@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { 
   Drawer, 
@@ -14,7 +16,8 @@ import {
 } from '@mui/material';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+
 
 interface CartDrawerProps {
   open: boolean;
@@ -64,7 +67,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
               <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>Tu carrito está vacío</Typography>
               <Button 
                 component={Link} 
-                to="/shop" 
+                href="/shop" 
                 variant="contained" 
                 onClick={onClose}
                 sx={{ borderRadius: '50px', px: 4 }}
@@ -128,7 +131,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
               </Typography>
               <Button 
                 component={Link} 
-                to="/cart" 
+                href="/cart" 
                 variant="outlined" 
                 fullWidth 
                 onClick={onClose}
@@ -138,7 +141,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
               </Button>
               <Button 
                 component={Link} 
-                to="/checkout" 
+                href="/checkout" 
                 variant="contained" 
                 fullWidth 
                 onClick={onClose}

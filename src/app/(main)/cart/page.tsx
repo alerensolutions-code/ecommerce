@@ -1,3 +1,5 @@
+"use client";
+
 import { 
   Box, 
   Container, 
@@ -20,13 +22,14 @@ import {
   ShieldCheck,
   Truck
 } from 'lucide-react';
-import { Link as RouterLink } from 'react-router-dom';
-import { useCart } from '../context/CartContext';
+import NextLink from 'next/link';
+
+import { useCart } from '../../../context/CartContext';
 
 const CartPage = () => {
   const { state, dispatch } = useCart();
 
-  const subtotal = state.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const subtotal = state.items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
   const shipping = subtotal > 500 ? 0 : 15;
   const total = subtotal + shipping;
 
@@ -49,8 +52,8 @@ const CartPage = () => {
               Parece que aún no has añadido nada. Explora nuestras ofertas en hardware gaming.
             </Typography>
             <Button 
-              component={RouterLink} 
-              to="/shop" 
+              component={NextLink} 
+              href="/shop" 
               variant="contained" 
               size="large"
               sx={{ py: 2, px: 6, fontWeight: 800 }}
@@ -69,7 +72,7 @@ const CartPage = () => {
       <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 2 }}>
         <Container maxWidth="xl">
           <Breadcrumbs>
-            <Link component={RouterLink} to="/" color="inherit" underline="hover">Inicio</Link>
+            <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
             <Typography color="text.primary">Carrito</Typography>
           </Breadcrumbs>
         </Container>
@@ -82,7 +85,7 @@ const CartPage = () => {
           {/* Items List */}
           <Grid size={{ xs: 12, lg: 8 }}>
             <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)' }}>
-              {state.items.map((item, index) => (
+              {state.items.map((item: any, index: number) => (
                 <Box key={item.id}>
                   <Grid container spacing={2} alignItems="center" sx={{ py: 3 }}>
                     <Grid size={{ xs: 4, sm: 2 }}>
@@ -95,8 +98,8 @@ const CartPage = () => {
                     </Grid>
                     <Grid size={{ xs: 8, sm: 4 }}>
                       <Link 
-                        component={RouterLink} 
-                        to={`/product/${item.id}`} 
+                        component={NextLink} 
+                        href={`/product/${item.id}`} 
                         sx={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{item.name}</Typography>
@@ -130,8 +133,8 @@ const CartPage = () => {
             </Paper>
 
             <Button 
-              component={RouterLink} 
-              to="/shop" 
+              component={NextLink} 
+              href="/shop" 
               startIcon={<ArrowLeft size={18} />}
               sx={{ mt: 3, fontWeight: 700 }}
             >
@@ -180,8 +183,8 @@ const CartPage = () => {
                 </Box>
 
                 <Button 
-                  component={RouterLink} 
-                  to="/checkout" 
+                  component={NextLink} 
+                  href="/checkout" 
                   variant="contained" 
                   fullWidth 
                   size="large"

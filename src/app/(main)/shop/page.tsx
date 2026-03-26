@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+"use client";
+
+import { useMemo, useState, useEffect } from 'react';
 import { 
   Box, 
   Container, 
@@ -12,29 +14,53 @@ import {
   Link,
   IconButton,
   Paper,
-  Button
+  Button,
+  CircularProgress
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import { LayoutGrid, List as ListIcon } from 'lucide-react';
-import { Link as RouterLink, useSearchParams } from 'react-router-dom';
-import { products } from '../data/mockData';
-import CategorySidebar from '../components/layout/CategorySidebar';
-import ProductCard from '../components/product/ProductCard';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import NextLink from 'next/link';
+
+import { supabase } from '../../../lib/supabase';
+import CategorySidebar from '../../../components/layout/CategorySidebar';
+import ProductCard from '../../../components/product/ProductCard';
 
 const ShopPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   
-  const category = searchParams.get('category') || '';
-  const minPrice = Number(searchParams.get('minPrice')) || 0;
-  const maxPrice = Number(searchParams.get('maxPrice')) || 3000;
-  const sortBy = searchParams.get('sort') || 'newest';
+  const category = searchParams?.get('category') || '';
+  const minPrice = Number(searchParams?.get('minPrice')) || 0;
+  const maxPrice = Number(searchParams?.get('maxPrice')) || 3000;
+  const sortBy = searchParams?.get('sort') || 'newest';
+
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, category:categories(name)');
+      
+      if (!error) {
+        setProducts(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchProducts();
+  }, []);
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
     // Category Filter
     if (category) {
-      result = result.filter(p => p.category === category);
+      result = result.filter(p => p.category?.name === category);
     }
 
     // Price Filter
@@ -49,20 +75,19 @@ const ShopPage = () => {
         result.sort((a, b) => b.price - a.price);
         break;
       case 'newest':
-        // Mocking newest by id descending
-        result.sort((a, b) => b.id.localeCompare(a.id));
+        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         break;
       default:
         break;
     }
 
     return result;
-  }, [category, minPrice, maxPrice, sortBy]);
+  }, [products, category, minPrice, maxPrice, sortBy]);
 
   const handleSortChange = (event: SelectChangeEvent) => {
-    const newParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
     newParams.set('sort', event.target.value);
-    setSearchParams(newParams);
+    router.push(`${pathname}?${newParams.toString()}`);
   };
 
   return (
@@ -71,7 +96,7 @@ const ShopPage = () => {
       <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 4, mb: 4 }}>
         <Container maxWidth="xl">
           <Breadcrumbs sx={{ mb: 2 }}>
-            <Link component={RouterLink} to="/" color="inherit" underline="hover">Inicio</Link>
+            <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
             <Typography color="text.primary">Tienda</Typography>
           </Breadcrumbs>
           <Typography variant="h3" sx={{ fontWeight: 800 }}>
@@ -129,7 +154,12 @@ const ShopPage = () => {
             </Paper>
 
             {/* Grid */}
-            {filteredProducts.length > 0 ? (
+            {loading ? (
+              <Box sx={{ py: 10, textAlign: 'center' }}>
+                <CircularProgress color="primary" />
+                <Typography sx={{ mt: 2 }} color="text.secondary">Cargando productos...</Typography>
+              </Box>
+            ) : filteredProducts.length > 0 ? (
               <Grid container spacing={3}>
                 {filteredProducts.map((product) => (
                   <Grid key={product.id} size={{ xs: 12, sm: 6, lg: 4 }}>
@@ -141,7 +171,7 @@ const ShopPage = () => {
               <Box sx={{ py: 10, textAlign: 'center' }}>
                 <Typography variant="h5" color="text.secondary">No se encontraron productos con estos filtros.</Typography>
                 <Button 
-                  onClick={() => setSearchParams({})} 
+                  onClick={() => router.push(pathname || '/')} 
                   sx={{ mt: 2 }}
                 >
                   Limpiar Filtros

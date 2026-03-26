@@ -1,20 +1,23 @@
-export type Category = 'Monitores' | 'Tarjetas Gráficas' | 'Procesadores' | 'Periféricos' | 'Consolas' | 'Accesorios';
+export type Category = string;
 
 export interface Product {
   id: string;
   name: string;
   brand: string;
-  category: Category;
+  category_id: string; // UUID from Supabase
+  category?: { name: string }; // For joins
   price: number;
   discountPrice?: number;
   description: string;
-  images: string[];
+  image?: string;
+  images?: string[];
   stock: number;
   featured: boolean;
-  specs: {
+  specs?: {
     label: string;
     value: string;
   }[];
+  created_at?: string;
 }
 
 export interface CartItem extends Product {
@@ -26,13 +29,16 @@ export interface User {
   username: string;
   name: string;
   email: string;
-  role: 'admin' | 'customer';
+  role: 'admin';
 }
 
 export interface Order {
   id: string;
-  userId: string;
-  date: string;
+  userId?: string;
+  customer_name: string;
+  email?: string;
+  phone: string; // Mandatory now
+  date?: string;
   items: CartItem[];
   total: number;
   status: 'Procesando' | 'Enviado' | 'Entregado' | 'Cancelado';

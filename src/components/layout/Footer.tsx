@@ -1,6 +1,9 @@
+"use client";
+
 import { Box, Container, Grid, Typography, Link, IconButton, Divider } from '@mui/material';
 import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
-import { Link as RouterLink } from 'react-router-dom';
+import NextLink from 'next/link';
+
 
 const Footer = () => {
   return (
@@ -29,22 +32,6 @@ const Footer = () => {
                 <Youtube size={20} />
               </IconButton>
             </Box>
-          </Grid>
-
-          {/* Quick Links */}
-          <Grid size={{ xs: 6, md: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Explorar</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Link component={RouterLink} to="/shop" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Tienda</Link>
-              <Link component={RouterLink} to="/shop?category=Monitores" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Monitores</Link>
-              <Link component={RouterLink} to="/shop?category=Tarjetas Gráficas" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Gráficas</Link>
-              <Link component={RouterLink} to="/shop?category=Consolas" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Consollas</Link>
-            </Box>
-          </Grid>
-
-          {/* Customer Service */}
-          <Grid size={{ xs: 6, md: 2 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Soporte</Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Link href="#" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Ayuda / FAQ</Link>
               <Link href="#" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Envíos</Link>

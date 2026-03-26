@@ -1,0 +1,271 @@
+"use client";
+
+import { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Container, 
+  Typography, 
+  Grid, 
+  Button, 
+  Paper, 
+  Divider, 
+  Chip, 
+  Stack, 
+  Breadcrumbs, 
+  Link,
+  Rating,
+  Tabs,
+  Tab,
+  IconButton,
+  CircularProgress
+} from '@mui/material';
+import { 
+  ShoppingCart, 
+  ShieldCheck, 
+  Truck, 
+  RotateCcw,
+  Heart,
+  Share2
+} from 'lucide-react';
+import { useParams } from 'next/navigation';
+import NextLink from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+
+import { supabase } from '../../../../lib/supabase';
+import { useCart } from '../../../../context/CartContext';
+import ProductCard from '../../../../components/product/ProductCard';
+
+const ProductDetailPage = () => {
+  const { id } = useParams() as { id: string };
+  const { dispatch } = useCart();
+  const [activeTab, setActiveTab] = useState(0);
+  
+  const [product, setProduct] = useState<any>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProductData = async () => {
+      setLoading(true);
+      
+      // Fetch main product with category join
+      const { data: pData } = await supabase
+        .from('products')
+        .select('*, category:categories(name)')
+        .eq('id', id)
+        .single();
+      
+      if (pData) {
+        setProduct(pData);
+        
+        // Fetch related products using category_id
+        const { data: related } = await supabase
+          .from('products')
+          .select('*, category:categories(name)')
+          .eq('category_id', pData.category_id)
+          .neq('id', id)
+          .limit(4);
+        
+        setRelatedProducts(related || []);
+      }
+      
+      setLoading(false);
+    };
+
+    fetchProductData();
+  }, [id]);
+
+  const handleAddToCart = () => {
+    dispatch({ type: 'ADD_TO_CART', payload: product });
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ py: 20, textAlign: 'center' }}>
+        <CircularProgress />
+        <Typography sx={{ mt: 2 }}>Cargando producto...</Typography>
+      </Box>
+    );
+  }
+
+  if (!product) {
+    return (
+      <Container sx={{ py: 10, textAlign: 'center' }}>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>Producto no encontrado</Typography>
+        <Button component={NextLink} href="/shop" variant="contained" sx={{ mt: 2 }}>Volver a la tienda</Button>
+      </Container>
+    );
+  }
+
+  const imageToShow = product.image || (product.images && product.images[0]) || '/placeholder.png';
+  const categoryName = product.category?.name || 'Varios';
+
+  return (
+    <Box sx={{ bgcolor: '#f4f4f4', minHeight: '100vh', pb: 10 }}>
+      {/* Breadcrumbs */}
+      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 2 }}>
+        <Container maxWidth="xl">
+          <Breadcrumbs>
+            <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
+            <Link component={NextLink} href="/shop" color="inherit" underline="hover">Tienda</Link>
+            <Link component={NextLink} href={`/shop?category=${categoryName}`} color="inherit" underline="hover">{categoryName}</Link>
+            <Typography color="text.primary">{product.name}</Typography>
+          </Breadcrumbs>
+        </Container>
+      </Box>
+
+      <Container maxWidth="xl" sx={{ mt: 4 }}>
+        <Grid container spacing={6}>
+          {/* Main Content - Left: Images */}
+          <Grid size={{ xs: 12, md: 7, lg: 6 }}>
+            <Box sx={{ position: 'sticky', top: 100 }}>
+              <Paper 
+                elevation={0} 
+                sx={{ 
+                  borderRadius: 4, 
+                  overflow: 'hidden', 
+                  bgcolor: 'white',
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  aspectRatio: '1/1',
+                  mb: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              >
+                <motion.img
+                  src={imageToShow}
+                  alt={product.name}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }}
+                />
+              </Paper>
+            </Box>
+          </Grid>
+
+          {/* Main Content - Right: Info */}
+          <Grid size={{ xs: 12, md: 5, lg: 6 }}>
+            <Box>
+              <Chip label={categoryName} sx={{ mb: 2, fontWeight: 700, borderRadius: 1 }} size="small" color="primary" variant="outlined" />
+              <Typography variant="h2" sx={{ mb: 2, fontWeight: 800 }}>{product.name}</Typography>
+              
+              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
+                <Rating value={5} readOnly precision={0.5} />
+                <Typography variant="body2" color="text.secondary">(Verificado)</Typography>
+              </Stack>
+
+              <Box sx={{ mb: 4 }}>
+                <Typography variant="h3" color="primary.main" sx={{ fontWeight: 800 }}>
+                  ${product.price.toLocaleString('es-ES')}
+                </Typography>
+              </Box>
+
+              <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary', lineHeight: 1.8 }}>
+                {product.description || 'Sin descripción disponible para este producto.'}
+              </Typography>
+
+              <Divider sx={{ mb: 4 }} />
+
+              <Stack spacing={3} sx={{ mb: 6 }}>
+                <Box>
+                  <Typography variant="subtitle2" sx={{ mb: 1.5, fontWeight: 700 }}>Disponibilidad</Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Box sx={{ width: 12, height: 12, borderRadius: '50%', bgcolor: product.stock > 0 ? '#4caf50' : '#f44336' }} />
+                    <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                      {product.stock > 0 ? 'En Stock - Envío Inmediato' : 'Consultar Disponibilidad'}
+                    </Typography>
+                  </Stack>
+                </Box>
+              </Stack>
+
+              <Stack direction="row" spacing={2}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  startIcon={<ShoppingCart size={24} />}
+                  onClick={handleAddToCart}
+                  disabled={product.stock === 0}
+                  sx={{ py: 2, flex: 1, fontSize: '1.1rem', fontWeight: 800, borderRadius: 2 }}
+                >
+                  Añadir al Carrito
+                </Button>
+                <IconButton sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 2 }}>
+                  <Heart size={24} />
+                </IconButton>
+                <IconButton sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 2 }}>
+                  <Share2 size={24} />
+                </IconButton>
+              </Stack>
+
+              {/* Guarantees */}
+              <Grid container spacing={2} sx={{ mt: 6 }}>
+                <Grid size={4}>
+                  <Stack sx={{ textAlign: 'center', alignItems: 'center' }}>
+                    <Truck size={24} color="#666" />
+                    <Typography variant="caption" sx={{ fontWeight: 700, mt: 1 }}>Envío Express</Typography>
+                  </Stack>
+                </Grid>
+                <Grid size={4}>
+                  <Stack sx={{ textAlign: 'center', alignItems: 'center' }}>
+                    <ShieldCheck size={24} color="#666" />
+                    <Typography variant="caption" sx={{ fontWeight: 700, mt: 1 }}>Compra Segura</Typography>
+                  </Stack>
+                </Grid>
+                <Grid size={4}>
+                  <Stack sx={{ textAlign: 'center', alignItems: 'center' }}>
+                    <RotateCcw size={24} color="#666" />
+                    <Typography variant="caption" sx={{ fontWeight: 700, mt: 1 }}>Garantía Devil</Typography>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Box>
+          </Grid>
+        </Grid>
+
+        {/* Description Section */}
+        <Box sx={{ mt: 10 }}>
+          <Tabs 
+            value={activeTab} 
+            onChange={(_, val) => setActiveTab(val)}
+            sx={{ 
+              borderBottom: '1px solid rgba(0,0,0,0.05)',
+              '& .MuiTab-root': { py: 3, px: 6, fontWeight: 700, fontSize: '1rem' }
+            }}
+          >
+            <Tab label="Descripción Detallada" />
+            <Tab label="Especificaciones" />
+          </Tabs>
+
+          <Box sx={{ py: 6 }}>
+            {activeTab === 0 && (
+              <Typography variant="body1" sx={{ lineHeight: 1.8, maxWidth: 900, fontSize: '1.1rem' }}>
+                {product.description || 'No hay una descripción detallada para este producto yet.'}
+              </Typography>
+            )}
+            {activeTab === 1 && (
+              <Typography variant="body1">Las especificaciones técnicas se coordinan al realizar el pedido vía WhatsApp.</Typography>
+            )}
+          </Box>
+        </Box>
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <Box sx={{ mt: 10 }}>
+            <Typography variant="h4" sx={{ mb: 6, fontWeight: 800 }}>Productos Relacionados</Typography>
+            <Grid container spacing={3}>
+              {relatedProducts.map((p: any) => (
+                <Grid key={p.id} size={{ xs: 12, sm: 6, md: 3 }}>
+                  <ProductCard product={p} />
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
+      </Container>
+    </Box>
+  );
+};
+
+export default ProductDetailPage;

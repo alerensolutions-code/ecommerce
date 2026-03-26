@@ -1,10 +1,11 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -17,12 +18,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const savedUser = localStorage.getItem('devil_gaming_auth');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      const parsedUser = JSON.parse(savedUser);
+      // Solo permitimos administradores ahora
+      if (parsedUser.role === 'admin') {
+        setUser(parsedUser);
+      } else {
+        localStorage.removeItem('devil_gaming_auth');
+        setUser(null);
+      }
     }
   }, []);
 
   const login = (email: string, password: string): boolean => {
-    // Mock validation for demo
+    // Solo permitimos el acceso al administrador
     if (email === 'admin@devilgaming.com' && password === 'admin123') {
       const adminUser: User = {
         id: '0',
@@ -36,32 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return true;
     }
     
-    if (email === 'user@example.com' && password === 'password') {
-      const mockUser: User = {
-        id: '1',
-        username: 'devil_fan',
-        name: 'Gamer Pro',
-        email: 'user@example.com',
-        role: 'customer'
-      };
-      setUser(mockUser);
-      localStorage.setItem('devil_gaming_auth', JSON.stringify(mockUser));
-      return true;
-    }
     return false;
-  };
-
-  const register = (name: string, email: string, _password: string): boolean => {
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      username: name.toLowerCase().replace(/\s+/g, '_'),
-      name: name,
-      email: email,
-      role: 'customer'
-    };
-    setUser(newUser);
-    localStorage.setItem('devil_gaming_auth', JSON.stringify(newUser));
-    return true;
   };
 
   const logout = () => {
@@ -70,7 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

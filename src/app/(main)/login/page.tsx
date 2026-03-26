@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { 
   Box, 
@@ -6,18 +8,18 @@ import {
   Typography, 
   TextField, 
   Button, 
-  Link, 
   Stack, 
   IconButton, 
   InputAdornment, 
   Alert 
 } from '@mui/material';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useRouter } from 'next/navigation';
+
+import { useAuth } from '../../../context/AuthContext';
 
 const LoginPage = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
@@ -29,9 +31,9 @@ const LoginPage = () => {
     if (email && password) {
       const success = login(email, password);
       if (success) {
-        navigate('/');
+        router.push('/admin');
       } else {
-        setError('Credenciales incorrectas. Prueba con user@example.com / password');
+        setError('Credenciales de administrador incorrectas.');
       }
     } else {
       setError('Por favor, completa todos los campos.');
@@ -60,9 +62,9 @@ const LoginPage = () => {
           }}
         >
           <Box sx={{ textAlign: 'center', mb: 4 }}>
-            <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Bienvenido</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, mb: 1 }}>Acceso Admin</Typography>
             <Typography variant="body2" color="text.secondary">
-              Inicia sesión en tu cuenta de Devil Gaming
+              Inicia sesión en el panel del administrador
             </Typography>
           </Box>
 
@@ -97,12 +99,6 @@ const LoginPage = () => {
                 }}
               />
               
-              <Box sx={{ textAlign: 'right' }}>
-                <Link component={RouterLink} to="/forgot-password" variant="body2" color="primary" sx={{ fontWeight: 600 }}>
-                  ¿Olvidaste tu contraseña?
-                </Link>
-              </Box>
-
               <Button
                 fullWidth
                 size="large"
@@ -115,10 +111,7 @@ const LoginPage = () => {
               </Button>
 
               <Typography variant="body2" align="center" color="text.secondary">
-                ¿No tienes una cuenta?{' '}
-                <Link component={RouterLink} to="/register" sx={{ fontWeight: 700, color: 'primary.main', textDecoration: 'none' }}>
-                  Regístrate aquí
-                </Link>
+                Acceso restringido únicamente a personal autorizado.
               </Typography>
             </Stack>
           </Box>

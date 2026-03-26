@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { 
   AppBar, 
@@ -23,7 +25,6 @@ import {
 import { 
   Search, 
   ShoppingCart, 
-  User, 
   Menu as MenuIcon, 
   ChevronDown,
   Monitor,
@@ -32,9 +33,10 @@ import {
   Keyboard,
   Layers
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
 import { useCart } from '../../context/CartContext';
-import { useAuth } from '../../context/AuthContext';
 import { alpha, styled } from '@mui/material/styles';
 import CartDrawer from '../cart/CartDrawer';
 
@@ -99,8 +101,7 @@ const categories = [
 
 const Navbar = () => {
   const { state } = useCart();
-  const { user } = useAuth();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
@@ -144,7 +145,7 @@ const Navbar = () => {
                 variant="h6"
                 noWrap
                 component={Link}
-                to="/"
+                href="/"
                 sx={{
                   mr: 2,
                   display: 'flex',
@@ -179,7 +180,7 @@ const Navbar = () => {
                     <MenuItem 
                       key={cat.name} 
                       onClick={() => {
-                        navigate(cat.path);
+                        router.push(cat.path);
                         handleCloseMenu();
                       }}
                       sx={{ minWidth: 200, py: 1.5 }}
@@ -191,22 +192,12 @@ const Navbar = () => {
                 </Menu>
                 <Button 
                   component={Link} 
-                  to="/shop" 
+                  href="/shop" 
                   color="inherit" 
                   sx={{ fontWeight: 600, ml: 2, '&:hover': { color: 'primary.main' } }}
                 >
                   Destacados
                 </Button>
-                {user?.role === 'admin' && (
-                  <Button 
-                    component={Link} 
-                    to="/admin" 
-                    color="primary" 
-                    sx={{ fontWeight: 700, ml: 2, bgcolor: alpha('#cc0000', 0.1) }}
-                  >
-                    Admin
-                  </Button>
-                )}
               </Box>
 
               {/* Search Bar */}
@@ -224,14 +215,6 @@ const Navbar = () => {
 
               {/* Icons */}
               <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-                <IconButton 
-                  component={Link} 
-                  to="/profile" 
-                  color="inherit"
-                  sx={{ '&:hover': { color: 'primary.main' } }}
-                >
-                  <User size={22} />
-                </IconButton>
                 <IconButton 
                   color="inherit"
                   sx={{ ml: 1, '&:hover': { color: 'primary.main' } }}
@@ -267,7 +250,7 @@ const Navbar = () => {
           <List>
             {categories.map((cat) => (
               <ListItem key={cat.name} disablePadding>
-                <ListItemButton component={Link} to={cat.path}>
+                <ListItemButton component={Link} href={cat.path}>
                   <ListItemIcon sx={{ color: 'primary.main' }}>{cat.icon}</ListItemIcon>
                   <ListItemText primary={cat.name} />
                 </ListItemButton>

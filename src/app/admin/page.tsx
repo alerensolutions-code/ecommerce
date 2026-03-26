@@ -1,3 +1,5 @@
+"use client";
+
 import { 
   Box, 
   Grid, 
@@ -8,7 +10,6 @@ import {
 } from '@mui/material';
 import { 
   TrendingUp, 
-  Users, 
   ShoppingBag, 
   DollarSign,
   ArrowUpRight,
@@ -18,7 +19,6 @@ import {
 const Dashboard = () => {
   const stats = [
     { title: 'Ventas Totales', value: '$12.450', icon: <DollarSign />, color: '#4caf50', trend: '+12%', up: true },
-    { title: 'Nuevos Usuarios', value: '154', icon: <Users />, color: '#2196f3', trend: '+5%', up: true },
     { title: 'Pedidos Hoy', value: '28', icon: <ShoppingBag />, color: '#ff9800', trend: '-2%', up: false },
     { title: 'Tasa Conversión', value: '3.2%', icon: <TrendingUp />, color: '#f44336', trend: '+0.5%', up: true },
   ];
@@ -29,7 +29,7 @@ const Dashboard = () => {
       
       <Grid container spacing={3}>
         {stats.map((stat) => (
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} key={stat.title}>
+          <Grid size={{ xs: 12, sm: 6, md: 4 }} key={stat.title}>
             <Paper 
               elevation={0} 
               sx={{ 

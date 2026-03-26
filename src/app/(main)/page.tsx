@@ -1,15 +1,17 @@
-import React from 'react';
-import { Box, Typography, Button, Container, Grid, Paper, Stack, TextField } from '@mui/material';
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { Box, Typography, Button, Container, Grid, Paper, Stack, TextField, CircularProgress } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { products } from '../data/mockData';
-import ProductCard from '../components/product/ProductCard';
+import { supabase } from '../../lib/supabase';
+import ProductCard from '../../components/product/ProductCard';
 import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Mail } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
 
 const Hero = () => (
   <Box sx={{ 
@@ -54,26 +56,12 @@ const Hero = () => (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <Button 
                 component={Link} 
-                to="/shop" 
+                href="/shop" 
                 variant="contained" 
                 size="large" 
                 sx={{ py: 2, px: 6, fontSize: '1.1rem' }}
               >
                 Explorar Tienda
-              </Button>
-              <Button 
-                variant="outlined" 
-                size="large" 
-                sx={{ 
-                  py: 2, 
-                  px: 6, 
-                  fontSize: '1.1rem', 
-                  color: 'white', 
-                  borderColor: 'white',
-                  '&:hover': { borderColor: 'primary.main', color: 'primary.main' }
-                }}
-              >
-                Ver Ofertas
               </Button>
             </Stack>
           </motion.div>
@@ -93,51 +81,26 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
   </Paper>
 );
 
-const Newsletter = () => (
-  <Box sx={{ py: 10, bgcolor: 'secondary.main', color: 'white' }}>
-    <Container maxWidth="md">
-      <Box sx={{ textAlign: 'center' }}>
-        <Mail size={48} color="#cc0000" style={{ marginBottom: '24px' }} />
-        <Typography variant="h3" sx={{ mb: 2 }}>Únete a la Legión</Typography>
-        <Typography variant="body1" sx={{ mb: 6, opacity: 0.8 }}>
-          Suscríbete para recibir ofertas exclusivas, lanzamientos anticipados y noticias del mundo gaming.
-        </Typography>
-        <Paper 
-          component="form" 
-          sx={{ 
-            p: '4px', 
-            display: 'flex', 
-            alignItems: 'center', 
-            bgcolor: 'white',
-            borderRadius: '50px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
-          }}
-        >
-          <TextField
-            placeholder="Tu correo electrónico"
-            variant="standard"
-            sx={{ ml: 3, flex: 1 }}
-            InputProps={{ disableUnderline: true }}
-          />
-          <Button 
-            variant="contained" 
-            sx={{ 
-              borderRadius: '50px', 
-              px: 4, 
-              py: 1.5,
-              fontWeight: 700
-            }}
-          >
-            Suscribirse
-          </Button>
-        </Paper>
-      </Box>
-    </Container>
-  </Box>
-);
-
 const HomePage = () => {
-  const featuredProducts = products.filter(p => p.featured);
+  const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*, category:categories(name)')
+        .limit(8); // Showing 8 products as featured for now
+      
+      if (!error) {
+        setFeaturedProducts(data || []);
+      }
+      setLoading(false);
+    };
+
+    fetchFeatured();
+  }, []);
 
   return (
     <Box>
@@ -169,31 +132,37 @@ const HomePage = () => {
               <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800 }}>MÁS DESEADOS</Typography>
               <Typography variant="h2">Productos Destacados</Typography>
             </Box>
-            <Button component={Link} to="/shop" endIcon={<ArrowRight size={20} />} sx={{ fontWeight: 700 }}>
+            <Button component={Link} href="/shop" endIcon={<ArrowRight size={20} />} sx={{ fontWeight: 700 }}>
               Ver Todos
             </Button>
           </Box>
 
-          <Swiper
-            modules={[Navigation, Pagination, Autoplay]}
-            spaceBetween={30}
-            slidesPerView={1}
-            navigation
-            pagination={{ clickable: true }}
-            autoplay={{ delay: 5000 }}
-            breakpoints={{
-              640: { slidesPerView: 2 },
-              1024: { slidesPerView: 3 },
-              1440: { slidesPerView: 4 },
-            }}
-            style={{ padding: '20px 5px 50px 5px' }}
-          >
-            {featuredProducts.map((product) => (
-              <SwiperSlide key={product.id}>
-                <ProductCard product={product} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          {loading ? (
+            <Box sx={{ textAlign: 'center', py: 5 }}><CircularProgress /></Box>
+          ) : featuredProducts.length > 0 ? (
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay]}
+              spaceBetween={30}
+              slidesPerView={1}
+              navigation
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 5000 }}
+              breakpoints={{
+                640: { slidesPerView: 2 },
+                1024: { slidesPerView: 3 },
+                1440: { slidesPerView: 4 },
+              }}
+              style={{ padding: '20px 5px 50px 5px' }}
+            >
+              {featuredProducts.map((product) => (
+                <SwiperSlide key={product.id}>
+                  <ProductCard product={product} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <Typography variant="body1" align="center" color="text.secondary">Añade productos en el panel de administrador para verlos aquí.</Typography>
+          )}
         </Container>
       </Box>
 
@@ -202,7 +171,7 @@ const HomePage = () => {
         <Typography variant="h2" align="center" sx={{ mb: 6 }}>Explora por Categoría</Typography>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper component={Link} to="/shop?category=Tarjetas Gráficas" sx={{ 
+            <Paper component={Link} href="/shop" sx={{ 
               height: 400, 
               position: 'relative', 
               overflow: 'hidden',
@@ -223,7 +192,7 @@ const HomePage = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <Grid container spacing={3}>
               <Grid size={12}>
-                <Paper component={Link} to="/shop?category=Monitores" sx={{ 
+                <Paper component={Link} href="/shop" sx={{ 
                   height: 188, 
                   position: 'relative', 
                   overflow: 'hidden',
@@ -241,7 +210,7 @@ const HomePage = () => {
                 </Paper>
               </Grid>
               <Grid size={12}>
-                <Paper component={Link} to="/shop?category=Periféricos" sx={{ 
+                <Paper component={Link} href="/shop" sx={{ 
                   height: 188, 
                   position: 'relative', 
                   overflow: 'hidden',
@@ -262,9 +231,6 @@ const HomePage = () => {
           </Grid>
         </Grid>
       </Container>
-
-      {/* Newsletter Section */}
-      {/* <Newsletter /> */}
     </Box>
   );
 };
