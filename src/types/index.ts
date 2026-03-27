@@ -9,7 +9,6 @@ export interface Product {
   price: number;
   discountPrice?: number;
   description: string;
-  image?: string;
   images?: string[];
   stock: number;
   featured: boolean;

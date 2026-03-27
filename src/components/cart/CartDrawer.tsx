@@ -1,17 +1,17 @@
 "use client";
 
 import React from 'react';
-import { 
-  Drawer, 
-  Box, 
-  Typography, 
-  IconButton, 
-  List, 
-  ListItem, 
-  ListItemAvatar, 
-  Avatar, 
-  Divider, 
-  Button, 
+import {
+  Drawer,
+  Box,
+  Typography,
+  IconButton,
+  List,
+  ListItem,
+  ListItemAvatar,
+  Avatar,
+  Divider,
+  Button,
   Stack
 } from '@mui/material';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
@@ -65,10 +65,10 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
             <Box sx={{ py: 10, textAlign: 'center' }}>
               <ShoppingBag size={64} color="rgba(0,0,0,0.1)" strokeWidth={1} style={{ marginBottom: '16px' }} />
               <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>Tu carrito está vacío</Typography>
-              <Button 
-                component={Link} 
-                href="/shop" 
-                variant="contained" 
+              <Button
+                component={Link}
+                href="/shop"
+                variant="contained"
                 onClick={onClose}
                 sx={{ borderRadius: '50px', px: 4 }}
               >
@@ -81,10 +81,10 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
                 <React.Fragment key={item.id}>
                   <ListItem alignItems="flex-start" sx={{ px: 1, py: 2 }}>
                     <ListItemAvatar sx={{ mr: 2 }}>
-                      <Avatar 
-                        src={item.images[0]} 
-                        variant="rounded" 
-                        sx={{ width: 80, height: 80, bgcolor: '#f5f5f5', border: '1px solid rgba(0,0,0,0.05)' }} 
+                      <Avatar
+                        src={item.images?.[0]}
+                        variant="rounded"
+                        sx={{ width: 80, height: 80, bgcolor: '#f5f5f5', border: '1px solid rgba(0,0,0,0.05)' }}
                       />
                     </ListItemAvatar>
                     <Box sx={{ flexGrow: 1 }}>
@@ -92,7 +92,7 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
                       <Typography variant="body2" color="primary.main" sx={{ fontWeight: 800, mb: 1 }}>
                         ${item.price.toLocaleString('es-ES')}
                       </Typography>
-                      
+
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Stack direction="row" alignItems="center" sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1 }}>
                           <IconButton size="small" onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}>
@@ -129,21 +129,21 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
               <Typography variant="caption" color="text.secondary">
                 Envío e impuestos se calcularán en el pago.
               </Typography>
-              <Button 
-                component={Link} 
-                href="/cart" 
-                variant="outlined" 
-                fullWidth 
+              <Button
+                component={Link}
+                href="/cart"
+                variant="outlined"
+                fullWidth
                 onClick={onClose}
                 sx={{ py: 1.5, fontWeight: 700 }}
               >
                 Ver Carrito Completo
               </Button>
-              <Button 
-                component={Link} 
-                href="/checkout" 
-                variant="contained" 
-                fullWidth 
+              <Button
+                component={Link}
+                href="/checkout"
+                variant="contained"
+                fullWidth
                 onClick={onClose}
                 endIcon={<ArrowRight size={20} />}
                 sx={{ py: 2, fontWeight: 800, fontSize: '1rem' }}
