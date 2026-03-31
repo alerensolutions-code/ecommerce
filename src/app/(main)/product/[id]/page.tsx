@@ -43,6 +43,7 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<string>('');
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -57,6 +58,7 @@ const ProductDetailPage = () => {
       
       if (pData) {
         setProduct(pData);
+        setSelectedImage(pData.images && pData.images[0] ? pData.images[0] : (pData.image || '/placeholder.png'));
         
         // Fetch related products using category_id
         const { data: related } = await supabase
@@ -97,8 +99,10 @@ const ProductDetailPage = () => {
     );
   }
 
-  const imageToShow = product.image || (product.images && product.images[0]) || '/placeholder.png';
   const categoryName = product.category?.name || 'Varios';
+  const allImages = product.images && Array.isArray(product.images) && product.images.length > 0 
+    ? product.images 
+    : [product.image || '/placeholder.png'];
 
   return (
     <Box sx={{ bgcolor: '#f4f4f4', minHeight: '100vh', pb: 10 }}>
@@ -133,15 +137,45 @@ const ProductDetailPage = () => {
                   justifyContent: 'center'
                 }}
               >
-                <motion.img
-                  src={imageToShow}
-                  alt={product.name}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }}
-                />
+                <AnimatePresence mode="wait">
+                  <motion.img
+                    key={selectedImage}
+                    src={selectedImage}
+                    alt={product.name}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.05 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '40px' }}
+                  />
+                </AnimatePresence>
               </Paper>
+
+              {/* Thumbnails Gallery */}
+              {allImages.length > 1 && (
+                <Grid container spacing={2}>
+                  {allImages.map((img: string, idx: number) => (
+                    <Grid size={2.4} key={idx}>
+                      <Paper
+                        elevation={0}
+                        onClick={() => setSelectedImage(img)}
+                        sx={{
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                          cursor: 'pointer',
+                          border: '2px solid',
+                          borderColor: selectedImage === img ? 'primary.main' : 'transparent',
+                          transition: 'all 0.2s',
+                          aspectRatio: '1/1',
+                          '&:hover': { transform: 'translateY(-2px)', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }
+                        }}
+                      >
+                        <Box component="img" src={img} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
             </Box>
           </Grid>
 

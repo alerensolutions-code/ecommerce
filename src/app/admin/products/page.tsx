@@ -1,19 +1,19 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  IconButton, 
-  Avatar, 
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  Avatar,
   Chip,
   TextField,
   InputAdornment,
@@ -32,7 +32,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
-  image: string;
+  images?: string[];
   description: string;
   category_id: string;
   category?: { name: string };
@@ -58,8 +58,11 @@ const ProductsManagement = () => {
     category_id: '',
     price: 0,
     stock: 0,
-    image: ''
+    images: [] as string[]
   });
+
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -68,11 +71,11 @@ const ProductsManagement = () => {
       .from('products')
       .select('*, category:categories(name)')
       .order('created_at', { ascending: false });
-    
+
     const { data: catsData } = await supabase.from('categories').select('*').order('name');
-    
+
     if (pError) console.error("Error fetching products:", pError);
-    
+
     setAllProducts(productsData || []);
     setDbCategories(catsData || []);
     setLoading(false);
@@ -82,8 +85,8 @@ const ProductsManagement = () => {
     fetchData();
   }, []);
 
-  const filteredProducts = allProducts.filter((p: Product) => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+  const filteredProducts = allProducts.filter((p: Product) =>
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -95,8 +98,9 @@ const ProductsManagement = () => {
       category_id: product?.category_id || '',
       price: product?.price || 0,
       stock: product?.stock || 0,
-      image: product?.image || ''
+      images: product?.images || []
     });
+    setSelectedFiles([]);
     setOpen(true);
   };
 
@@ -105,14 +109,87 @@ const ProductsManagement = () => {
     setSelectedProduct(null);
   };
 
-  const handleSave = async () => {
-    if (selectedProduct) {
-      await supabase.from('products').update(formValues).eq('id', selectedProduct.id);
-    } else {
-      await supabase.from('products').insert([formValues]);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      if (formValues.images.length + selectedFiles.length + filesArray.length > 5) {
+        alert('Máximo 5 imágenes permitidas en total');
+        return;
+      }
+      setSelectedFiles(prev => [...prev, ...filesArray]);
     }
-    fetchData();
-    handleClose();
+  };
+
+  const removeSelectedFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeExistingImage = (index: number) => {
+    setFormValues(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
+  const uploadImagesToSupabase = async (files: File[]) => {
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `productImages/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Error uploading image:', uploadError);
+        continue;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      uploadedUrls.push(publicUrl);
+    }
+    return uploadedUrls;
+  };
+
+  const handleSave = async () => {
+    setUploadingFiles(true);
+    let finalImages = [...formValues.images];
+
+    if (selectedFiles.length > 0) {
+      const urls = await uploadImagesToSupabase(selectedFiles);
+      finalImages = [...finalImages, ...urls];
+    }
+
+    const dataToSave = {
+      name: formValues.name,
+      description: formValues.description,
+      category_id: formValues.category_id,
+      price: formValues.price,
+      stock: formValues.stock,
+      images: finalImages
+    };
+
+    try {
+      if (selectedProduct) {
+        const { error } = await supabase.from('products').update(dataToSave).eq('id', selectedProduct.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('products').insert([dataToSave]);
+        if (error) throw error;
+      }
+      fetchData();
+      handleClose();
+    } catch (err: any) {
+      console.error('Error guardando producto:', err);
+      alert('Error al guardar el producto: ' + (err.message || JSON.stringify(err)));
+    } finally {
+      setUploadingFiles(false);
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -126,9 +203,9 @@ const ProductsManagement = () => {
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 800 }}>Gestión de Productos</Typography>
-        <Button 
-          variant="contained" 
-          startIcon={<Plus size={20} />} 
+        <Button
+          variant="contained"
+          startIcon={<Plus size={20} />}
           onClick={() => handleOpen()}
           sx={{ py: 1.5, px: 3, fontWeight: 700 }}
         >
@@ -175,8 +252,8 @@ const ProductsManagement = () => {
                 <TableRow key={product.id} hover>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar 
-                        src={product.image} 
+                      <Avatar
+                        src={product.images?.[0] || ''}
                         variant="rounded"
                         sx={{ width: 40, height: 40, border: '1px solid #eee' }}
                       />
@@ -191,9 +268,9 @@ const ProductsManagement = () => {
                   <TableCell sx={{ fontWeight: 600 }}>${product.price.toLocaleString('es-ES')}</TableCell>
                   <TableCell>{product.stock}</TableCell>
                   <TableCell>
-                    <Chip 
-                      label={product.stock > 0 ? 'En Stock' : 'Sin Stock'} 
-                      size="small" 
+                    <Chip
+                      label={product.stock > 0 ? 'En Stock' : 'Sin Stock'}
+                      size="small"
                       color={product.stock > 5 ? 'success' : 'warning'}
                       sx={{ fontWeight: 600 }}
                     />
@@ -224,97 +301,118 @@ const ProductsManagement = () => {
           <Grid container spacing={3}>
             <Grid size={{ xs: 12, md: 8 }}>
               <Stack spacing={3}>
-                <TextField 
-                  fullWidth 
-                  label="Nombre del Producto" 
-                  value={formValues.name} 
-                  onChange={(e) => setFormValues({...formValues, name: e.target.value})} 
+                <TextField
+                  fullWidth
+                  label="Nombre del Producto"
+                  value={formValues.name}
+                  onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
                 />
-                <TextField 
-                  fullWidth 
-                  label="Breve Descripción" 
-                  multiline 
-                  rows={2} 
-                  value={formValues.description} 
-                  onChange={(e) => setFormValues({...formValues, description: e.target.value})} 
+                <TextField
+                  fullWidth
+                  label="Breve Descripción"
+                  multiline
+                  rows={2}
+                  value={formValues.description}
+                  onChange={(e) => setFormValues({ ...formValues, description: e.target.value })}
                 />
-                  <Grid container spacing={2}>
-                    <Grid size={12}>
-                      <TextField 
-                        select 
-                        fullWidth 
-                        label="Categoría" 
-                        value={formValues.category_id}
-                        onChange={(e) => setFormValues({...formValues, category_id: e.target.value})}
-                      >
-                        {dbCategories.map((option) => (
-                          <MenuItem key={option.id} value={option.id}>
-                            {option.name}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-                    </Grid>
-                    <Grid size={6}>
-                      <TextField 
-                        fullWidth 
-                        label="Precio ($)" 
-                        type="number" 
-                        value={formValues.price} 
-                        onChange={(e) => setFormValues({...formValues, price: parseFloat(e.target.value)})} 
-                      />
-                    </Grid>
-                    <Grid size={6}>
-                      <TextField 
-                        fullWidth 
-                        label="Stock" 
-                        type="number" 
-                        value={formValues.stock} 
-                        onChange={(e) => setFormValues({...formValues, stock: parseInt(e.target.value)})} 
-                      />
-                    </Grid>
+                <Grid container spacing={2}>
+                  <Grid size={12}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Categoría"
+                      value={formValues.category_id}
+                      onChange={(e) => setFormValues({ ...formValues, category_id: e.target.value })}
+                    >
+                      {dbCategories.map((option) => (
+                        <MenuItem key={option.id} value={option.id}>
+                          {option.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                   </Grid>
+                  <Grid size={6}>
+                    <TextField
+                      fullWidth
+                      label="Precio ($)"
+                      type="number"
+                      value={formValues.price}
+                      onChange={(e) => setFormValues({ ...formValues, price: parseFloat(e.target.value) })}
+                    />
+                  </Grid>
+                  <Grid size={6}>
+                    <TextField
+                      fullWidth
+                      label="Stock"
+                      type="number"
+                      value={formValues.stock}
+                      onChange={(e) => setFormValues({ ...formValues, stock: parseInt(e.target.value) })}
+                    />
+                  </Grid>
+                </Grid>
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <Stack spacing={2}>
-                <Box 
-                  sx={{ 
-                    width: '100%', 
-                    aspectRatio: '1/1', 
-                    border: '2px dashed #ddd', 
+                <Typography variant="subtitle2" fontWeight={700}>Imágenes (Max 5)</Typography>
+
+                <Box
+                  sx={{
+                    border: '2px dashed #ddd',
                     borderRadius: 2,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexDirection: 'column',
-                    gap: 1,
-                    overflow: 'hidden'
+                    p: 2,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(204,0,0,0.02)' }
                   }}
+                  component="label"
                 >
-                  {formValues.image ? (
-                    <Box component="img" src={formValues.image} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <>
-                      <Plus size={32} opacity={0.3} />
-                      <Typography variant="caption" color="text.secondary">Vista Previa</Typography>
-                    </>
-                  )}
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    hidden
+                    onChange={handleFileChange}
+                    disabled={formValues.images.length + selectedFiles.length >= 5 || uploadingFiles}
+                  />
+                  <Plus size={32} opacity={0.5} style={{ margin: '0 auto' }} />
+                  <Typography variant="caption" display="block" color="text.secondary">
+                    Subir imágenes desde el ordenador
+                  </Typography>
                 </Box>
-                <TextField 
-                  fullWidth 
-                  size="small" 
-                  label="URL de la Imagen" 
-                  value={formValues.image} 
-                  onChange={(e) => setFormValues({...formValues, image: e.target.value})} 
-                />
+
+                <Grid container spacing={1}>
+                  {/* Existing Images */}
+                  {formValues.images.map((img, idx) => (
+                    <Grid size={6} key={`ext-${idx}`}>
+                      <Box sx={{ position: 'relative', aspectRatio: '1/1', borderRadius: 1, overflow: 'hidden', border: '1px solid #eee' }}>
+                        <Box component="img" src={img} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <IconButton size="small" color="error" sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'white' } }} onClick={() => removeExistingImage(idx)}>
+                          <Trash2 size={14} />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                  ))}
+                  {/* New Selected Files Preview */}
+                  {selectedFiles.map((file, idx) => (
+                    <Grid size={6} key={`new-${idx}`}>
+                      <Box sx={{ position: 'relative', aspectRatio: '1/1', borderRadius: 1, overflow: 'hidden', border: '1px solid #eee' }}>
+                        <Box component="img" src={URL.createObjectURL(file)} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <IconButton size="small" color="error" sx={{ position: 'absolute', top: 2, right: 2, bgcolor: 'rgba(255,255,255,0.8)', '&:hover': { bgcolor: 'white' } }} onClick={() => removeSelectedFile(idx)}>
+                          <Trash2 size={14} />
+                        </IconButton>
+                      </Box>
+                    </Grid>
+                  ))}
+                </Grid>
               </Stack>
             </Grid>
           </Grid>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
-          <Button onClick={handleClose} color="inherit" sx={{ fontWeight: 600 }}>Cancelar</Button>
-          <Button variant="contained" onClick={handleSave} sx={{ fontWeight: 800, px: 4 }}>
-            {selectedProduct ? 'Actualizar' : 'Crear Producto'}
+          <Button onClick={handleClose} color="inherit" sx={{ fontWeight: 600 }} disabled={uploadingFiles}>Cancelar</Button>
+          <Button variant="contained" onClick={handleSave} sx={{ fontWeight: 800, px: 4 }} disabled={uploadingFiles}>
+            {uploadingFiles ? 'Procesando...' : (selectedProduct ? 'Actualizar' : 'Crear Producto')}
           </Button>
         </DialogActions>
       </Dialog>

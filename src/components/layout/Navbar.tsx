@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   AppBar, 
   Toolbar, 
@@ -31,13 +31,15 @@ import {
   Cpu,
   Gamepad,
   Keyboard,
-  Layers
+  Layers,
+  Box as BoxIcon
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 import { useCart } from '../../context/CartContext';
 import { alpha, styled } from '@mui/material/styles';
+import { supabase } from '../../lib/supabase';
 import CartDrawer from '../cart/CartDrawer';
 
 const SearchWrapper = styled('div')(({ theme }) => ({
@@ -89,22 +91,51 @@ function HideOnScroll(props: { children: React.ReactElement }) {
   );
 }
 
-const categories = [
-  { name: 'Todas', icon: <Layers size={20} />, path: '/shop' },
-  { name: 'Monitores', icon: <Monitor size={20} />, path: '/shop?category=Monitores' },
-  { name: 'Tarjetas Gráficas', icon: <Cpu size={20} />, path: '/shop?category=Tarjetas Gráficas' },
-  { name: 'Procesadores', icon: <Cpu size={20} />, path: '/shop?category=Procesadores' },
-  { name: 'Periféricos', icon: <Keyboard size={20} />, path: '/shop?category=Periféricos' },
-  { name: 'Consolas', icon: <Gamepad size={20} />, path: '/shop?category=Consolas' },
-  { name: 'Accesorios', icon: <Keyboard size={20} />, path: '/shop?category=Accesorios' },
-];
-
 const Navbar = () => {
   const { state } = useCart();
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  
+  // Categorías base estáticas (siempre presentes)
+  const [dbCategories, setDbCategories] = useState<{name: string, icon: any, path: string}[]>([]);
+
+  // Mapeo de iconos basado en el nombre de la categoría
+  const getCategoryIcon = (name: string) => {
+    const n = name.toLowerCase();
+    if (n.includes('monitor')) return <Monitor size={20} />;
+    if (n.includes('grafica') || n.includes('gpu') || n.includes('cpu')) return <Cpu size={20} />;
+    if (n.includes('consola') || n.includes('gamer') || n.includes('juego')) return <Gamepad size={20} />;
+    if (n.includes('periferico') || n.includes('teclado') || n.includes('mouse')) return <Keyboard size={20} />;
+    return <Layers size={20} />;
+  };
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data, error } = await supabase.from('categories').select('name').order('name');
+        if (error) throw error;
+
+        if (data) {
+          const dynamicCats = data.map(c => ({
+            name: c.name,
+            icon: getCategoryIcon(c.name),
+            path: `/shop?category=${encodeURIComponent(c.name)}`
+          }));
+
+          setDbCategories([
+            { name: 'Todas', icon: <BoxIcon size={20} />, path: '/shop' },
+            ...dynamicCats
+          ]);
+        }
+      } catch (err) {
+        console.error('Error fetching categories for navbar:', err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const cartCount = state.items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -161,43 +192,71 @@ const Navbar = () => {
               </Typography>
 
               {/* Desktop Categories */}
-              <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4 }}>
-                <Button
-                  color="inherit"
+              <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center' }}>
+                <Box
                   onClick={handleOpenMenu}
-                  endIcon={<ChevronDown size={16} />}
-                  sx={{ fontWeight: 600, '&:hover': { color: 'primary.main' } }}
+                  sx={{ 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    fontWeight: 600, 
+                    fontSize: '0.95rem',
+                    transition: 'all 0.3s',
+                    color: 'text.primary',
+                    '&:hover': { color: 'primary.main' },
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      width: '0%',
+                      height: '2px',
+                      bottom: -4,
+                      left: 0,
+                      backgroundColor: 'primary.main',
+                      transition: 'width 0.3s'
+                    },
+                    '&:hover::after': { width: '100%' }
+                  }}
                 >
-                  Categorías
-                </Button>
+                  Categorías <ChevronDown size={16} style={{ marginLeft: 4 }} />
+                </Box>
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
                   onClose={handleCloseMenu}
-                  sx={{ mt: '5px' }}
+                  elevation={3}
+                  sx={{ mt: '15px' }}
+                  PaperProps={{
+                    sx: {
+                      borderRadius: 2,
+                      minWidth: 220,
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                      border: '1px solid rgba(0,0,0,0.05)'
+                    }
+                  }}
                 >
-                  {categories.map((cat) => (
+                  {dbCategories.map((cat) => (
                     <MenuItem 
                       key={cat.name} 
                       onClick={() => {
                         router.push(cat.path);
                         handleCloseMenu();
                       }}
-                      sx={{ minWidth: 200, py: 1.5 }}
+                      sx={{ 
+                        py: 1.5, 
+                        px: 3,
+                        transition: 'all 0.2s',
+                        '&:hover': { 
+                          bgcolor: 'rgba(204,0,0,0.04)',
+                          color: 'primary.main',
+                          pl: 3.5
+                        } 
+                      }}
                     >
-                      <ListItemIcon sx={{ color: 'primary.main' }}>{cat.icon}</ListItemIcon>
-                      <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 500 }} />
+                      <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }} />
                     </MenuItem>
                   ))}
                 </Menu>
-                <Button 
-                  component={Link} 
-                  href="/shop" 
-                  color="inherit" 
-                  sx={{ fontWeight: 600, ml: 2, '&:hover': { color: 'primary.main' } }}
-                >
-                  Destacados
-                </Button>
               </Box>
 
               {/* Search Bar */}
@@ -248,7 +307,7 @@ const Navbar = () => {
             </Typography>
           </Box>
           <List>
-            {categories.map((cat) => (
+            {dbCategories.map((cat) => (
               <ListItem key={cat.name} disablePadding>
                 <ListItemButton component={Link} href={cat.path}>
                   <ListItemIcon sx={{ color: 'primary.main' }}>{cat.icon}</ListItemIcon>

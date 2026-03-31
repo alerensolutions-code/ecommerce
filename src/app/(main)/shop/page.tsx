@@ -15,10 +15,11 @@ import {
   IconButton,
   Paper,
   Button,
-  CircularProgress
+  CircularProgress,
+  Drawer
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import { LayoutGrid, List as ListIcon } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Filter } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import NextLink from 'next/link';
 
@@ -38,6 +39,8 @@ const ShopPage = () => {
 
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -108,7 +111,7 @@ const ShopPage = () => {
       <Container maxWidth="xl">
         <Grid container spacing={4}>
           {/* Sidebar */}
-          <Grid size={{ xs: 12, md: 3, lg: 2.5 }}>
+          <Grid size={{ xs: 12, md: 3, lg: 2.5 }} sx={{ display: { xs: 'none', md: 'block' } }}>
             <CategorySidebar />
           </Grid>
 
@@ -127,14 +130,36 @@ const ShopPage = () => {
                 border: '1px solid rgba(0,0,0,0.05)'
               }}
             >
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
                 Mostrando <strong>{filteredProducts.length}</strong> productos
               </Typography>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
+                <Button 
+                  startIcon={<Filter size={16} />} 
+                  sx={{ display: { xs: 'flex', md: 'none' } }}
+                  onClick={() => setMobileFiltersOpen(true)}
+                  variant="outlined"
+                  size="small"
+                >
+                  Filtros
+                </Button>
+
                 <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, mr: 2 }}>
-                  <IconButton size="small" color="primary"><LayoutGrid size={20} /></IconButton>
-                  <IconButton size="small"><ListIcon size={20} /></IconButton>
+                  <IconButton 
+                    size="small" 
+                    color={viewMode === 'grid' ? 'primary' : 'default'}
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <LayoutGrid size={20} />
+                  </IconButton>
+                  <IconButton 
+                    size="small" 
+                    color={viewMode === 'list' ? 'primary' : 'default'}
+                    onClick={() => setViewMode('list')}
+                  >
+                    <ListIcon size={20} />
+                  </IconButton>
                 </Box>
                 
                 <FormControl size="small" sx={{ minWidth: 200 }}>
@@ -162,8 +187,8 @@ const ShopPage = () => {
             ) : filteredProducts.length > 0 ? (
               <Grid container spacing={3}>
                 {filteredProducts.map((product) => (
-                  <Grid key={product.id} size={{ xs: 12, sm: 6, lg: 4 }}>
-                    <ProductCard product={product} />
+                  <Grid key={product.id} size={viewMode === 'grid' ? { xs: 12, sm: 6, lg: 4 } : { xs: 12 }}>
+                    <ProductCard product={product} layout={viewMode} />
                   </Grid>
                 ))}
               </Grid>
@@ -181,6 +206,20 @@ const ShopPage = () => {
           </Grid>
         </Grid>
       </Container>
+
+      {/* Mobile Filters Drawer */}
+      <Drawer
+        anchor="left"
+        open={mobileFiltersOpen}
+        onClose={() => setMobileFiltersOpen(false)}
+        PaperProps={{ sx: { width: 280, p: 2, bgcolor: '#f4f4f4' } }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Typography variant="h6" fontWeight={800}>Filtros</Typography>
+          <Button size="small" onClick={() => setMobileFiltersOpen(false)} color="inherit">Cerrar</Button>
+        </Box>
+        <CategorySidebar />
+      </Drawer>
     </Box>
   );
 };

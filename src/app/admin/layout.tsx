@@ -5,7 +5,7 @@ import {
   ListItemText, Typography, Divider, AppBar, Toolbar, Avatar
 } from '@mui/material';
 import { 
-  LayoutDashboard, Package, ShoppingBag, Users, LogOut
+  LayoutDashboard, Package, ShoppingBag, Users, LogOut, TrendingUp
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';

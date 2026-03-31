@@ -20,9 +20,10 @@ import { motion } from 'framer-motion';
 
 interface ProductCardProps {
   product: any;
+  layout?: 'grid' | 'list';
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { dispatch } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -48,7 +49,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         sx={{ 
           height: '100%', 
           display: 'flex', 
-          flexDirection: 'column',
+          flexDirection: layout === 'list' ? { xs: 'column', sm: 'row' } : 'column',
           textDecoration: 'none',
           position: 'relative',
           overflow: 'hidden',
@@ -60,7 +61,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           }
         }}
       >
-        <Box sx={{ position: 'relative', pt: '100%', overflow: 'hidden' }}>
+        <Box sx={{ 
+          position: 'relative', 
+          width: layout === 'list' ? { xs: '100%', sm: '30%' } : '100%',
+          minWidth: layout === 'list' ? { sm: '200px' } : 'auto',
+          pt: layout === 'list' ? { xs: '100%', sm: '0' } : '100%',
+          overflow: 'hidden' 
+        }}>
           <CardMedia
             component="img"
             image={imageToShow}
@@ -80,11 +87,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           />
         </Box>
 
-        <CardContent sx={{ flexGrow: 1, p: 2.5 }}>
+        <CardContent sx={{ 
+          flexGrow: 1, 
+          p: 2.5,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
+        }}>
           <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: 1 }}>
             {product.category?.name || 'Sin Categoría'}
           </Typography>
-          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 800, mb: 1, lineHeight: 1.2, height: '2.4em', overflow: 'hidden', color: '#333' }}>
+          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 800, mb: 1, lineHeight: 1.2, height: layout === 'list' ? 'auto' : '2.4em', overflow: 'hidden', color: '#333' }}>
             {product.name}
           </Typography>
           
@@ -95,14 +108,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           </Box>
 
           <Button
-            fullWidth
+            fullWidth={layout !== 'list'}
             variant="contained"
             color="primary"
             startIcon={<ShoppingCart size={18} />}
             onClick={handleAddToCart}
             sx={{ 
-              mt: 'auto', 
+              mt: layout === 'list' ? 1 : 'auto',
+              width: layout === 'list' ? 'fit-content' : '100%',
               py: 1, 
+              px: layout === 'list' ? 4 : undefined,
               fontWeight: 800, 
               borderRadius: 2,
               boxShadow: 'none',

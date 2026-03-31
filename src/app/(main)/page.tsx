@@ -16,54 +16,164 @@ import Link from 'next/link';
 const Hero = () => (
   <Box sx={{ 
     width: '100%', 
-    height: { xs: '70vh', md: '80vh' }, 
+    height: { xs: 'auto', md: '70vh' }, // Altura más compacta para notebooks
+    minHeight: { xs: '500px', md: '550px' },
     position: 'relative', 
     overflow: 'hidden',
-    bgcolor: 'secondary.main',
+    bgcolor: '#0a0a0a',
     display: 'flex',
-    alignItems: 'center'
+    alignItems: 'center',
+    py: { xs: 6, md: 0 }
   }}>
+    {/* ... (Mesh Gradient) */}
     <Box sx={{ 
       position: 'absolute', 
       top: 0, 
       left: 0, 
       width: '100%', 
-      height: '100%', 
-      backgroundImage: 'url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2000&auto=format&fit=crop")',
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      opacity: 0.4,
-      zIndex: 0
+      height: '100%',
+      background: `
+        radial-gradient(at 0% 0%, rgba(204, 0, 0, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(33, 150, 243, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(204, 0, 0, 0.15) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(33, 150, 243, 0.1) 0px, transparent 50%)
+      `,
+      zIndex: 0,
+      '&::before': {
+        content: '""',
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        backgroundImage: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")',
+        opacity: 0.1,
+      }
     }} />
+
+    {/* ... (Animated Glows) */}
+    <Box 
+      component={motion.div}
+      animate={{ 
+        scale: [1, 1.2, 1],
+        opacity: [0.3, 0.5, 0.3],
+      }}
+      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+      sx={{ 
+        position: 'absolute', 
+        top: '20%', 
+        left: '10%', 
+        width: '40%', 
+        height: '40%', 
+        borderRadius: '50%', 
+        background: 'radial-gradient(circle, rgba(204,0,0,0.2) 0%, transparent 70%)',
+        filter: 'blur(60px)',
+        zIndex: 0 
+      }} 
+    />
     
     <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
-      <Grid container spacing={4}>
+      <Grid container spacing={4} alignItems="center">
         <Grid size={{ xs: 12, md: 7 }}>
           <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800, fontSize: '1.2rem', letterSpacing: 4 }}>
-              PRÓXIMA GENERACIÓN
-            </Typography>
-            <Typography variant="h1" color="white" sx={{ mt: 2, mb: 4 }}>
-              DOMINA EL JUEGO CON <span style={{ color: '#cc0000' }}>DEVIL GAMING</span>
-            </Typography>
-            <Typography variant="h5" color="rgba(255,255,255,0.8)" sx={{ mb: 6, fontWeight: 400, maxWidth: 600 }}>
-              Hardware de alto rendimiento diseñado por y para gamers. No aceptes menos que la perfección técnica.
-            </Typography>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <Button 
-                component={Link} 
-                href="/shop" 
-                variant="contained" 
-                size="large" 
-                sx={{ py: 2, px: 6, fontSize: '1.1rem' }}
-              >
-                Explorar Tienda
-              </Button>
-            </Stack>
+            {/* Glassmorphism Content Box - Compact Edition */}
+            <Box sx={{ 
+              p: { xs: 3, md: 4.5 }, 
+              borderRadius: 6, 
+              background: 'rgba(255, 255, 255, 0.03)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255, 255, 255, 0.05)',
+              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
+            }}>
+              <Typography variant="overline" color="primary.main" sx={{ fontWeight: 900, fontSize: '0.9rem', letterSpacing: 5, display: 'block', mb: 1 }}>
+                ESTÁNDAR DE ÉLITE
+              </Typography>
+              <Typography variant="h1" color="white" sx={{ 
+                mb: 1.5, 
+                fontSize: { xs: '2.2rem', md: '3.4rem' },
+                lineHeight: 1.1,
+                textShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              }}>
+                DOMINA TU MUNDO <br />
+                CON <span style={{ color: '#cc0000', position: 'relative' }}>
+                  DEVIL GAMING
+                </span>
+              </Typography>
+              <Typography variant="h5" color="rgba(255,255,255,0.7)" sx={{ mb: 3.5, fontSize: { xs: '0.95rem', md: '1.15rem' }, fontWeight: 400, maxWidth: 500, lineHeight: 1.6 }}>
+                Ingeniería de precisión y rendimiento extremo. No solo vendemos hardware, forjamos victorias.
+              </Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
+                <Button 
+                  component={Link} 
+                  href="/shop" 
+                  variant="contained" 
+                  size="large" 
+                  endIcon={<ArrowRight />}
+                  sx={{ 
+                    py: 1.5, 
+                    px: 4, 
+                    fontSize: '0.95rem', 
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    boxShadow: '0 10px 20px rgba(204, 0, 0, 0.3)',
+                    '&:hover': {
+                      transform: 'translateY(-3px)',
+                      boxShadow: '0 15px 30px rgba(204, 0, 0, 0.4)',
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  Explorar Arsenal
+                </Button>
+                <Button 
+                  component={Link} 
+                  href="/shop?featured=true" 
+                  variant="outlined" 
+                  size="large" 
+                  sx={{ 
+                    py: 1.5, 
+                    px: 4, 
+                    fontSize: '0.95rem', 
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    color: 'white',
+                    '&:hover': {
+                      borderColor: 'white',
+                      background: 'rgba(255,255,255,0.05)'
+                    }
+                  }}
+                >
+                  Ofertas Top
+                </Button>
+              </Stack>
+            </Box>
+          </motion.div>
+        </Grid>
+        
+        {/* Floating Element for Decoration */}
+        <Grid size={{ xs: 0, md: 5 }} sx={{ display: { xs: 'none', md: 'block' } }}>
+          <motion.div
+            animate={{ 
+              y: [0, -15, 0],
+            }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            style={{ textAlign: 'center' }}
+          >
+            <Box sx={{ 
+              width: 200, 
+              height: 200, 
+              margin: '0 auto',
+              background: 'radial-gradient(circle, rgba(204,0,0,0.1) 0%, transparent 70%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}>
+               <Zap size={120} color="#cc0000" style={{ opacity: 0.4, filter: 'drop-shadow(0 0 20px rgba(204,0,0,0.5))' }} />
+            </Box>
           </motion.div>
         </Grid>
       </Grid>

@@ -60,7 +60,7 @@ const CheckoutPage = () => {
         customer_name: `${formData.firstName} ${formData.lastName}`,
         phone: formData.phone,
         total: total,
-        status: 'Procesando',
+        status: 'Pendiente',
         items: state.items.map(item => ({
           id: item.id,
           name: item.name,

@@ -1,76 +1,59 @@
 "use client";
 
-import { Box, Container, Grid, Typography, Link, IconButton, Divider } from '@mui/material';
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin } from 'lucide-react';
-import NextLink from 'next/link';
-
+import { Box, Container, Typography, Link, IconButton, Stack, Divider } from '@mui/material';
+import { Instagram, Twitter, Mail, MapPin, Phone } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <Box sx={{ bgcolor: 'secondary.main', color: 'white', pt: 8, pb: 4, mt: 'auto' }}>
+    <Box sx={{ bgcolor: 'secondary.main', color: 'white', py: 3, mt: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
       <Container maxWidth="xl">
-        <Grid container spacing={4}>
-          {/* Brand & Description */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main', mb: 2 }}>
+        <Stack 
+          direction={{ xs: 'column', md: 'row' }} 
+          spacing={3} 
+          justifyContent="space-between" 
+          alignItems="center"
+        >
+          {/* Brand & Copyright */}
+          <Stack direction="row" spacing={2} alignItems="center">
+            <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main' }}>
               DEVIL<span>GAMING</span>
             </Typography>
-            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 3, maxWidth: 300 }}>
-              Tu destino definitivo para hardware de alto rendimiento y periféricos premium. Elevamos tu experiencia gaming al siguiente nivel.
+            <Typography variant="caption" sx={{ opacity: 0.3, display: { xs: 'none', sm: 'block' } }}>
+              | © {new Date().getFullYear()}
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <IconButton color="inherit" size="small" sx={{ '&:hover': { color: 'primary.main' } }}>
-                <Facebook size={20} />
-              </IconButton>
-              <IconButton color="inherit" size="small" sx={{ '&:hover': { color: 'primary.main' } }}>
-                <Instagram size={20} />
-              </IconButton>
-              <IconButton color="inherit" size="small" sx={{ '&:hover': { color: 'primary.main' } }}>
-                <Twitter size={20} />
-              </IconButton>
-              <IconButton color="inherit" size="small" sx={{ '&:hover': { color: 'primary.main' } }}>
-                <Youtube size={20} />
-              </IconButton>
-            </Box>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Link href="#" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Ayuda / FAQ</Link>
-              <Link href="#" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Envíos</Link>
-              <Link href="#" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Garantía</Link>
-              <Link href="#" color="inherit" variant="body2" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>Términos</Link>
-            </Box>
-          </Grid>
+          </Stack>
 
-          {/* Contact Info */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 2 }}>Contacto</Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <MapPin size={18} className="text-primary" />
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>Av. Tech 404, Ciudad Gamer</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Phone size={18} />
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>+34 900 123 456</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          {/* Quick Links */}
+          <Stack direction="row" spacing={3} sx={{ flexWrap: 'wrap', justifyContent: 'center' }}>
+            <Link href="#" color="inherit" variant="caption" sx={{ opacity: 0.7, textDecoration: 'none', '&:hover': { opacity: 1, color: 'primary.main' } }}>Garantía</Link>
+            <Link href="#" color="inherit" variant="caption" sx={{ opacity: 0.7, textDecoration: 'none', '&:hover': { opacity: 1, color: 'primary.main' } }}>Envíos</Link>
+            <Link href="#" color="inherit" variant="caption" sx={{ opacity: 0.7, textDecoration: 'none', '&:hover': { opacity: 1, color: 'primary.main' } }}>Términos</Link>
+          </Stack>
+
+          {/* Contact Info (Compact) */}
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="center">
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.6 }}>
+              <MapPin size={14} />
+              <Typography variant="caption">Ciudad Gamer, ES</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, opacity: 0.6 }}>
+              <Phone size={14} />
+              <Typography variant="caption">900 112 233</Typography>
+            </Box>
+            <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.1)', display: { xs: 'none', sm: 'block' } }} />
+            <Box sx={{ display: 'flex', gap: 0.5 }}>
+              <IconButton color="inherit" size="small" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>
+                <Instagram size={18} />
+              </IconButton>
+              <IconButton color="inherit" size="small" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>
+                <Twitter size={18} />
+              </IconButton>
+              <IconButton color="inherit" size="small" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>
                 <Mail size={18} />
-                <Typography variant="body2" sx={{ opacity: 0.7 }}>contacto@devilgaming.com</Typography>
-              </Box>
+              </IconButton>
             </Box>
-          </Grid>
-        </Grid>
-
-        <Divider sx={{ my: 4, bgcolor: 'rgba(255,255,255,0.1)' }} />
-
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-          <Typography variant="caption" sx={{ opacity: 0.5 }}>
-            © {new Date().getFullYear()} Devil Gaming. Todos los derechos reservados.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <Link href="#" color="inherit" variant="caption" sx={{ opacity: 0.5, '&:hover': { opacity: 1 } }}>Privacidad</Link>
-            <Link href="#" color="inherit" variant="caption" sx={{ opacity: 0.5, '&:hover': { opacity: 1 } }}>Cookies</Link>
-          </Box>
-        </Box>
+          </Stack>
+        </Stack>
       </Container>
     </Box>
   );

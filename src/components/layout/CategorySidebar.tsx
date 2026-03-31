@@ -7,33 +7,18 @@ import {
   List, 
   ListItem, 
   ListItemButton, 
-  ListItemIcon, 
   ListItemText,
   Paper,
   Divider,
   Slider
 } from '@mui/material';
 import { 
-  Monitor, 
-  Cpu, 
-  Gamepad, 
-  Keyboard, 
-  Mouse, 
-  Layers,
   ChevronRight,
+  Layers,
   Package
 } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
-
-const iconMap: { [key: string]: React.ReactNode } = {
-  'Monitores': <Monitor size={20} />,
-  'Tarjetas Gráficas': <Cpu size={20} />,
-  'Procesadores': <Cpu size={20} />,
-  'Periféricos': <Keyboard size={20} />,
-  'Consolas': <Gamepad size={20} />,
-  'Accesorios': <Mouse size={20} />,
-};
 
 const CategorySidebar = () => {
   const router = useRouter();
@@ -62,10 +47,9 @@ const CategorySidebar = () => {
       
       if (!error && data) {
         const formatted = [
-          { name: 'Todas', icon: <Layers size={20} />, value: '' },
+          { name: 'Todas', value: '' },
           ...data.map((c: any) => ({
             name: c.name,
-            icon: iconMap[c.name] || <Package size={20} />,
             value: c.name
           }))
         ];
@@ -112,14 +96,10 @@ const CategorySidebar = () => {
                 '&.Mui-selected': {
                   bgcolor: 'rgba(204, 0, 0, 0.08)',
                   color: 'primary.main',
-                  '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' },
-                  '& .MuiListItemIcon-root': { color: 'primary.main' }
+                  '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' }
                 }
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
-                {cat.icon}
-              </ListItemIcon>
               <ListItemText 
                 primary={cat.name} 
                 primaryTypographyProps={{ fontWeight: 500, fontSize: '0.9rem' }} 

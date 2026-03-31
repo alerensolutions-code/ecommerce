@@ -40,5 +40,5 @@ export interface Order {
   date?: string;
   items: CartItem[];
   total: number;
-  status: 'Procesando' | 'Enviado' | 'Entregado' | 'Cancelado';
+  status: 'Pendiente' | 'Enviado' | 'Entregado' | 'Cancelado';
 }
