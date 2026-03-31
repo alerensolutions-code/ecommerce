@@ -91,3 +91,12 @@ export const products: Product[] = [
     ]
   }
 ];
+
+export const categories: string[] = [
+  'Monitores',
+  'Tarjetas Gráficas',
+  'Procesadores',
+  'Periféricos',
+  'Consolas',
+  'Accesorios'
+];

@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { 
   Card, 
@@ -11,16 +13,17 @@ import {
   Tooltip
 } from '@mui/material';
 import { ShoppingCart, Eye, Heart } from 'lucide-react';
-import type { Product } from '../../types';
-import { Link } from 'react-router-dom';
+import Link from 'next/link';
+
 import { useCart } from '../../context/CartContext';
 import { motion } from 'framer-motion';
 
 interface ProductCardProps {
-  product: Product;
+  product: any;
+  layout?: 'grid' | 'list';
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { dispatch } = useCart();
 
   const handleAddToCart = (e: React.MouseEvent) => {
@@ -29,9 +32,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     dispatch({ type: 'ADD_TO_CART', payload: product });
   };
 
-  const discountPercent = product.discountPrice 
-    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
-    : null;
+  // Support both Supabase total price and mock data discount prices
+  const displayPrice = product.price;
+  const imageToShow = product.image || (product.images && product.images[0]) || '/placeholder.png';
 
   return (
     <motion.div
@@ -42,35 +45,32 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     >
       <Card 
         component={Link} 
-        to={`/product/${product.id}`}
+        href={`/product/${product.id}`}
         sx={{ 
           height: '100%', 
           display: 'flex', 
-          flexDirection: 'column',
+          flexDirection: layout === 'list' ? { xs: 'column', sm: 'row' } : 'column',
           textDecoration: 'none',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          borderRadius: 3,
+          border: '1px solid rgba(0,0,0,0.05)',
+          '&:hover': {
+            borderColor: 'primary.main',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.08)'
+          }
         }}
       >
-        {discountPercent && (
-          <Chip
-            label={`-${discountPercent}%`}
-            color="primary"
-            size="small"
-            sx={{ 
-              position: 'absolute', 
-              top: 10, 
-              left: 10, 
-              zIndex: 1, 
-              fontWeight: 700 
-            }}
-          />
-        )}
-        
-        <Box sx={{ position: 'relative', pt: '100%', overflow: 'hidden' }}>
+        <Box sx={{ 
+          position: 'relative', 
+          width: layout === 'list' ? { xs: '100%', sm: '30%' } : '100%',
+          minWidth: layout === 'list' ? { sm: '200px' } : 'auto',
+          pt: layout === 'list' ? { xs: '100%', sm: '0' } : '100%',
+          overflow: 'hidden' 
+        }}>
           <CardMedia
             component="img"
-            image={product.images[0]}
+            image={imageToShow}
             alt={product.name}
             sx={{
               position: 'absolute',
@@ -85,62 +85,46 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               }
             }}
           />
-          <Box className="card-actions" sx={{
-            position: 'absolute',
-            bottom: -50,
-            left: 0,
-            right: 0,
-            height: 50,
-            bgcolor: 'rgba(255,255,255,0.9)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            transition: 'bottom 0.3s ease',
-            gap: 2
-          }}>
-            <Tooltip title="Vista Rápida">
-              <IconButton size="small"><Eye size={18} /></IconButton>
-            </Tooltip>
-            <Tooltip title="Favoritos">
-              <IconButton size="small"><Heart size={18} /></IconButton>
-            </Tooltip>
-          </Box>
         </Box>
 
-        <CardContent sx={{ flexGrow: 1, p: 2 }}>
-          <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
-            {product.category}
+        <CardContent sx={{ 
+          flexGrow: 1, 
+          p: 2.5,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center'
+        }}>
+          <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: 1 }}>
+            {product.category?.name || 'Sin Categoría'}
           </Typography>
-          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 700, mb: 1, lineHeight: 1.2, height: '2.4em', overflow: 'hidden' }}>
+          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 800, mb: 1, lineHeight: 1.2, height: layout === 'list' ? 'auto' : '2.4em', overflow: 'hidden', color: '#333' }}>
             {product.name}
           </Typography>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            {product.discountPrice ? (
-              <>
-                <Typography variant="h6" color="primary.main" sx={{ fontWeight: 800 }}>
-                  ${product.discountPrice}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through', opacity: 0.6 }}>
-                  ${product.price}
-                </Typography>
-              </>
-            ) : (
-              <Typography variant="h6" color="secondary.main" sx={{ fontWeight: 800 }}>
-                ${product.price}
-              </Typography>
-            )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2.5 }}>
+            <Typography variant="h6" color="primary.main" sx={{ fontWeight: 900 }}>
+              ${displayPrice.toLocaleString('es-ES')}
+            </Typography>
           </Box>
 
           <Button
-            fullWidth
+            fullWidth={layout !== 'list'}
             variant="contained"
             color="primary"
             startIcon={<ShoppingCart size={18} />}
             onClick={handleAddToCart}
-            sx={{ mt: 'auto' }}
+            sx={{ 
+              mt: layout === 'list' ? 1 : 'auto',
+              width: layout === 'list' ? 'fit-content' : '100%',
+              py: 1, 
+              px: layout === 'list' ? 4 : undefined,
+              fontWeight: 800, 
+              borderRadius: 2,
+              boxShadow: 'none',
+              '&:hover': { boxShadow: '0 4px 12px rgba(204, 0, 0, 0.2)' }
+            }}
           >
-            Añadir
+            Añadir al Carrito
           </Button>
         </CardContent>
       </Card>

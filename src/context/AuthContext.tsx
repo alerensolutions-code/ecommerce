@@ -1,76 +1,131 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from '../types';
+import { supabase } from '../lib/supabase';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => boolean;
-  register: (name: string, email: string, password: string) => boolean;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('devil_gaming_auth');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
+    let mounted = true;
+
+    // Timeout de seguridad: Si en 5s no hay respuesta de auth, liberamos el loading
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && loading) setLoading(false);
+    }, 5000);
+
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          if (session) {
+            await verifyAdminProfile(session.user);
+          } else {
+            setLoading(false);
+          }
+        }
+      } catch (err) {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!mounted) return;
+      if (session) {
+        await verifyAdminProfile(session.user);
+      } else {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimeout);
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const login = (email: string, password: string): boolean => {
-    // Mock validation for demo
-    if (email === 'admin@devilgaming.com' && password === 'admin123') {
-      const adminUser: User = {
-        id: '0',
-        username: 'devil_admin',
-        name: 'Admin Principal',
-        email: 'admin@devilgaming.com',
+  const verifyAdminProfile = async (supabaseUser: any) => {
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', supabaseUser.id)
+        .single();
+
+      if (error || !profile || !profile.is_admin) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setLoading(false);
+        return false;
+      }
+
+      const appUser: User = {
+        id: supabaseUser.id,
+        username: supabaseUser.email?.split('@')[0] || 'admin',
+        name: supabaseUser.user_metadata?.full_name || 'Admin',
+        email: supabaseUser.email || '',
         role: 'admin'
       };
-      setUser(adminUser);
-      localStorage.setItem('devil_gaming_auth', JSON.stringify(adminUser));
+      
+      setUser(appUser);
+      setLoading(false);
       return true;
+    } catch (err) {
+      setLoading(false);
+      return false;
     }
-    
-    if (email === 'user@example.com' && password === 'password') {
-      const mockUser: User = {
-        id: '1',
-        username: 'devil_fan',
-        name: 'Gamer Pro',
-        email: 'user@example.com',
-        role: 'customer'
-      };
-      setUser(mockUser);
-      localStorage.setItem('devil_gaming_auth', JSON.stringify(mockUser));
-      return true;
-    }
-    return false;
   };
 
-  const register = (name: string, email: string, _password: string): boolean => {
-    const newUser: User = {
-      id: Math.random().toString(36).substr(2, 9),
-      username: name.toLowerCase().replace(/\s+/g, '_'),
-      name: name,
-      email: email,
-      role: 'customer'
-    };
-    setUser(newUser);
-    localStorage.setItem('devil_gaming_auth', JSON.stringify(newUser));
-    return true;
+  const login = async (email: string, password: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email: email.trim(), 
+        password: password 
+      });
+
+      if (error || !data?.user) {
+        setLoading(false);
+        return false;
+      }
+
+      return await verifyAdminProfile(data.user);
+    } catch (err) {
+      setLoading(false);
+      return false;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('devil_gaming_auth');
+  const logout = async () => {
+    try {
+      setLoading(true);
+      await supabase.auth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   );

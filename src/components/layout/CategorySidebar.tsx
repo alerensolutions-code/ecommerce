@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from 'react';
 import { 
   Box, 
@@ -5,55 +7,67 @@ import {
   List, 
   ListItem, 
   ListItemButton, 
-  ListItemIcon, 
   ListItemText,
   Paper,
   Divider,
   Slider
 } from '@mui/material';
 import { 
-  Monitor, 
-  Cpu, 
-  Gamepad, 
-  Keyboard, 
-  Mouse, 
+  ChevronRight,
   Layers,
-  ChevronRight
+  Package
 } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
-
-const categories = [
-  { name: 'Todas', icon: <Layers size={20} />, value: '' },
-  { name: 'Monitores', icon: <Monitor size={20} />, value: 'Monitores' },
-  { name: 'Tarjetas Gráficas', icon: <Cpu size={20} />, value: 'Tarjetas Gráficas' },
-  { name: 'Procesadores', icon: <Cpu size={20} />, value: 'Procesadores' },
-  { name: 'Periféricos', icon: <Keyboard size={20} />, value: 'Periféricos' },
-  { name: 'Consolas', icon: <Gamepad size={20} />, value: 'Consolas' },
-  { name: 'Accesorios', icon: <Mouse size={20} />, value: 'Accesorios' },
-];
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { supabase } from '../../lib/supabase';
 
 const CategorySidebar = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const currentCategory = searchParams.get('category') || '';
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  
+  const currentCategory = searchParams?.get('category') || '';
   
   // Get price range from URL or default
-  const minPrice = Number(searchParams.get('minPrice')) || 0;
-  const maxPrice = Number(searchParams.get('maxPrice')) || 3000;
+  const minPrice = Number(searchParams?.get('minPrice')) || 0;
+  const maxPrice = Number(searchParams?.get('maxPrice')) || 3000;
   
   const [priceRange, setPriceRange] = React.useState<number[]>([minPrice, maxPrice]);
+  const [dynamicCategories, setDynamicCategories] = React.useState<any[]>([]);
 
   useEffect(() => {
     setPriceRange([minPrice, maxPrice]);
   }, [minPrice, maxPrice]);
 
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      
+      if (!error && data) {
+        const formatted = [
+          { name: 'Todas', value: '' },
+          ...data.map((c: any) => ({
+            name: c.name,
+            value: c.name
+          }))
+        ];
+        setDynamicCategories(formatted);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
   const handleCategoryClick = (value: string) => {
-    const newParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
     if (value === '') {
       newParams.delete('category');
     } else {
       newParams.set('category', value);
     }
-    setSearchParams(newParams);
+    router.push(`${pathname}?${newParams.toString()}`);
   };
 
   const handlePriceChange = (_event: Event, newValue: number | number[]) => {
@@ -61,18 +75,18 @@ const CategorySidebar = () => {
   };
 
   const handlePriceChangeCommitted = (_event: React.SyntheticEvent | Event, newValue: number | number[]) => {
-    const newParams = new URLSearchParams(searchParams);
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
     const [min, max] = newValue as number[];
     newParams.set('minPrice', min.toString());
     newParams.set('maxPrice', max.toString());
-    setSearchParams(newParams);
+    router.push(`${pathname}?${newParams.toString()}`);
   };
 
   return (
     <Paper elevation={0} sx={{ p: 2, borderRadius: 2, border: '1px solid rgba(0,0,0,0.05)' }}>
       <Typography variant="h6" sx={{ fontWeight: 700, mb: 2, px: 1 }}>Categorías</Typography>
       <List disablePadding>
-        {categories.map((cat) => (
+        {dynamicCategories.map((cat) => (
           <ListItem key={cat.name} disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton
               selected={currentCategory === cat.value}
@@ -82,14 +96,10 @@ const CategorySidebar = () => {
                 '&.Mui-selected': {
                   bgcolor: 'rgba(204, 0, 0, 0.08)',
                   color: 'primary.main',
-                  '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' },
-                  '& .MuiListItemIcon-root': { color: 'primary.main' }
+                  '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' }
                 }
               }}
             >
-              <ListItemIcon sx={{ minWidth: 40, color: 'text.secondary' }}>
-                {cat.icon}
-              </ListItemIcon>
               <ListItemText 
                 primary={cat.name} 
                 primaryTypographyProps={{ fontWeight: 500, fontSize: '0.9rem' }} 
