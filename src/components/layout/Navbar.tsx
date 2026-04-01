@@ -20,7 +20,8 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  ListItemIcon
+  ListItemIcon,
+  CircularProgress
 } from '@mui/material';
 import { 
   Search, 
@@ -101,6 +102,36 @@ const Navbar = () => {
   
   // Categorías base estáticas (siempre presentes)
   const [dbCategories, setDbCategories] = useState<{name: string, icon: any, path: string}[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+
+  const fetchCategories = async () => {
+    if (categoriesLoaded || loadingCategories) return;
+    
+    setLoadingCategories(true);
+    try {
+      const { data, error } = await supabase.from('categories').select('name').order('name');
+      if (error) throw error;
+
+      if (data) {
+        const dynamicCats = data.map(c => ({
+          name: c.name,
+          icon: getCategoryIcon(c.name),
+          path: `/shop?category=${encodeURIComponent(c.name)}`
+        }));
+
+        setDbCategories([
+          { name: 'Todas', icon: <BoxIcon size={20} />, path: '/shop' },
+          ...dynamicCats
+        ]);
+        setCategoriesLoaded(true);
+      }
+    } catch (err) {
+      console.error('Error fetching categories for navbar:', err);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   // Mapeo de iconos basado en el nombre de la categoría
   const getCategoryIcon = (name: string) => {
@@ -112,36 +143,14 @@ const Navbar = () => {
     return <Layers size={20} />;
   };
 
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const { data, error } = await supabase.from('categories').select('name').order('name');
-        if (error) throw error;
-
-        if (data) {
-          const dynamicCats = data.map(c => ({
-            name: c.name,
-            icon: getCategoryIcon(c.name),
-            path: `/shop?category=${encodeURIComponent(c.name)}`
-          }));
-
-          setDbCategories([
-            { name: 'Todas', icon: <BoxIcon size={20} />, path: '/shop' },
-            ...dynamicCats
-          ]);
-        }
-      } catch (err) {
-        console.error('Error fetching categories for navbar:', err);
-      }
-    };
-
-    fetchCategories();
-  }, []);
+  // Ya no usamos useEffect para fetchCategories al montar
+  // Se ejecutará on-demand en handleOpenMenu o toggleDrawer(true)
 
   const cartCount = state.items.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
+    fetchCategories();
   };
 
   const handleCloseMenu = () => {
@@ -153,6 +162,7 @@ const Navbar = () => {
       return;
     }
     setMobileOpen(open);
+    if (open) fetchCategories();
   };
 
   return (
@@ -236,7 +246,11 @@ const Navbar = () => {
                     }
                   }}
                 >
-                  {dbCategories.map((cat) => (
+                  {loadingCategories ? (
+                    <MenuItem disabled sx={{ justifyContent: 'center', py: 2 }}>
+                      <CircularProgress size={20} />
+                    </MenuItem>
+                  ) : dbCategories.map((cat) => (
                     <MenuItem 
                       key={cat.name} 
                       onClick={() => {
@@ -315,11 +329,12 @@ const Navbar = () => {
             </Typography>
           </Box>
           <List>
-            {dbCategories.map((cat) => (
+            {loadingCategories ? (
+              <Box sx={{ p: 3, textAlign: 'center' }}><CircularProgress size={24} /></Box>
+            ) : dbCategories.map((cat) => (
               <ListItem key={cat.name} disablePadding>
                 <ListItemButton component={Link} href={cat.path}>
-                  <ListItemIcon sx={{ color: 'primary.main' }}>{cat.icon}</ListItemIcon>
-                  <ListItemText primary={cat.name} />
+                  <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 600 }} />
                 </ListItemButton>
               </ListItem>
             ))}

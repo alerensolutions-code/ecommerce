@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
+import { Box, CircularProgress } from '@mui/material';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
     if (loading) return;
 
     // Basic client-side redirect
-    // A more robust app would do this in Next.js middleware.ts using cookies
+    // A more robust app would do this in Next.js proxy.ts using cookies
     if (!isAuthenticated) {
       router.push('/login');
     } else if (adminOnly && user?.role !== 'admin') {
@@ -25,8 +26,16 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
     }
   }, [isAuthenticated, adminOnly, user, router, loading]);
 
-  if (loading || !isAuthenticated || (adminOnly && user?.role !== 'admin')) {
-    return null; // or a loading spinner
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', height: '100vh', width: '100%', justifyContent: 'center', alignItems: 'center' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated || (adminOnly && user?.role !== 'admin')) {
+    return null; 
   }
 
   return <>{children}</>;

@@ -80,6 +80,7 @@ const ProductDetailPage = () => {
   }, [id]);
 
   const handleAddToCart = () => {
+    if (isAdded) return;
     dispatch({ type: 'ADD_TO_CART', payload: product });
     setIsAdded(true);
     setTimeout(() => {
