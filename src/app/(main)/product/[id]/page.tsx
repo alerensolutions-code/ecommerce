@@ -25,7 +25,8 @@ import {
   Truck, 
   RotateCcw,
   Heart,
-  Share2
+  Share2,
+  CheckCheck
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import NextLink from 'next/link';
@@ -44,6 +45,7 @@ const ProductDetailPage = () => {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>('');
+  const [isAdded, setIsAdded] = useState(false);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -78,7 +80,10 @@ const ProductDetailPage = () => {
   }, [id]);
 
   const handleAddToCart = () => {
+    if (isAdded) return;
     dispatch({ type: 'ADD_TO_CART', payload: product });
+    setIsAdded(true);
+    setTimeout(() => setIsAdded(false), 2000);
   };
 
   if (loading) {
@@ -218,12 +223,20 @@ const ProductDetailPage = () => {
                 <Button
                   variant="contained"
                   size="large"
-                  startIcon={<ShoppingCart size={24} />}
+                  color={isAdded ? "success" : "primary"}
+                  startIcon={isAdded ? <CheckCheck size={24} /> : <ShoppingCart size={24} />}
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
-                  sx={{ py: 2, flex: 1, fontSize: '1.1rem', fontWeight: 800, borderRadius: 2 }}
+                  sx={{ 
+                    py: 2, 
+                    flex: 1, 
+                    fontSize: '1.1rem', 
+                    fontWeight: 800, 
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease'
+                  }}
                 >
-                  Añadir al Carrito
+                  {isAdded ? "¡Agregado!" : "Añadir al Carrito"}
                 </Button>
                 <IconButton sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 2 }}>
                   <Heart size={24} />

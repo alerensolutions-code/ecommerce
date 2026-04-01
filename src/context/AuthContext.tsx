@@ -28,25 +28,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
+
         if (mounted) {
           if (session) {
             await verifyAdminProfile(session.user);
           } else {
+            setUser(null);
             setLoading(false);
           }
         }
       } catch (err) {
-        if (mounted) setLoading(false);
+        console.error('Auth initialization error:', err);
+        if (mounted) {
+          setUser(null);
+          setLoading(false);
+        }
       }
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!mounted) return;
+      
+      console.log(`[Auth Event]: ${event}`, { userId: session?.user?.id });
+      
       if (session) {
-        await verifyAdminProfile(session.user);
+        // TOKEN_REFRESHED: El usuario sigue siendo el mismo. No hace falta re-verificar perfil.
+        // Si no hay usuario en el estado, lo cargamos.
+        if (event === 'SIGNED_IN' || !user) {
+          verifyAdminProfile(session.user); // NO usar await aquí para evitar deadlocks de Supabase
+        } else {
+          // Para TOKEN_REFRESHED, el estado ya debería estar bien, solo liberamos
+          setLoading(false);
+        }
       } else {
         setUser(null);
         setLoading(false);

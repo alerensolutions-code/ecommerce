@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
   Box,
   Typography,
@@ -22,11 +23,17 @@ import {
   DialogContent,
   DialogActions,
   Grid,
-  Stack
+  Stack,
+  TablePagination,
+  FormControl,
+  InputLabel,
+  Select as MuiSelect,
+  Tooltip,
+  MenuItem
 } from '@mui/material';
-import { Plus, Search, Edit2, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, ExternalLink, FileDown } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { MenuItem } from '@mui/material';
+import { exportToCSV } from '../../../lib/export';
 
 type Product = {
   id: string;
@@ -61,34 +68,79 @@ const ProductsManagement = () => {
     images: [] as string[]
   });
 
+  // Filtros y Paginación
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [filterStock, setFilterStock] = useState<string>('all');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  
+  const searchParams = useSearchParams();
+
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
-    // Fetch products with their category names using a join
-    const { data: productsData, error: pError } = await supabase
-      .from('products')
-      .select('*, category:categories(name)')
-      .order('created_at', { ascending: false });
+    try {
+      // Fetch products with their category names using a join
+      const { data: productsData, error: pError } = await supabase
+        .from('products')
+        .select('*, category:categories(name)')
+        .order('created_at', { ascending: false });
 
-    const { data: catsData } = await supabase.from('categories').select('*').order('name');
+      const { data: catsData, error: cError } = await supabase.from('categories').select('*').order('name');
 
-    if (pError) console.error("Error fetching products:", pError);
+      if (pError) throw pError;
+      if (cError) throw cError;
 
-    setAllProducts(productsData || []);
-    setDbCategories(catsData || []);
-    setLoading(false);
+      setAllProducts(productsData || []);
+      setDbCategories(catsData || []);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchData();
-  }, []);
+    const stockParam = searchParams.get('filter');
+    if (stockParam === 'low_stock') {
+      setFilterStock('low');
+    }
+  }, [searchParams]);
 
-  const filteredProducts = allProducts.filter((p: Product) =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProducts = useMemo(() => {
+    let result = [...allProducts];
+    
+    // Filtro por término de búsqueda
+    if (searchTerm) {
+      result = result.filter((p: Product) =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Filtro por categoría
+    if (selectedCategory !== 'all') {
+      result = result.filter((p: Product) => p.category_id === selectedCategory);
+    }
+
+    // Filtro por stock
+    if (filterStock !== 'all') {
+      result = result.filter((p: Product) => {
+        if (filterStock === 'low') return p.stock > 0 && p.stock < 5;
+        if (filterStock === 'out') return p.stock === 0;
+        return true;
+      });
+    }
+    
+    return result;
+  }, [allProducts, searchTerm, selectedCategory, filterStock]);
+
+  const pagedProducts = useMemo(() => {
+    return filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
+  }, [filteredProducts, page, rowsPerPage]);
 
   const handleOpen = (product: Product | null = null) => {
     setSelectedProduct(product);
@@ -215,22 +267,71 @@ const ProductsManagement = () => {
 
       <Paper elevation={0} sx={{ p: 0, borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <Box sx={{ p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-          <TextField
-            fullWidth
-            placeholder="Buscar por nombre o marca..."
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            size="small"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search size={18} />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ maxWidth: 400 }}
-          />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <TextField
+              fullWidth
+              placeholder="Buscar por nombre o marca..."
+              variant="outlined"
+              value={searchTerm}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setSearchTerm(e.target.value);
+                setPage(0);
+              }}
+              size="small"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={18} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ maxWidth: 400 }}
+            />
+            
+            <FormControl size="small" sx={{ minWidth: 200 }}>
+              <InputLabel id="category-filter-label">Categoría</InputLabel>
+              <MuiSelect
+                labelId="category-filter-label"
+                value={selectedCategory}
+                label="Categoría"
+                onChange={(e: any) => {
+                  setSelectedCategory(e.target.value);
+                  setPage(0);
+                }}
+              >
+                <MenuItem value="all">Todas las categorías</MenuItem>
+                {dbCategories.map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                ))}
+              </MuiSelect>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel id="stock-filter-label">Stock</InputLabel>
+              <MuiSelect
+                labelId="stock-filter-label"
+                value={filterStock}
+                label="Stock"
+                onChange={(e: any) => {
+                  setFilterStock(e.target.value);
+                  setPage(0);
+                }}
+              >
+                <MenuItem value="all">Todo el Stock</MenuItem>
+                <MenuItem value="low">Stock Bajo (&lt; 5)</MenuItem>
+                <MenuItem value="out">Sin Stock (0)</MenuItem>
+              </MuiSelect>
+            </FormControl>
+
+            <Tooltip title="Exportar Inventario (CSV)">
+              <IconButton 
+                onClick={() => exportToCSV(allProducts, 'inventario_devil_game')}
+                sx={{ bgcolor: 'rgba(0,0,0,0.02)', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.05)' } }}
+              >
+                <FileDown size={20} />
+              </IconButton>
+            </Tooltip>
+          </Stack>
         </Box>
 
         <TableContainer>
@@ -248,7 +349,7 @@ const ProductsManagement = () => {
             <TableBody>
               {loading ? (
                 <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
-              ) : filteredProducts.map((product) => (
+              ) : pagedProducts.map((product: Product) => (
                 <TableRow key={product.id} hover>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
@@ -290,6 +391,19 @@ const ProductsManagement = () => {
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filteredProducts.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+          labelRowsPerPage="Productos por página"
+        />
       </Paper>
 
       {/* Product Modal */}
@@ -420,4 +534,12 @@ const ProductsManagement = () => {
   );
 };
 
-export default ProductsManagement;
+const ProductsPage = () => {
+  return (
+    <Suspense fallback={<div>Cargando productos...</div>}>
+      <ProductsManagement />
+    </Suspense>
+  );
+};
+
+export default ProductsPage;

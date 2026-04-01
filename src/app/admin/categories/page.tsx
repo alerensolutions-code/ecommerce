@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { 
   Box, 
   Typography, 
@@ -19,9 +19,13 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  TablePagination,
+  InputAdornment,
+  Tooltip
 } from '@mui/material';
-import { Plus, Edit2, Trash2, Folder } from 'lucide-react';
+import { Plus, Edit2, Trash2, Folder, Search, FileDown } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
+import { exportToCSV } from '../../../lib/export';
 
 type Category = {
   id: string;
@@ -31,25 +35,39 @@ type Category = {
 const CategoriesManagement = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Filtros y Paginación
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   
   const fetchCategories = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('categories')
-      .select('*')
-      .order('name');
-    
-    if (error) {
-      console.error('Error fetching categories:', error);
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('name');
+      
+      if (error) throw error;
       setCategories(data || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Opcional: mostrar un toast o alerta aquí
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter(category => 
+      category.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [categories, searchTerm]);
 
   const [open, setOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -119,6 +137,35 @@ const CategoriesManagement = () => {
       </Stack>
 
       <Paper elevation={0} sx={{ borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+        <Box sx={{ p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder="Buscar por nombre..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setPage(0);
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search size={18} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ maxWidth: 400 }}
+            />
+            
+            <Tooltip title="Exportar Categorías (CSV)">
+              <IconButton 
+                onClick={() => exportToCSV(filteredCategories, 'categorias_devil_game')}
+                sx={{ ml: 2, bgcolor: 'rgba(0,0,0,0.02)', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.05)' } }}
+              >
+                <FileDown size={18} />
+              </IconButton>
+            </Tooltip>
+        </Box>
         <TableContainer>
           <Table>
             <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
@@ -129,42 +176,55 @@ const CategoriesManagement = () => {
             </TableHead>
             <TableBody>
               {loading ? (
-                <TableRow>
-                  <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
-                    Cargando categorías...
-                  </TableCell>
-                </TableRow>
-              ) : categories.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
-                    No hay categorías creadas.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                categories.map((category) => (
-                  <TableRow key={category.id} hover>
-                    <TableCell>
-                      <Stack direction="row" spacing={2} alignItems="center">
-                        <Folder size={18} opacity={0.5} />
-                        <Typography sx={{ fontWeight: 600 }}>{category.name}</Typography>
-                      </Stack>
-                    </TableCell>
-                    <TableCell align="right">
-                      <Stack direction="row" spacing={1} justifyContent="flex-end">
-                        <IconButton size="small" onClick={() => handleOpen(category)}>
-                          <Edit2 size={18} />
-                        </IconButton>
-                        <IconButton size="small" color="error" onClick={() => handleDelete(category.id, category.name)}>
-                          <Trash2 size={18} />
-                        </IconButton>
-                      </Stack>
+                  <TableRow>
+                    <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
+                      Cargando categorías...
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ) : filteredCategories.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={2} align="center" sx={{ py: 4 }}>
+                      No se encontraron categorías.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredCategories.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((category) => (
+                    <TableRow key={category.id} hover>
+                      <TableCell>
+                        <Stack direction="row" spacing={2} alignItems="center">
+                          <Folder size={18} opacity={0.5} />
+                          <Typography sx={{ fontWeight: 600 }}>{category.name}</Typography>
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <IconButton size="small" onClick={() => handleOpen(category)}>
+                            <Edit2 size={18} />
+                          </IconButton>
+                          <IconButton size="small" color="error" onClick={() => handleDelete(category.id, category.name)}>
+                            <Trash2 size={18} />
+                          </IconButton>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={filteredCategories.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+          labelRowsPerPage="Categorías por página"
+        />
       </Paper>
 
       {/* Category Modal */}
