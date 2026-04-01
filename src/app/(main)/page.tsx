@@ -101,9 +101,6 @@ const Hero = () => (
                   DEVIL GAMING
                 </span>
               </Typography>
-              <Typography variant="h5" color="rgba(255,255,255,0.7)" sx={{ mb: 3.5, fontSize: { xs: '0.95rem', md: '1.15rem' }, fontWeight: 400, maxWidth: 500, lineHeight: 1.6 }}>
-                Ingeniería de precisión y rendimiento extremo. No solo vendemos hardware, forjamos victorias.
-              </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
                 <Button 
                   component={Link} 
@@ -182,13 +179,47 @@ const Hero = () => (
 );
 
 const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
-  <Paper elevation={0} sx={{ p: 4, textAlign: 'center', bgcolor: 'white', border: '1px solid rgba(0,0,0,0.05)', borderRadius: 4 }}>
-    <Box sx={{ color: 'primary.main', mb: 2, display: 'flex', justifyContent: 'center' }}>
-      {icon}
-    </Box>
-    <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{title}</Typography>
-    <Typography variant="body2" color="text.secondary">{desc}</Typography>
-  </Paper>
+  <motion.div
+    whileHover={{ y: -10 }}
+    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+  >
+    <Paper 
+      elevation={0} 
+      sx={{ 
+        p: 4, 
+        textAlign: 'center', 
+        bgcolor: 'white', 
+        border: '1px solid rgba(0,0,0,0.05)', 
+        borderRadius: 4,
+        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        cursor: 'default',
+        '&:hover': {
+          boxShadow: '0 15px 35px rgba(204,0,0,0.12)',
+          borderColor: 'rgba(204,0,0,0.2)',
+          '& .icon-wrapper': {
+            transform: 'scale(1.15) rotate(5deg)',
+            color: '#ff3333'
+          }
+        }
+      }}
+    >
+      <Box 
+        className="icon-wrapper"
+        sx={{ 
+          color: 'primary.main', 
+          mb: 2, 
+          display: 'flex', 
+          justifyContent: 'center',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}
+      >
+        {icon}
+      </Box>
+      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{title}</Typography>
+      <Typography variant="body2" color="text.secondary">{desc}</Typography>
+    </Paper>
+  </motion.div>
 );
 
 const HomePage = () => {

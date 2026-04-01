@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 import { useCart } from '../../context/CartContext';
 import { alpha, styled } from '@mui/material/styles';
@@ -294,7 +295,14 @@ const Navbar = () => {
                   onClick={() => setCartOpen(true)}
                 >
                   <Badge badgeContent={cartCount} color="primary">
-                    <ShoppingCart size={22} />
+                    <motion.div
+                      key={cartCount}
+                      initial={{ scale: 1.5, rotate: -15 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 10 }}
+                    >
+                      <ShoppingCart size={22} />
+                    </motion.div>
                   </Badge>
                 </IconButton>
               </Box>
