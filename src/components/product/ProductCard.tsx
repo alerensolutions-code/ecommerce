@@ -8,15 +8,12 @@ import {
   Typography, 
   Button, 
   Box, 
-  Chip, 
-  IconButton,
-  Tooltip
 } from '@mui/material';
-import { ShoppingCart, Eye, Heart } from 'lucide-react';
+import { ShoppingCart, Check } from 'lucide-react';
 import Link from 'next/link';
 
 import { useCart } from '../../context/CartContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductCardProps {
   product: any;
@@ -25,11 +22,16 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
   const { dispatch } = useCart();
+  const [isAdded, setIsAdded] = React.useState(false);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dispatch({ type: 'ADD_TO_CART', payload: product });
+    setIsAdded(true);
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
   };
 
   // Support both Supabase total price and mock data discount prices
@@ -107,25 +109,55 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
             </Typography>
           </Box>
 
-          <Button
-            fullWidth={layout !== 'list'}
-            variant="contained"
-            color="primary"
-            startIcon={<ShoppingCart size={18} />}
-            onClick={handleAddToCart}
-            sx={{ 
-              mt: layout === 'list' ? 1 : 'auto',
-              width: layout === 'list' ? 'fit-content' : '100%',
-              py: 1, 
-              px: layout === 'list' ? 4 : undefined,
-              fontWeight: 800, 
-              borderRadius: 2,
-              boxShadow: 'none',
-              '&:hover': { boxShadow: '0 4px 12px rgba(204, 0, 0, 0.2)' }
-            }}
+          <motion.div
+            animate={isAdded ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ duration: 0.3 }}
+            style={{ width: layout === 'list' ? 'fit-content' : '100%', marginTop: layout === 'list' ? 8 : 'auto' }}
           >
-            Añadir al Carrito
-          </Button>
+            <Button
+              fullWidth={layout !== 'list'}
+              variant="contained"
+              color={isAdded ? "success" : "primary"}
+              startIcon={
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={isAdded ? 'check' : 'cart'}
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {isAdded ? <Check size={18} /> : <ShoppingCart size={18} />}
+                  </motion.div>
+                </AnimatePresence>
+              }
+              onClick={handleAddToCart}
+              disabled={isAdded}
+              sx={{ 
+                width: '100%',
+                py: 1, 
+                px: layout === 'list' ? 4 : undefined,
+                fontWeight: 800, 
+                borderRadius: 2,
+                boxShadow: 'none',
+                transition: 'all 0.3s ease',
+                ...(isAdded ? {
+                  bgcolor: '#4caf50',
+                  color: 'white',
+                  '&:hover': { bgcolor: '#45a049', boxShadow: 'none' },
+                  '&.Mui-disabled': {
+                    bgcolor: '#4caf50',
+                    color: 'white',
+                    opacity: 1
+                  }
+                } : {
+                  '&:hover': { boxShadow: '0 4px 12px rgba(204, 0, 0, 0.2)' }
+                })
+              }}
+            >
+              {isAdded ? '¡Agregado!' : 'Añadir al Carrito'}
+            </Button>
+          </motion.div>
         </CardContent>
       </Card>
     </motion.div>

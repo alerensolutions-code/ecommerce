@@ -25,7 +25,8 @@ import {
   Truck, 
   RotateCcw,
   Heart,
-  Share2
+  Share2,
+  Check
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import NextLink from 'next/link';
@@ -44,6 +45,7 @@ const ProductDetailPage = () => {
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<string>('');
+  const [isAdded, setIsAdded] = useState(false);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -79,6 +81,10 @@ const ProductDetailPage = () => {
 
   const handleAddToCart = () => {
     dispatch({ type: 'ADD_TO_CART', payload: product });
+    setIsAdded(true);
+    setTimeout(() => {
+      setIsAdded(false);
+    }, 2000);
   };
 
   if (loading) {
@@ -215,16 +221,52 @@ const ProductDetailPage = () => {
               </Stack>
 
               <Stack direction="row" spacing={2}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<ShoppingCart size={24} />}
-                  onClick={handleAddToCart}
-                  disabled={product.stock === 0}
-                  sx={{ py: 2, flex: 1, fontSize: '1.1rem', fontWeight: 800, borderRadius: 2 }}
+                <motion.div
+                  animate={isAdded ? { scale: [1, 1.05, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                  style={{ flex: 1 }}
                 >
-                  Añadir al Carrito
-                </Button>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    color={isAdded ? "success" : "primary"}
+                    startIcon={
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={isAdded ? 'check' : 'cart'}
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {isAdded ? <Check size={24} /> : <ShoppingCart size={24} />}
+                        </motion.div>
+                      </AnimatePresence>
+                    }
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0 || isAdded}
+                    sx={{ 
+                      py: 2, 
+                      width: '100%',
+                      fontSize: '1.1rem', 
+                      fontWeight: 800, 
+                      borderRadius: 2,
+                      transition: 'all 0.3s ease',
+                      ...(isAdded && {
+                        bgcolor: '#4caf50',
+                        color: 'white',
+                        '&:hover': { bgcolor: '#45a049' },
+                        '&.Mui-disabled': {
+                          bgcolor: '#4caf50',
+                          color: 'white',
+                          opacity: 1
+                        }
+                      })
+                    }}
+                  >
+                    {isAdded ? '¡Agregado!' : 'Añadir al Carrito'}
+                  </Button>
+                </motion.div>
                 <IconButton sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 2 }}>
                   <Heart size={24} />
                 </IconButton>
