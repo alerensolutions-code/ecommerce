@@ -25,7 +25,26 @@ const Hero = () => (
     alignItems: 'center',
     py: { xs: 6, md: 0 }
   }}>
-    {/* ... (Mesh Gradient) */}
+    {/* Video Background */}
+    <video
+      autoPlay
+      loop
+      muted
+      playsInline
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        objectFit: 'cover',
+        zIndex: 0,
+      }}
+    >
+      <source src="/hero-bg.mp4" type="video/mp4" />
+    </video>
+
+    {/* Video Overlay / Darkening Gradient */}
     <Box sx={{ 
       position: 'absolute', 
       top: 0, 
@@ -33,10 +52,9 @@ const Hero = () => (
       width: '100%', 
       height: '100%',
       background: `
-        radial-gradient(at 0% 0%, rgba(204, 0, 0, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(33, 150, 243, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(204, 0, 0, 0.15) 0px, transparent 50%),
-        radial-gradient(at 0% 100%, rgba(33, 150, 243, 0.1) 0px, transparent 50%)
+        linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)),
+        radial-gradient(at 0% 0%, rgba(204, 0, 0, 0.2) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(204, 0, 0, 0.2) 0px, transparent 50%)
       `,
       zIndex: 0,
       '&::before': {
