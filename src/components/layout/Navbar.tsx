@@ -33,7 +33,8 @@ import {
   Gamepad,
   Keyboard,
   Layers,
-  Box as BoxIcon
+  Box as BoxIcon,
+  LayoutDashboard
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -43,6 +44,7 @@ import { useCart } from '../../context/CartContext';
 import { alpha, styled } from '@mui/material/styles';
 import { supabase } from '../../lib/supabase';
 import CartDrawer from '../cart/CartDrawer';
+import { useAuth } from '../../context/AuthContext';
 
 const SearchWrapper = styled('div')(({ theme }) => ({
   position: 'relative',
@@ -95,6 +97,7 @@ function HideOnScroll(props: { children: React.ReactElement }) {
 
 const Navbar = () => {
   const { state } = useCart();
+  const { user } = useAuth();
   const router = useRouter();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -288,10 +291,36 @@ const Navbar = () => {
               </Box>
 
               {/* Icons */}
-              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, gap: 1 }}>
+                {/* Admin button — only visible when logged in as admin */}
+                {user?.role === 'admin' && (
+                  <Button
+                    component={Link}
+                    href="/admin"
+                    size="small"
+                    variant="outlined"
+                    startIcon={<LayoutDashboard size={16} />}
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: '0.78rem',
+                      borderColor: 'primary.main',
+                      color: 'primary.main',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 2,
+                      display: { xs: 'none', sm: 'flex' },
+                      '&:hover': {
+                        bgcolor: 'rgba(204,0,0,0.06)',
+                        borderColor: 'primary.dark',
+                      }
+                    }}
+                  >
+                    Panel Admin
+                  </Button>
+                )}
                 <IconButton 
                   color="inherit"
-                  sx={{ ml: 1, '&:hover': { color: 'primary.main' } }}
+                  sx={{ ml: 0.5, '&:hover': { color: 'primary.main' } }}
                   onClick={() => setCartOpen(true)}
                 >
                   <Badge badgeContent={cartCount} color="primary">

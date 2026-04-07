@@ -1,14 +1,14 @@
 "use client";
 
 import { useMemo, useState, useEffect } from 'react';
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Grid, 
-  FormControl, 
-  Select, 
-  MenuItem, 
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  FormControl,
+  Select,
+  MenuItem,
   InputLabel,
   Breadcrumbs,
   Link,
@@ -31,11 +31,12 @@ const ShopPage = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  
+
   const category = searchParams?.get('category') || '';
   const minPrice = Number(searchParams?.get('minPrice')) || 0;
   const maxPrice = Number(searchParams?.get('maxPrice')) || 3000;
   const sortBy = searchParams?.get('sort') || 'newest';
+  const stockFilter = searchParams?.get('stock') || '';
 
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +49,7 @@ const ShopPage = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*, category:categories(name)');
-      
+
       if (!error) {
         setProducts(data || []);
       }
@@ -69,6 +70,13 @@ const ShopPage = () => {
     // Price Filter
     result = result.filter(p => p.price >= minPrice && p.price <= maxPrice);
 
+    // Stock Filter
+    if (stockFilter === 'in-stock') {
+      result = result.filter(p => p.stock && p.stock > 0);
+    } else if (stockFilter === 'out-of-stock') {
+      result = result.filter(p => !p.stock || p.stock === 0);
+    }
+
     // Sorting
     switch (sortBy) {
       case 'price-low':
@@ -85,7 +93,7 @@ const ShopPage = () => {
     }
 
     return result;
-  }, [products, category, minPrice, maxPrice, sortBy]);
+  }, [products, category, minPrice, maxPrice, sortBy, stockFilter]);
 
   const handleSortChange = (event: SelectChangeEvent) => {
     const newParams = new URLSearchParams(searchParams?.toString() || '');
@@ -98,7 +106,7 @@ const ShopPage = () => {
       {/* Header / Breadcrumbs */}
       <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 4, mb: 4 }}>
         <Container maxWidth="xl">
-          <Breadcrumbs sx={{ mb: 2 }}>
+          <Breadcrumbs separator="›" aria-label="breadcrumb" sx={{ mb: 2 }}>
             <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
             <Typography color="text.primary">Tienda</Typography>
           </Breadcrumbs>
@@ -118,13 +126,13 @@ const ShopPage = () => {
           {/* Product Grid */}
           <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
             {/* Toolbar */}
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 2, 
-                mb: 3, 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                mb: 3,
+                display: 'flex',
+                justifyContent: 'space-between',
                 alignItems: 'center',
                 borderRadius: 2,
                 border: '1px solid rgba(0,0,0,0.05)'
@@ -135,8 +143,8 @@ const ShopPage = () => {
               </Typography>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
-                <Button 
-                  startIcon={<Filter size={16} />} 
+                <Button
+                  startIcon={<Filter size={16} />}
                   sx={{ display: { xs: 'flex', md: 'none' } }}
                   onClick={() => setMobileFiltersOpen(true)}
                   variant="outlined"
@@ -146,22 +154,22 @@ const ShopPage = () => {
                 </Button>
 
                 <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, mr: 2 }}>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     color={viewMode === 'grid' ? 'primary' : 'default'}
                     onClick={() => setViewMode('grid')}
                   >
                     <LayoutGrid size={20} />
                   </IconButton>
-                  <IconButton 
-                    size="small" 
+                  <IconButton
+                    size="small"
                     color={viewMode === 'list' ? 'primary' : 'default'}
                     onClick={() => setViewMode('list')}
                   >
                     <ListIcon size={20} />
                   </IconButton>
                 </Box>
-                
+
                 <FormControl size="small" sx={{ minWidth: 200 }}>
                   <InputLabel id="sort-label">Ordenar por</InputLabel>
                   <Select
@@ -195,8 +203,8 @@ const ShopPage = () => {
             ) : (
               <Box sx={{ py: 10, textAlign: 'center' }}>
                 <Typography variant="h5" color="text.secondary">No se encontraron productos con estos filtros.</Typography>
-                <Button 
-                  onClick={() => router.push(pathname || '/')} 
+                <Button
+                  onClick={() => router.push(pathname || '/')}
                   sx={{ mt: 2 }}
                 >
                   Limpiar Filtros

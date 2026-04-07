@@ -73,6 +73,12 @@ const CategoriesManagement = () => {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [newName, setNewName] = useState('');
 
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+
+  const [warningDialogOpen, setWarningDialogOpen] = useState(false);
+  const [warningMessage, setWarningMessage] = useState('');
+
   const handleOpen = (category: Category | null = null) => {
     setEditingCategory(category);
     setNewName(category?.name || '');
@@ -107,19 +113,47 @@ const CategoriesManagement = () => {
     handleClose();
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (confirm(`¿Estás seguro de que deseas eliminar la categoría "${name}"?`)) {
-      const { error } = await supabase
-        .from('categories')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        alert('Error al eliminar categoría');
-      } else {
-        fetchCategories();
-      }
+  const handleDeleteClick = (category: Category) => {
+    setCategoryToDelete(category);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!categoryToDelete) return;
+
+    // Verificar si hay productos asociados a esta categoría
+    const { data: products, error: productsError } = await supabase
+      .from('products')
+      .select('id')
+      .eq('category_id', categoryToDelete.id)
+      .limit(1);
+
+    if (productsError) {
+      alert('Error al verificar productos asociados');
+      return;
     }
+
+    if (products && products.length > 0) {
+      setDeleteDialogOpen(false);
+      setWarningMessage(`No se puede eliminar la categoría "${categoryToDelete.name}" porque tiene productos asociados. Primero debés eliminar todos los productos asociados para poder eliminar la categoría.`);
+      setWarningDialogOpen(true);
+      setCategoryToDelete(null);
+      return;
+    }
+
+    const { error } = await supabase
+      .from('categories')
+      .delete()
+      .eq('id', categoryToDelete.id);
+    
+    if (error) {
+      alert('Error al eliminar categoría');
+    } else {
+      fetchCategories();
+    }
+    
+    setDeleteDialogOpen(false);
+    setCategoryToDelete(null);
   };
 
   return (
@@ -201,7 +235,7 @@ const CategoriesManagement = () => {
                           <IconButton size="small" onClick={() => handleOpen(category)}>
                             <Edit2 size={18} />
                           </IconButton>
-                          <IconButton size="small" color="error" onClick={() => handleDelete(category.id, category.name)}>
+                          <IconButton size="small" color="error" onClick={() => handleDeleteClick(category)}>
                             <Trash2 size={18} />
                           </IconButton>
                         </Stack>
@@ -245,6 +279,37 @@ const CategoriesManagement = () => {
           <Button onClick={handleClose} color="inherit">Cancelar</Button>
           <Button variant="contained" onClick={handleSave} sx={{ px: 4, fontWeight: 800 }}>
             {editingCategory ? 'Actualizar' : 'Crear'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <Typography>
+            ¿Estás seguro de que querés eliminar la categoría <strong>{categoryToDelete?.name}</strong>? Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, gap: 1 }}>
+          <Button onClick={() => setDeleteDialogOpen(false)} color="inherit" sx={{ fontWeight: 600 }}>Cancelar</Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error" sx={{ fontWeight: 700 }}>
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Warning Dialog */}
+      <Dialog open={warningDialogOpen} onClose={() => setWarningDialogOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800, pb: 1, color: 'error.main' }}>Acción Denegada</DialogTitle>
+        <DialogContent>
+          <Typography>
+            {warningMessage}
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={() => setWarningDialogOpen(false)} variant="contained" color="primary" sx={{ fontWeight: 700 }}>
+            Entendido
           </Button>
         </DialogActions>
       </Dialog>

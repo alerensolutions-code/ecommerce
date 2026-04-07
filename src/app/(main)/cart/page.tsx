@@ -1,23 +1,23 @@
 "use client";
 
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Grid, 
-  Paper, 
-  Button, 
-  IconButton, 
-  Stack, 
-  Divider, 
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Paper,
+  Button,
+  IconButton,
+  Stack,
+  Divider,
   Link,
   Breadcrumbs
 } from '@mui/material';
-import { 
-  Trash2, 
-  Plus, 
-  Minus, 
-  ArrowLeft, 
+import {
+  Trash2,
+  Plus,
+  Minus,
+  ArrowLeft,
   ArrowRight,
   ShieldCheck,
   Truck
@@ -51,10 +51,10 @@ const CartPage = () => {
             <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
               Parece que aún no has añadido nada. Explora nuestras ofertas en hardware gaming.
             </Typography>
-            <Button 
-              component={NextLink} 
-              href="/shop" 
-              variant="contained" 
+            <Button
+              component={NextLink}
+              href="/shop"
+              variant="contained"
               size="large"
               sx={{ py: 2, px: 6, fontWeight: 800 }}
             >
@@ -71,7 +71,7 @@ const CartPage = () => {
       {/* Breadcrumbs */}
       <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 2 }}>
         <Container maxWidth="xl">
-          <Breadcrumbs>
+          <Breadcrumbs separator="›" aria-label="breadcrumb">
             <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
             <Typography color="text.primary">Carrito</Typography>
           </Breadcrumbs>
@@ -89,17 +89,17 @@ const CartPage = () => {
                 <Box key={item.id}>
                   <Grid container spacing={2} alignItems="center" sx={{ py: 3 }}>
                     <Grid size={{ xs: 4, sm: 2 }}>
-                      <Box 
-                        component="img" 
-                        src={item.images[0]} 
+                      <Box
+                        component="img"
+                        src={item.images[0]}
                         alt={item.name}
                         sx={{ width: '100%', borderRadius: 2, border: '1px solid #eee' }}
                       />
                     </Grid>
                     <Grid size={{ xs: 8, sm: 4 }}>
-                      <Link 
-                        component={NextLink} 
-                        href={`/product/${item.id}`} 
+                      <Link
+                        component={NextLink}
+                        href={`/product/${item.id}`}
                         sx={{ textDecoration: 'none', color: 'inherit' }}
                       >
                         <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>{item.name}</Typography>
@@ -132,9 +132,9 @@ const CartPage = () => {
               ))}
             </Paper>
 
-            <Button 
-              component={NextLink} 
-              href="/shop" 
+            <Button
+              component={NextLink}
+              href="/shop"
               startIcon={<ArrowLeft size={18} />}
               sx={{ mt: 3, fontWeight: 700 }}
             >
@@ -144,18 +144,18 @@ const CartPage = () => {
 
           {/* Order Summary */}
           <Grid size={{ xs: 12, lg: 4 }}>
-            <Paper 
-              elevation={0} 
-              sx={{ 
-                p: 4, 
-                borderRadius: 4, 
+            <Paper
+              elevation={0}
+              sx={{
+                p: 4,
+                borderRadius: 4,
                 border: '1px solid rgba(0,0,0,0.05)',
                 position: 'sticky',
                 top: 100
               }}
             >
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 800 }}>Resumen del Pedido</Typography>
-              
+
               <Stack spacing={2}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography color="text.secondary">Subtotal</Typography>
@@ -172,9 +172,9 @@ const CartPage = () => {
                     ¡Añade ${(500 - subtotal).toLocaleString('es-ES')} más para envío gratis!
                   </Typography>
                 )}
-                
+
                 <Divider sx={{ my: 1 }} />
-                
+
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="h6" sx={{ fontWeight: 800 }}>Total</Typography>
                   <Typography variant="h5" color="primary" sx={{ fontWeight: 800 }}>
@@ -182,11 +182,11 @@ const CartPage = () => {
                   </Typography>
                 </Box>
 
-                <Button 
-                  component={NextLink} 
-                  href="/checkout" 
-                  variant="contained" 
-                  fullWidth 
+                <Button
+                  component={NextLink}
+                  href="/checkout"
+                  variant="contained"
+                  fullWidth
                   size="large"
                   endIcon={<ArrowRight size={20} />}
                   sx={{ py: 2, mt: 2, fontWeight: 800, fontSize: '1.1rem' }}
