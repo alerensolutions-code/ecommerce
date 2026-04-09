@@ -49,9 +49,9 @@ import { useAuth } from '../../context/AuthContext';
 const SearchWrapper = styled('div')(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.secondary.main, 0.05),
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
   '&:hover': {
-    backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   marginLeft: 0,
   width: '100%',
@@ -69,7 +69,7 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: theme.palette.text.secondary,
+  color: 'rgba(255, 255, 255, 0.7)',
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
@@ -85,15 +85,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
   },
 }));
 
-function HideOnScroll(props: { children: React.ReactElement }) {
-  const { children } = props;
-  const trigger = useScrollTrigger();
-  return (
-    <Slide direction="down" in={!trigger}>
-      {children}
-    </Slide>
-  );
-}
+
 
 const Navbar = () => {
   const { state } = useCart();
@@ -170,85 +162,96 @@ const Navbar = () => {
 
   return (
     <>
-      <HideOnScroll>
-        <AppBar position="sticky" color="inherit" elevation={1} sx={{ bgcolor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
-          <Container maxWidth="xl">
-            <Toolbar disableGutters>
-              {/* Mobile Menu Icon */}
-              <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                edge="start"
-                onClick={toggleDrawer(true)}
-                sx={{ mr: 2, display: { md: 'none' } }}
-              >
-                <MenuIcon />
-              </IconButton>
+      <AppBar 
+        position="sticky" 
+        elevation={0} 
+        sx={{ 
+          bgcolor: 'rgba(10, 10, 10, 0.95)', 
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          top: 0,
+          zIndex: 1100
+        }}
+      >
+        <Container maxWidth="xl">
+          <Toolbar disableGutters>
+            {/* Mobile Menu Icon */}
+            <IconButton
+              aria-label="open drawer"
+              edge="start"
+              onClick={toggleDrawer(true)}
+              sx={{ mr: 2, display: { md: 'none' }, color: '#fff' }}
+            >
+              <MenuIcon />
+            </IconButton>
 
-              {/* Logo */}
-              <Typography
-                variant="h6"
-                noWrap
-                component={Link}
-                href="/"
-                sx={{
-                  mr: 2,
-                  display: 'flex',
-                  fontWeight: 800,
-                  color: 'primary.main',
-                  textDecoration: 'none',
-                  fontSize: '1.5rem',
-                  letterSpacing: '.1rem',
-                  '& span': { color: 'secondary.main' }
+            {/* Logo */}
+            <Typography
+              variant="h6"
+              noWrap
+              component={Link}
+              href="/"
+              sx={{
+                mr: 2,
+                display: 'flex',
+                fontWeight: 900,
+                textDecoration: 'none',
+                fontSize: '1.6rem',
+                letterSpacing: '.15rem',
+                color: '#fff',
+                fontStyle: 'italic',
+                '& span': { 
+                  background: 'linear-gradient(90deg, #ff0000, #cc0000)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  textShadow: '0 0 15px rgba(204,0,0,0.5)',
+                  ml: 0.5
+                }
+              }}
+            >
+              DEVIL<span>GAMING</span>
+            </Typography>
+
+            {/* Desktop Categories */}
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center' }}>
+              <Box
+                onClick={handleOpenMenu}
+                sx={{ 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  fontWeight: 700, 
+                  fontSize: '0.95rem',
+                  transition: 'all 0.3s',
+                  color: 'rgba(255,255,255,0.9)',
+                  padding: '8px 16px',
+                  borderRadius: '24px',
+                  '&:hover': { 
+                    color: '#ff0000',
+                    backgroundColor: 'rgba(255, 0, 0, 0.08)',
+                    boxShadow: '0 0 10px rgba(255,0,0,0.2)'
+                  },
                 }}
               >
-                DEVIL<span>GAMING</span>
-              </Typography>
-
-              {/* Desktop Categories */}
-              <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center' }}>
-                <Box
-                  onClick={handleOpenMenu}
-                  sx={{ 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    fontWeight: 600, 
-                    fontSize: '0.95rem',
-                    transition: 'all 0.3s',
-                    color: 'text.primary',
-                    '&:hover': { color: 'primary.main' },
-                    position: 'relative',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      width: '0%',
-                      height: '2px',
-                      bottom: -4,
-                      left: 0,
-                      backgroundColor: 'primary.main',
-                      transition: 'width 0.3s'
-                    },
-                    '&:hover::after': { width: '100%' }
-                  }}
-                >
-                  Categorías <ChevronDown size={16} style={{ marginLeft: 4 }} />
-                </Box>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleCloseMenu}
-                  elevation={3}
-                  sx={{ mt: '15px' }}
-                  PaperProps={{
-                    sx: {
-                      borderRadius: 2,
-                      minWidth: 220,
-                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                      border: '1px solid rgba(0,0,0,0.05)'
-                    }
-                  }}
-                >
+                Categorías <ChevronDown size={16} style={{ marginLeft: 6 }} />
+              </Box>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleCloseMenu}
+                elevation={0}
+                sx={{ mt: '15px' }}
+                PaperProps={{
+                  sx: {
+                    borderRadius: 2,
+                    minWidth: 220,
+                    bgcolor: '#111',
+                    color: '#fff',
+                    boxShadow: '0 10px 40px rgba(0,0,0,0.5)',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }
+                }}
+              >
                   {loadingCategories ? (
                     <MenuItem disabled sx={{ justifyContent: 'center', py: 2 }}>
                       <CircularProgress size={20} />
@@ -257,19 +260,19 @@ const Navbar = () => {
                     <MenuItem 
                       key={cat.name} 
                       onClick={() => {
-                        router.push(cat.path);
-                        handleCloseMenu();
-                      }}
-                      sx={{ 
-                        py: 1.5, 
-                        px: 3,
-                        transition: 'all 0.2s',
-                        '&:hover': { 
-                          bgcolor: 'rgba(204,0,0,0.04)',
-                          color: 'primary.main',
-                          pl: 3.5
-                        } 
-                      }}
+                      router.push(cat.path);
+                      handleCloseMenu();
+                    }}
+                    sx={{ 
+                      py: 1.5, 
+                      px: 3,
+                      transition: 'all 0.2s',
+                      '&:hover': { 
+                        bgcolor: 'rgba(204,0,0,0.15)',
+                        color: '#ff3333',
+                        pl: 3.5
+                      } 
+                    }}
                     >
                       <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }} />
                     </MenuItem>
@@ -284,45 +287,45 @@ const Navbar = () => {
                     <Search size={18} />
                   </SearchIconWrapper>
                   <StyledInputBase
-                    placeholder="Buscar hardware..."
-                    inputProps={{ 'aria-label': 'search' }}
-                  />
+                  placeholder="Buscar hardware..."
+                  inputProps={{ 'aria-label': 'search' }}
+                  sx={{ color: 'white' }}
+                />
                 </SearchWrapper>
               </Box>
 
               {/* Icons */}
-              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, gap: 1 }}>
-                {/* Admin button — only visible when logged in as admin */}
-                {user?.role === 'admin' && (
-                  <Button
-                    component={Link}
-                    href="/admin"
-                    size="small"
-                    variant="outlined"
-                    startIcon={<LayoutDashboard size={16} />}
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: '0.78rem',
-                      borderColor: 'primary.main',
-                      color: 'primary.main',
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 2,
-                      display: { xs: 'none', sm: 'flex' },
-                      '&:hover': {
-                        bgcolor: 'rgba(204,0,0,0.06)',
-                        borderColor: 'primary.dark',
-                      }
-                    }}
-                  >
-                    Panel Admin
-                  </Button>
-                )}
-                <IconButton 
-                  color="inherit"
-                  sx={{ ml: 0.5, '&:hover': { color: 'primary.main' } }}
-                  onClick={() => setCartOpen(true)}
+            <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, gap: 1 }}>
+              {/* Admin button — only visible when logged in as admin */}
+              {user?.role === 'admin' && (
+                <Button
+                  component={Link}
+                  href="/admin"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<LayoutDashboard size={16} />}
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '0.78rem',
+                    borderColor: 'rgba(255,255,255,0.3)',
+                    color: 'white',
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 2,
+                    display: { xs: 'none', sm: 'flex' },
+                    '&:hover': {
+                      bgcolor: 'rgba(255,255,255,0.1)',
+                      borderColor: 'white',
+                    }
+                  }}
                 >
+                  Panel Admin
+                </Button>
+              )}
+              <IconButton 
+                sx={{ ml: 0.5, color: 'white', '&:hover': { color: '#ff3333' } }}
+                onClick={() => setCartOpen(true)}
+              >
                   <Badge badgeContent={cartCount} color="primary">
                     <motion.div
                       key={cartCount}
@@ -335,10 +338,9 @@ const Navbar = () => {
                   </Badge>
                 </IconButton>
               </Box>
-            </Toolbar>
-          </Container>
-        </AppBar>
-      </HideOnScroll>
+          </Toolbar>
+        </Container>
+      </AppBar>
 
       {/* Mobile Drawer */}
       <Drawer

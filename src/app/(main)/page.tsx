@@ -77,12 +77,25 @@ const Hero = () => (
             mb: 1.5,
             fontSize: { xs: '2.2rem', md: '3.4rem' },
             lineHeight: 1.1,
+            fontWeight: 900,
             textShadow: '0 10px 30px rgba(0,0,0,0.5)'
           }}>
             DOMINA TU MUNDO <br />
-            CON <span style={{ color: '#cc0000', position: 'relative' }}>
+            CON{' '}
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              style={{ 
+                background: 'linear-gradient(90deg, #ff0000, #cc0000)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+                textShadow: '0 0 40px rgba(255,0,0,0.6)'
+              }}
+            >
               DEVIL GAMING
-            </span>
+            </motion.span>
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
             <Button
@@ -139,6 +152,7 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
   <motion.div
     whileHover={{ y: -10 }}
     transition={{ type: "spring", stiffness: 400, damping: 17 }}
+    style={{ height: '100%' }}
   >
     <Paper
       elevation={0}
@@ -148,6 +162,11 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
         bgcolor: 'white',
         border: '1px solid rgba(0,0,0,0.05)',
         borderRadius: 4,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
         boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'default',
@@ -206,18 +225,26 @@ const HomePage = () => {
 
       {/* Features Section */}
       <Container maxWidth="xl" sx={{ py: 10 }}>
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<Truck size={32} />} title="Envío Express" desc="En 24/48h en tu casa listo para viciar." />
+        <Grid container spacing={4} alignItems="stretch">
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<Truck size={32} />} title="Envío Express" desc="En 24/48h en tu casa listo para viciar." />
+            </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<ShieldCheck size={32} />} title="Garantía Premium" desc="3 años de garantía oficial en todo el hardware." />
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<ShieldCheck size={32} />} title="Garantía Premium" desc="3 años de garantía oficial en todo el hardware." />
+            </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<Zap size={32} />} title="Soporte Técnico" desc="Expertos disponibles para ayudarte con tu setup." />
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<Zap size={32} />} title="Soporte Técnico" desc="Expertos disponibles para ayudarte con tu setup." />
+            </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<Headphones size={32} />} title="Atención 24/7" desc="Siempre estamos ahí cuando nos necesitas." />
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<Headphones size={32} />} title="Atención 24/7" desc="Siempre estamos ahí cuando nos necesitas." />
+            </Box>
           </Grid>
         </Grid>
       </Container>
@@ -227,8 +254,16 @@ const HomePage = () => {
         <Container maxWidth="xl">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 6 }}>
             <Box>
-              <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800 }}>MÁS DESEADOS</Typography>
-              <Typography variant="h2">Productos Destacados</Typography>
+              <Typography variant="h2" sx={{ 
+                fontWeight: 900,
+                background: 'linear-gradient(90deg, #ff0000, #cc0000)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+                textShadow: '0 0 20px rgba(255,0,0,0.15)'
+              }}>
+                Productos Destacados
+              </Typography>
             </Box>
             <Button component={Link} href="/shop" endIcon={<ArrowRight size={20} />} sx={{ fontWeight: 700 }}>
               Ver Todos
@@ -263,70 +298,81 @@ const HomePage = () => {
         </Container>
       </Box>
 
-      {/* Categories Highlights */}
+      {/* Arma Tu PC Section */}
       <Container maxWidth="xl" sx={{ py: 10 }}>
-        <Typography variant="h2" align="center" sx={{ mb: 6 }}>Explora por Categoría</Typography>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper component={Link} href="/shop" sx={{
-              height: 400,
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'end',
-              p: 4,
-              textDecoration: 'none',
-              '&:hover img': { transform: 'scale(1.05)' }
-            }}>
-              <Box component="img" src="https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&q=80&w=1000" sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, transition: 'transform 0.6s ease' }} />
-              <Box sx={{ position: 'relative', zIndex: 1, color: 'white' }}>
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>Tarjetas Gráficas</Typography>
-                <Typography variant="body1" sx={{ opacity: 0.8 }}>Potencia sin límites</Typography>
-              </Box>
-              <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)', zIndex: 0 }} />
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Grid container spacing={3}>
-              <Grid size={12}>
-                <Paper component={Link} href="/shop" sx={{
-                  height: 188,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  p: 4,
-                  textDecoration: 'none',
-                  '&:hover img': { transform: 'scale(1.05)' }
-                }}>
-                  <Box component="img" src="https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&q=80&w=1000" sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, transition: 'transform 0.6s ease' }} />
-                  <Box sx={{ position: 'relative', zIndex: 1, color: 'white' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>Monitores 4K</Typography>
-                  </Box>
-                  <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, rgba(0,0,0,0.7) 0%, transparent 60%)', zIndex: 0 }} />
-                </Paper>
-              </Grid>
-              <Grid size={12}>
-                <Paper component={Link} href="/shop" sx={{
-                  height: 188,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  p: 4,
-                  textDecoration: 'none',
-                  '&:hover img': { transform: 'scale(1.05)' }
-                }}>
-                  <Box component="img" src="https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=1000" sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, transition: 'transform 0.6s ease' }} />
-                  <Box sx={{ position: 'relative', zIndex: 1, color: 'white' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>Periféricos Pro</Typography>
-                  </Box>
-                  <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, rgba(0,0,0,0.7) 0%, transparent 60%)', zIndex: 0 }} />
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
+        <Typography variant="h2" align="center" sx={{ 
+          mb: 6,
+          fontWeight: 900,
+          background: 'linear-gradient(90deg, #ff0000, #cc0000)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          display: 'inline-block',
+          width: '100%',
+          textShadow: '0 0 20px rgba(255,0,0,0.15)'
+        }}>
+          Arma Tu PC Ideal
+        </Typography>
+
+        <Paper sx={{
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: 6,
+          height: { xs: 400, md: 500 },
+          display: 'flex',
+          alignItems: 'center',
+          border: '1px solid rgba(204,0,0,0.2)',
+          boxShadow: '0 20px 50px rgba(0,0,0,0.1)'
+        }}>
+          <Box 
+            component="img" 
+            src="https://images.unsplash.com/photo-1587202372634-32705e3bf49c?auto=format&fit=crop&q=80&w=2000" 
+            sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0 }} 
+          />
+          <Box sx={{ 
+            position: 'absolute', 
+            top: 0, 
+            left: 0, 
+            width: '100%', 
+            height: '100%', 
+            background: 'linear-gradient(to right, rgba(10,10,10,0.95) 0%, rgba(10,10,10,0.4) 60%, transparent 100%)', 
+            zIndex: 1 
+          }} />
+          
+          <Box sx={{ position: 'relative', zIndex: 2, p: { xs: 4, md: 8 }, maxWidth: 800 }}>
+            <Typography variant="overline" sx={{ color: '#ff3333', fontWeight: 900, letterSpacing: 3, mb: 2, display: 'block' }}>
+              SÓLO PARA EXIGENTES
+            </Typography>
+            <Typography variant="h3" color="white" sx={{ fontWeight: 800, mb: 3, lineHeight: 1.2 }}>
+              Diseña tu Máquina.<br />Nosotros la ensamblamos.
+            </Typography>
+            <Typography variant="h6" sx={{ color: 'rgba(255,255,255,0.7)', mb: 4, fontWeight: 400, maxWidth: 500 }}>
+              Elige los componentes exactos que necesitas. Desde estaciones de trabajo hasta rigs de gaming extremos.
+            </Typography>
+            
+            <Button
+              component={Link}
+              href="/build-pc"
+              variant="contained"
+              size="large"
+              endIcon={<Zap />}
+              sx={{
+                py: 2,
+                px: 5,
+                fontSize: '1rem',
+                fontWeight: 800,
+                borderRadius: 3,
+                boxShadow: '0 10px 20px rgba(204, 0, 0, 0.4)',
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  boxShadow: '0 15px 30px rgba(204, 0, 0, 0.6)',
+                },
+                transition: 'all 0.3s'
+              }}
+            >
+              Comenzar a Armar
+            </Button>
+          </Box>
+        </Paper>
       </Container>
     </Box>
   );
