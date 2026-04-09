@@ -31,7 +31,7 @@ import {
   Tooltip,
   MenuItem
 } from '@mui/material';
-import { Plus, Search, Edit2, Trash2, ExternalLink, FileDown } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, FileDown } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { exportToCSV } from '../../../lib/export';
 
@@ -58,6 +58,8 @@ const ProductsManagement = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
   const [formValues, setFormValues] = useState({
     name: '',
@@ -244,11 +246,22 @@ const ProductsManagement = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('¿Eliminar este producto?')) {
-      await supabase.from('products').delete().eq('id', id);
-      fetchData();
-    }
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+    await supabase.from('products').delete().eq('id', productToDelete.id);
+    setDeleteDialogOpen(false);
+    setProductToDelete(null);
+    fetchData();
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false);
+    setProductToDelete(null);
   };
 
   return (
@@ -341,8 +354,7 @@ const ProductsManagement = () => {
                 <TableCell sx={{ fontWeight: 700 }}>Producto</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Categoría</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Precio</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Stock</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Estado</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Stock / Estado</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -367,21 +379,33 @@ const ProductsManagement = () => {
                     <Chip label={product.category?.name || 'Sin categoría'} size="small" variant="outlined" />
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>${product.price.toLocaleString('es-ES')}</TableCell>
-                  <TableCell>{product.stock}</TableCell>
                   <TableCell>
-                    <Chip
-                      label={product.stock > 0 ? 'En Stock' : 'Sin Stock'}
-                      size="small"
-                      color={product.stock > 5 ? 'success' : 'warning'}
-                      sx={{ fontWeight: 600 }}
-                    />
+                    <Box>
+                      <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                        {product.stock} unid.
+                      </Typography>
+                      <Chip
+                        label={
+                          product.stock === 0 ? 'Sin Stock' :
+                          product.stock < 5 ? 'Stock Bajo' :
+                          'En Stock'
+                        }
+                        size="small"
+                        color={
+                          product.stock === 0 ? 'error' :
+                          product.stock < 5 ? 'warning' :
+                          'success'
+                        }
+                        sx={{ fontWeight: 600 }}
+                      />
+                    </Box>
                   </TableCell>
                   <TableCell align="right">
                     <Stack direction="row" spacing={1} justifyContent="flex-end">
                       <IconButton size="small" onClick={() => handleOpen(product)}>
                         <Edit2 size={18} />
                       </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDelete(product.id)}>
+                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(product)}>
                         <Trash2 size={18} />
                       </IconButton>
                     </Stack>
@@ -527,6 +551,22 @@ const ProductsManagement = () => {
           <Button onClick={handleClose} color="inherit" sx={{ fontWeight: 600 }} disabled={uploadingFiles}>Cancelar</Button>
           <Button variant="contained" onClick={handleSave} sx={{ fontWeight: 800, px: 4 }} disabled={uploadingFiles}>
             {uploadingFiles ? 'Procesando...' : (selectedProduct ? 'Actualizar' : 'Crear Producto')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>Confirmar eliminación</DialogTitle>
+        <DialogContent>
+          <Typography>
+            ¿Estás seguro de que querés eliminar <strong>{productToDelete?.name}</strong>? Esta acción no se puede deshacer.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5, gap: 1 }}>
+          <Button onClick={handleDeleteCancel} color="inherit" sx={{ fontWeight: 600 }}>Cancelar</Button>
+          <Button onClick={handleDeleteConfirm} variant="contained" color="error" sx={{ fontWeight: 700 }}>
+            Eliminar
           </Button>
         </DialogActions>
       </Dialog>

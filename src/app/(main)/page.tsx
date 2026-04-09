@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Container, Grid, Paper, Stack, TextField, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Container, Grid, Paper, Stack, CircularProgress } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -10,15 +10,15 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { supabase } from '../../lib/supabase';
 import ProductCard from '../../components/product/ProductCard';
-import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Mail } from 'lucide-react';
+import { ArrowRight, Truck, ShieldCheck, Zap, Headphones } from 'lucide-react';
 import Link from 'next/link';
 
 const Hero = () => (
-  <Box sx={{ 
-    width: '100%', 
+  <Box sx={{
+    width: '100%',
     height: { xs: 'auto', md: '70vh' }, // Altura más compacta para notebooks
     minHeight: { xs: '500px', md: '550px' },
-    position: 'relative', 
+    position: 'relative',
     overflow: 'hidden',
     bgcolor: '#0a0a0a',
     display: 'flex',
@@ -45,11 +45,11 @@ const Hero = () => (
     </video>
 
     {/* Video Overlay / Darkening Gradient */}
-    <Box sx={{ 
-      position: 'absolute', 
-      top: 0, 
-      left: 0, 
-      width: '100%', 
+    <Box sx={{
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
       height: '100%',
       background: `
         linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)),
@@ -67,133 +67,72 @@ const Hero = () => (
       }
     }} />
 
-    {/* ... (Animated Glows) */}
-    <Box 
-      component={motion.div}
-      animate={{ 
-        scale: [1, 1.2, 1],
-        opacity: [0.3, 0.5, 0.3],
-      }}
-      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-      sx={{ 
-        position: 'absolute', 
-        top: '20%', 
-        left: '10%', 
-        width: '40%', 
-        height: '40%', 
-        borderRadius: '50%', 
-        background: 'radial-gradient(circle, rgba(204,0,0,0.2) 0%, transparent 70%)',
-        filter: 'blur(60px)',
-        zIndex: 0 
-      }} 
-    />
-    
     <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
       <Grid container spacing={4} alignItems="center">
         <Grid size={{ xs: 12, md: 7 }}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
-            {/* Glassmorphism Content Box - Compact Edition */}
-            <Box sx={{ 
-              p: { xs: 3, md: 4.5 }, 
-              borderRadius: 6, 
-              background: 'rgba(255, 255, 255, 0.03)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
-              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.37)',
-            }}>
-              <Typography variant="overline" color="primary.main" sx={{ fontWeight: 900, fontSize: '0.9rem', letterSpacing: 5, display: 'block', mb: 1 }}>
-                ESTÁNDAR DE ÉLITE
-              </Typography>
-              <Typography variant="h1" color="white" sx={{ 
-                mb: 1.5, 
-                fontSize: { xs: '2.2rem', md: '3.4rem' },
-                lineHeight: 1.1,
-                textShadow: '0 10px 30px rgba(0,0,0,0.5)'
-              }}>
-                DOMINA TU MUNDO <br />
-                CON <span style={{ color: '#cc0000', position: 'relative' }}>
-                  DEVIL GAMING
-                </span>
-              </Typography>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
-                <Button 
-                  component={Link} 
-                  href="/shop" 
-                  variant="contained" 
-                  size="large" 
-                  endIcon={<ArrowRight />}
-                  sx={{ 
-                    py: 1.5, 
-                    px: 4, 
-                    fontSize: '0.95rem', 
-                    fontWeight: 700,
-                    borderRadius: 3,
-                    boxShadow: '0 10px 20px rgba(204, 0, 0, 0.3)',
-                    '&:hover': {
-                      transform: 'translateY(-3px)',
-                      boxShadow: '0 15px 30px rgba(204, 0, 0, 0.4)',
-                    },
-                    transition: 'all 0.3s'
-                  }}
-                >
-                  Explorar Arsenal
-                </Button>
-                <Button 
-                  component={Link} 
-                  href="/shop?featured=true" 
-                  variant="outlined" 
-                  size="large" 
-                  sx={{ 
-                    py: 1.5, 
-                    px: 4, 
-                    fontSize: '0.95rem', 
-                    fontWeight: 700,
-                    borderRadius: 3,
-                    borderColor: 'rgba(255,255,255,0.3)',
-                    color: 'white',
-                    '&:hover': {
-                      borderColor: 'white',
-                      background: 'rgba(255,255,255,0.05)'
-                    }
-                  }}
-                >
-                  Ofertas Top
-                </Button>
-              </Stack>
-            </Box>
-          </motion.div>
-        </Grid>
-        
-        {/* Floating Element for Decoration */}
-        <Grid size={{ xs: 0, md: 5 }} sx={{ display: { xs: 'none', md: 'block' } }}>
-          <motion.div
-            animate={{ 
-              y: [0, -15, 0],
-            }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            style={{ textAlign: 'center' }}
-          >
-            <Box sx={{ 
-              width: 200, 
-              height: 200, 
-              margin: '0 auto',
-              background: 'radial-gradient(circle, rgba(204,0,0,0.1) 0%, transparent 70%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative'
-            }}>
-               <Zap size={120} color="#cc0000" style={{ opacity: 0.4, filter: 'drop-shadow(0 0 20px rgba(204,0,0,0.5))' }} />
-            </Box>
-          </motion.div>
+          <Typography variant="overline" color="primary.main" sx={{ fontWeight: 900, fontSize: '0.9rem', letterSpacing: 5, display: 'block', mb: 1 }}>
+            ESTÁNDAR DE ÉLITE
+          </Typography>
+          <Typography variant="h1" color="white" sx={{
+            mb: 1.5,
+            fontSize: { xs: '2.2rem', md: '3.4rem' },
+            lineHeight: 1.1,
+            textShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          }}>
+            DOMINA TU MUNDO <br />
+            CON <span style={{ color: '#cc0000', position: 'relative' }}>
+              DEVIL GAMING
+            </span>
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
+            <Button
+              component={Link}
+              href="/shop"
+              variant="contained"
+              size="large"
+              endIcon={<ArrowRight />}
+              sx={{
+                py: 1.5,
+                px: 4,
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                borderRadius: 3,
+                boxShadow: '0 10px 20px rgba(204, 0, 0, 0.3)',
+                '&:hover': {
+                  transform: 'translateY(-3px)',
+                  boxShadow: '0 15px 30px rgba(204, 0, 0, 0.4)',
+                },
+                transition: 'all 0.3s'
+              }}
+            >
+              Explorar Arsenal
+            </Button>
+            <Button
+              component={Link}
+              href="/shop?featured=true"
+              variant="outlined"
+              size="large"
+              sx={{
+                py: 1.5,
+                px: 4,
+                fontSize: '0.95rem',
+                fontWeight: 700,
+                borderRadius: 3,
+                borderColor: 'rgba(255,255,255,0.3)',
+                color: 'white',
+                '&:hover': {
+                  borderColor: 'white',
+                  background: 'rgba(255,255,255,0.05)'
+                }
+              }}
+            >
+              Ofertas Top
+            </Button>
+          </Stack>
         </Grid>
       </Grid>
     </Container>
-  </Box>
+  </Box >
 );
 
 const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
@@ -201,13 +140,13 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
     whileHover={{ y: -10 }}
     transition={{ type: "spring", stiffness: 400, damping: 17 }}
   >
-    <Paper 
-      elevation={0} 
-      sx={{ 
-        p: 4, 
-        textAlign: 'center', 
-        bgcolor: 'white', 
-        border: '1px solid rgba(0,0,0,0.05)', 
+    <Paper
+      elevation={0}
+      sx={{
+        p: 4,
+        textAlign: 'center',
+        bgcolor: 'white',
+        border: '1px solid rgba(0,0,0,0.05)',
         borderRadius: 4,
         boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -222,12 +161,12 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
         }
       }}
     >
-      <Box 
+      <Box
         className="icon-wrapper"
-        sx={{ 
-          color: 'primary.main', 
-          mb: 2, 
-          display: 'flex', 
+        sx={{
+          color: 'primary.main',
+          mb: 2,
+          display: 'flex',
           justifyContent: 'center',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         }}
@@ -251,7 +190,7 @@ const HomePage = () => {
         .from('products')
         .select('*, category:categories(name)')
         .limit(8); // Showing 8 products as featured for now
-      
+
       if (!error) {
         setFeaturedProducts(data || []);
       }
@@ -303,7 +242,6 @@ const HomePage = () => {
               modules={[Navigation, Pagination, Autoplay]}
               spaceBetween={30}
               slidesPerView={1}
-              navigation
               pagination={{ clickable: true }}
               autoplay={{ delay: 5000 }}
               breakpoints={{
@@ -330,9 +268,9 @@ const HomePage = () => {
         <Typography variant="h2" align="center" sx={{ mb: 6 }}>Explora por Categoría</Typography>
         <Grid container spacing={3}>
           <Grid size={{ xs: 12, md: 6 }}>
-            <Paper component={Link} href="/shop" sx={{ 
-              height: 400, 
-              position: 'relative', 
+            <Paper component={Link} href="/shop" sx={{
+              height: 400,
+              position: 'relative',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'end',
@@ -351,9 +289,9 @@ const HomePage = () => {
           <Grid size={{ xs: 12, md: 6 }}>
             <Grid container spacing={3}>
               <Grid size={12}>
-                <Paper component={Link} href="/shop" sx={{ 
-                  height: 188, 
-                  position: 'relative', 
+                <Paper component={Link} href="/shop" sx={{
+                  height: 188,
+                  position: 'relative',
                   overflow: 'hidden',
                   display: 'flex',
                   alignItems: 'center',
@@ -369,9 +307,9 @@ const HomePage = () => {
                 </Paper>
               </Grid>
               <Grid size={12}>
-                <Paper component={Link} href="/shop" sx={{ 
-                  height: 188, 
-                  position: 'relative', 
+                <Paper component={Link} href="/shop" sx={{
+                  height: 188,
+                  position: 'relative',
                   overflow: 'hidden',
                   display: 'flex',
                   alignItems: 'center',

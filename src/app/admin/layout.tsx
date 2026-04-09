@@ -5,7 +5,7 @@ import {
   ListItemText, Typography, Divider, AppBar, Toolbar, Avatar
 } from '@mui/material';
 import { 
-  LayoutDashboard, Package, ShoppingBag, Users, LogOut, TrendingUp
+  LayoutDashboard, Package, ShoppingBag, LogOut, Store
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -85,6 +85,14 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </List>
           <Box sx={{ mt: 'auto', p: 2 }}>
             <List>
+              <ListItem disablePadding sx={{ mb: 1 }}>
+                <ListItemButton component={Link} href="/" sx={{ borderRadius: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.07)' } }}>
+                  <ListItemIcon sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 40 }}>
+                    <Store size={20} />
+                  </ListItemIcon>
+                  <ListItemText primary="Ir a la Tienda" primaryTypographyProps={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.7)' }} />
+                </ListItemButton>
+              </ListItem>
               <ListItem disablePadding>
                 <ListItemButton onClick={handleLogout} sx={{ borderRadius: 2 }}>
                   <ListItemIcon sx={{ color: 'rgba(255,255,255,0.5)', minWidth: 40 }}>

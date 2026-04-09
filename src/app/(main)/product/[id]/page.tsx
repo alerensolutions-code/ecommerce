@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Grid, 
-  Button, 
-  Paper, 
-  Divider, 
-  Chip, 
-  Stack, 
-  Breadcrumbs, 
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Button,
+  Paper,
+  Divider,
+  Chip,
+  Stack,
+  Breadcrumbs,
   Link,
   Rating,
   Tabs,
@@ -19,14 +19,15 @@ import {
   IconButton,
   CircularProgress
 } from '@mui/material';
-import { 
-  ShoppingCart, 
-  ShieldCheck, 
-  Truck, 
+import {
+  ShoppingCart,
+  ShieldCheck,
+  Truck,
   RotateCcw,
   Heart,
   Share2,
-  Check
+  Check,
+  MessageCircle
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 import NextLink from 'next/link';
@@ -40,7 +41,7 @@ const ProductDetailPage = () => {
   const { id } = useParams() as { id: string };
   const { dispatch } = useCart();
   const [activeTab, setActiveTab] = useState(0);
-  
+
   const [product, setProduct] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,18 +51,18 @@ const ProductDetailPage = () => {
   useEffect(() => {
     const fetchProductData = async () => {
       setLoading(true);
-      
+
       // Fetch main product with category join
       const { data: pData } = await supabase
         .from('products')
         .select('*, category:categories(name)')
         .eq('id', id)
         .single();
-      
+
       if (pData) {
         setProduct(pData);
         setSelectedImage(pData.images && pData.images[0] ? pData.images[0] : (pData.image || '/placeholder.png'));
-        
+
         // Fetch related products using category_id
         const { data: related } = await supabase
           .from('products')
@@ -69,10 +70,10 @@ const ProductDetailPage = () => {
           .eq('category_id', pData.category_id)
           .neq('id', id)
           .limit(4);
-        
+
         setRelatedProducts(related || []);
       }
-      
+
       setLoading(false);
     };
 
@@ -107,8 +108,8 @@ const ProductDetailPage = () => {
   }
 
   const categoryName = product.category?.name || 'Varios';
-  const allImages = product.images && Array.isArray(product.images) && product.images.length > 0 
-    ? product.images 
+  const allImages = product.images && Array.isArray(product.images) && product.images.length > 0
+    ? product.images
     : [product.image || '/placeholder.png'];
 
   return (
@@ -116,7 +117,7 @@ const ProductDetailPage = () => {
       {/* Breadcrumbs */}
       <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 2 }}>
         <Container maxWidth="xl">
-          <Breadcrumbs>
+          <Breadcrumbs separator="›" aria-label="breadcrumb">
             <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
             <Link component={NextLink} href="/shop" color="inherit" underline="hover">Tienda</Link>
             <Link component={NextLink} href={`/shop?category=${categoryName}`} color="inherit" underline="hover">{categoryName}</Link>
@@ -130,11 +131,11 @@ const ProductDetailPage = () => {
           {/* Main Content - Left: Images */}
           <Grid size={{ xs: 12, md: 7, lg: 6 }}>
             <Box sx={{ position: 'sticky', top: 100 }}>
-              <Paper 
-                elevation={0} 
-                sx={{ 
-                  borderRadius: 4, 
-                  overflow: 'hidden', 
+              <Paper
+                elevation={0}
+                sx={{
+                  borderRadius: 4,
+                  overflow: 'hidden',
                   bgcolor: 'white',
                   border: '1px solid rgba(0,0,0,0.05)',
                   aspectRatio: '1/1',
@@ -191,11 +192,6 @@ const ProductDetailPage = () => {
             <Box>
               <Chip label={categoryName} sx={{ mb: 2, fontWeight: 700, borderRadius: 1 }} size="small" color="primary" variant="outlined" />
               <Typography variant="h2" sx={{ mb: 2, fontWeight: 800 }}>{product.name}</Typography>
-              
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 3 }}>
-                <Rating value={5} readOnly precision={0.5} />
-                <Typography variant="body2" color="text.secondary">(Verificado)</Typography>
-              </Stack>
 
               <Box sx={{ mb: 4 }}>
                 <Typography variant="h3" color="primary.main" sx={{ fontWeight: 800 }}>
@@ -227,103 +223,93 @@ const ProductDetailPage = () => {
                   transition={{ duration: 0.3 }}
                   style={{ flex: 1 }}
                 >
-                  <Button
-                    variant="contained"
-                    size="large"
-                    color={isAdded ? "success" : "primary"}
-                    startIcon={
-                      <AnimatePresence mode="wait">
-                        <motion.div
-                          key={isAdded ? 'check' : 'cart'}
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {isAdded ? <Check size={24} /> : <ShoppingCart size={24} />}
-                        </motion.div>
-                      </AnimatePresence>
-                    }
-                    onClick={handleAddToCart}
-                    disabled={product.stock === 0 || isAdded}
-                    sx={{ 
-                      py: 2, 
-                      width: '100%',
-                      fontSize: '1.1rem', 
-                      fontWeight: 800, 
-                      borderRadius: 2,
-                      transition: 'all 0.3s ease',
-                      ...(isAdded && {
-                        bgcolor: '#4caf50',
-                        color: 'white',
-                        '&:hover': { bgcolor: '#45a049' },
-                        '&.Mui-disabled': {
+                  {product.stock > 0 && (
+                    <Button
+                      variant="contained"
+                      size="large"
+                      color={isAdded ? "success" : "primary"}
+                      startIcon={
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={isAdded ? 'check' : 'cart'}
+                            initial={{ scale: 0, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            {isAdded ? <Check size={24} /> : <ShoppingCart size={24} />}
+                          </motion.div>
+                        </AnimatePresence>
+                      }
+                      onClick={handleAddToCart}
+                      disabled={isAdded}
+                      sx={{
+                        py: 2,
+                        width: '100%',
+                        fontSize: '1.1rem',
+                        fontWeight: 800,
+                        borderRadius: 2,
+                        transition: 'all 0.3s ease',
+                        ...(isAdded && {
                           bgcolor: '#4caf50',
                           color: 'white',
-                          opacity: 1
+                          '&:hover': { bgcolor: '#45a049' },
+                          '&.Mui-disabled': {
+                            bgcolor: '#4caf50',
+                            color: 'white',
+                            opacity: 1
+                          }
+                        })
+                      }}
+                    >
+                      {isAdded ? '¡Agregado!' : 'Añadir al Carrito'}
+                    </Button>
+                  )}
+
+                  {/* Botón Consultar WhatsApp */}
+                  {product.stock === 0 && (
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      startIcon={<MessageCircle size={24} />}
+                      href={`https://wa.me/5491100000000?text=${encodeURIComponent(`Hola! Quiero consultar la disponibilidad del producto: ${product.name}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        py: 2,
+                        width: '100%',
+                        fontSize: '1.1rem',
+                        fontWeight: 800,
+                        borderRadius: 2,
+                        mt: 2,
+                        color: '#25d366',
+                        borderColor: '#25d366',
+                        '&:hover': {
+                          borderColor: '#1da851',
+                          bgcolor: 'rgba(37,211,102,0.05)'
                         }
-                      })
-                    }}
-                  >
-                    {isAdded ? '¡Agregado!' : 'Añadir al Carrito'}
-                  </Button>
+                      }}
+                    >
+                      Consultar por WhatsApp
+                    </Button>
+                  )}
                 </motion.div>
-                <IconButton sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 2 }}>
-                  <Heart size={24} />
-                </IconButton>
-                <IconButton sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 2 }}>
-                  <Share2 size={24} />
-                </IconButton>
               </Stack>
 
-              {/* Guarantees */}
-              <Grid container spacing={2} sx={{ mt: 6 }}>
-                <Grid size={4}>
-                  <Stack sx={{ textAlign: 'center', alignItems: 'center' }}>
-                    <Truck size={24} color="#666" />
-                    <Typography variant="caption" sx={{ fontWeight: 700, mt: 1 }}>Envío Express</Typography>
-                  </Stack>
-                </Grid>
-                <Grid size={4}>
-                  <Stack sx={{ textAlign: 'center', alignItems: 'center' }}>
-                    <ShieldCheck size={24} color="#666" />
-                    <Typography variant="caption" sx={{ fontWeight: 700, mt: 1 }}>Compra Segura</Typography>
-                  </Stack>
-                </Grid>
-                <Grid size={4}>
-                  <Stack sx={{ textAlign: 'center', alignItems: 'center' }}>
-                    <RotateCcw size={24} color="#666" />
-                    <Typography variant="caption" sx={{ fontWeight: 700, mt: 1 }}>Garantía Devil</Typography>
-                  </Stack>
-                </Grid>
-              </Grid>
             </Box>
           </Grid>
         </Grid>
 
         {/* Description Section */}
         <Box sx={{ mt: 10 }}>
-          <Tabs 
-            value={activeTab} 
-            onChange={(_, val) => setActiveTab(val)}
-            sx={{ 
-              borderBottom: '1px solid rgba(0,0,0,0.05)',
-              '& .MuiTab-root': { py: 3, px: 6, fontWeight: 700, fontSize: '1rem' }
-            }}
-          >
-            <Tab label="Descripción Detallada" />
-            <Tab label="Especificaciones" />
-          </Tabs>
+          <Typography variant="h5" sx={{ mb: 4, fontWeight: 800, borderBottom: '1px solid rgba(0,0,0,0.05)', pb: 2 }}>
+            Descripción Detallada
+          </Typography>
 
-          <Box sx={{ py: 6 }}>
-            {activeTab === 0 && (
-              <Typography variant="body1" sx={{ lineHeight: 1.8, maxWidth: 900, fontSize: '1.1rem' }}>
-                {product.description || 'No hay una descripción detallada para este producto yet.'}
-              </Typography>
-            )}
-            {activeTab === 1 && (
-              <Typography variant="body1">Las especificaciones técnicas se coordinan al realizar el pedido vía WhatsApp.</Typography>
-            )}
+          <Box sx={{ py: 2 }}>
+            <Typography variant="body1" sx={{ lineHeight: 1.8, maxWidth: 900, fontSize: '1.1rem' }}>
+              {product.description || 'No hay una descripción detallada para este producto yet.'}
+            </Typography>
           </Box>
         </Box>
 
