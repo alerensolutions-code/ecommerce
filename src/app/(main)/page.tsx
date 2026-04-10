@@ -187,7 +187,8 @@ const HomePage = () => {
       const { data, error } = await supabase
         .from('products')
         .select('*, category:categories(name)')
-        .limit(8); // Showing 8 products as featured for now
+        .eq('featured', true)
+        .limit(8);
 
       if (!error) {
         setFeaturedProducts(data || []);

@@ -13,10 +13,8 @@ import {
   Stack,
   Breadcrumbs,
   Link,
-  Rating,
   Tabs,
   Tab,
-  IconButton,
   CircularProgress,
   Table,
   TableBody,
@@ -26,11 +24,6 @@ import {
 } from '@mui/material';
 import {
   ShoppingCart,
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  Heart,
-  Share2,
   Check,
   MessageCircle
 } from 'lucide-react';

@@ -7,27 +7,24 @@ import {
   Typography,
   Stepper,
   Step,
-  StepLabel,
   Button,
   Paper,
   Grid,
   Card,
-  CardContent,
   CardMedia,
   Stack,
-  Chip,
   Divider,
   IconButton,
   Alert,
   CircularProgress,
-  Badge
+  StepButton
 } from '@mui/material';
-import { 
-  ChevronRight, 
-  ChevronLeft, 
-  ShoppingCart, 
-  Trash2, 
-  AlertTriangle, 
+import {
+  ChevronRight,
+  ChevronLeft,
+  ShoppingCart,
+  Trash2,
+  AlertTriangle,
   CheckCircle2,
   Cpu,
   Monitor,
@@ -40,7 +37,7 @@ import {
 import { supabase } from '../../../lib/supabase';
 import { useCart } from '../../../context/CartContext';
 import { Product } from '../../../types';
-import { CompatibilityEngine, CompatibilityResult } from '../../../lib/compatibility';
+import { CompatibilityEngine } from '../../../lib/compatibility';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Definición de Pasos
@@ -78,7 +75,7 @@ const PCBuilderPage = () => {
     const fetchStepProducts = async () => {
       setLoading(true);
       const currentCategory = STEPS[activeStep].category;
-      
+
       const { data, error } = await supabase
         .from('products')
         .select('*, category:categories(name, parent_id)')
@@ -86,7 +83,7 @@ const PCBuilderPage = () => {
 
       if (data) {
         // Solo filtramos por categoría principal
-        let filtered = data.filter((p: any) => 
+        let filtered = data.filter((p: any) =>
           p.category?.name?.toLowerCase().includes(currentCategory.toLowerCase()) ||
           p.category?.parent?.name?.toLowerCase().includes(currentCategory.toLowerCase())
         );
@@ -168,15 +165,15 @@ const PCBuilderPage = () => {
           </Grid>
 
           <Divider sx={{ mb: 4 }} />
-          
+
           <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 6 }}>
-             <Typography variant="h4" fontWeight={800}>Total: ${totalPrice.toLocaleString('es-ES')}</Typography>
-             <Stack direction="row" spacing={2}>
-               <Button variant="outlined" onClick={handleBack}>Volver y Editar</Button>
-               <Button variant="contained" size="large" onClick={handleAddToCart} startIcon={<ShoppingCart />}>
-                 Añadir Todo al Carrito
-               </Button>
-             </Stack>
+            <Typography variant="h4" fontWeight={800}>Total: ${totalPrice.toLocaleString('es-ES')}</Typography>
+            <Stack direction="row" spacing={2}>
+              <Button variant="outlined" onClick={handleBack}>Volver y Editar</Button>
+              <Button variant="contained" size="large" onClick={handleAddToCart} startIcon={<ShoppingCart />}>
+                Añadir Todo al Carrito
+              </Button>
+            </Stack>
           </Stack>
         </Paper>
       </Container>
@@ -198,10 +195,12 @@ const PCBuilderPage = () => {
             Seleccioná componente por componente. Validaremos la compatibilidad por vos.
           </Typography>
 
-          <Stepper activeStep={activeStep} alternativeLabel>
-            {STEPS.map((step) => (
+          <Stepper activeStep={activeStep} alternativeLabel nonLinear>
+            {STEPS.map((step, index) => (
               <Step key={step.name}>
-                <StepLabel>{step.name}</StepLabel>
+                <StepButton color="inherit" onClick={() => setActiveStep(index)}>
+                  {step.name}
+                </StepButton>
               </Step>
             ))}
           </Stepper>
@@ -214,12 +213,38 @@ const PCBuilderPage = () => {
           <Grid size={{ xs: 12, md: 8 }}>
             <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <Stack direction="row" spacing={2} alignItems="center">
-                <Box sx={{ p: 1.5, bgcolor: 'primary.main', borderRadius: 2, color: 'white' }}>
+                <Box sx={{
+                  p: 1.5,
+                  bgcolor: 'primary.main',
+                  borderRadius: 2,
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
                   <StepIcon size={24} />
                 </Box>
                 <Typography variant="h5" fontWeight={800}>Seleccioná tu {currentStep.name}</Typography>
               </Stack>
-              <Button onClick={handleSkip} color="inherit" sx={{ fontWeight: 600 }}>Saltear este paso</Button>
+
+              <Stack direction="row" spacing={1}>
+                <IconButton
+                  onClick={handleBack}
+                  disabled={activeStep === 0}
+                  size="small"
+                  sx={{ border: '1px solid rgba(0,0,0,0.1)', bgcolor: 'white' }}
+                >
+                  <ChevronLeft size={20} />
+                </IconButton>
+                <IconButton
+                  onClick={handleNext}
+                  disabled={activeStep === STEPS.length - 1}
+                  size="small"
+                  sx={{ border: '1px solid rgba(0,0,0,0.1)', bgcolor: 'white' }}
+                >
+                  <ChevronRight size={20} />
+                </IconButton>
+              </Stack>
             </Box>
 
             {loading ? (
@@ -236,40 +261,40 @@ const PCBuilderPage = () => {
                   products.map((p) => {
                     const stepKey = getStepKey(activeStep);
                     const isSelected = build[stepKey]?.id === p.id;
-                    
+
                     // Validar compatibilidad en tiempo real para este producto específico
                     // Simulamos un build con este producto para ver si rompe algo
                     const potentialBuild = { ...build, [stepKey]: p };
                     const issues = CompatibilityEngine.validateBuild(potentialBuild as any);
-                    
+
                     // Consideramos incompatible si hay errores (no warnings) relacionados con este producto
                     const compatibilityError = issues.find(i => i.type === 'error');
                     const isCompatible = !compatibilityError;
 
                     return (
                       <Grid size={{ xs: 12, sm: 6 }} key={p.id}>
-                        <Card 
+                        <Card
                           elevation={0}
-                          sx={{ 
-                            borderRadius: 3, 
-                            border: '1px solid', 
+                          sx={{
+                            borderRadius: 3,
+                            border: '1px solid',
                             borderColor: isSelected ? 'primary.main' : 'rgba(0,0,0,0.05)',
                             transition: 'all 0.2s',
                             opacity: isCompatible ? 1 : 0.6,
                             filter: isCompatible ? 'none' : 'grayscale(0.8)',
-                            '&:hover': { 
-                              transform: isCompatible ? 'translateY(-4px)' : 'none', 
-                              boxShadow: isCompatible ? '0 10px 20px rgba(0,0,0,0.05)' : 'none' 
+                            '&:hover': {
+                              transform: isCompatible ? 'translateY(-4px)' : 'none',
+                              boxShadow: isCompatible ? '0 10px 20px rgba(0,0,0,0.05)' : 'none'
                             },
                             position: 'relative',
                             overflow: 'visible'
                           }}
                         >
                           {!isCompatible && (
-                            <Box sx={{ 
-                              position: 'absolute', 
-                              top: 10, 
-                              right: 10, 
+                            <Box sx={{
+                              position: 'absolute',
+                              top: 10,
+                              right: 10,
                               zIndex: 10,
                               bgcolor: 'rgba(0,0,0,0.6)',
                               backdropFilter: 'blur(4px)',
@@ -287,25 +312,25 @@ const PCBuilderPage = () => {
                           )}
 
                           <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-                            <Box 
-                              component="img" 
-                              src={p.images?.[0] || '/placeholder.png'} 
-                              sx={{ 
-                                width: 100, 
-                                height: 100, 
-                                objectFit: 'contain', 
-                                bgcolor: '#f4f4f4', 
-                                borderRadius: 2 
-                              }} 
+                            <Box
+                              component="img"
+                              src={p.images?.[0] || '/placeholder.png'}
+                              sx={{
+                                width: 100,
+                                height: 100,
+                                objectFit: 'contain',
+                                bgcolor: '#f4f4f4',
+                                borderRadius: 2
+                              }}
                             />
                             <Box sx={{ flex: 1 }}>
                               <Typography variant="body2" fontWeight={800} sx={{ mb: 0.5 }}>{p.name}</Typography>
                               <Typography variant="body1" color="primary" fontWeight={700} sx={{ mb: 1 }}>
                                 ${p.price.toLocaleString('es-ES')}
                               </Typography>
-                              <Button 
-                                variant={isSelected ? "contained" : "outlined"} 
-                                size="small" 
+                              <Button
+                                variant={isSelected ? "contained" : "outlined"}
+                                size="small"
                                 fullWidth
                                 onClick={() => isCompatible && handleSelectProduct(p)}
                                 disabled={!isCompatible && !isSelected}
@@ -330,7 +355,7 @@ const PCBuilderPage = () => {
               <Paper elevation={0} sx={{ p: 3, borderRadius: 4, mb: 3, border: '1px solid rgba(0,0,0,0.05)' }}>
                 <Typography variant="h6" fontWeight={800} gutterBottom>Tu Configuración</Typography>
                 <Divider sx={{ my: 2 }} />
-                
+
                 <Stack spacing={2}>
                   {STEPS.map((step, idx) => {
                     const product = build[getStepKey(idx)];
@@ -353,17 +378,34 @@ const PCBuilderPage = () => {
                 </Stack>
 
                 <Divider sx={{ my: 3 }} />
-                
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 4 }}>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                   <Typography variant="h6" fontWeight={800}>Total Estimado:</Typography>
                   <Typography variant="h6" fontWeight={800} color="primary">${totalPrice.toLocaleString('es-ES')}</Typography>
                 </Box>
+
+                {activeStep === STEPS.length - 1 && (
+                  <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={handleNext}
+                    sx={{
+                      py: 1.5,
+                      fontWeight: 700,
+                      borderRadius: 2,
+                      borderWidth: 2,
+                      '&:hover': { borderWidth: 2 }
+                    }}
+                  >
+                    Finalizar Configuración
+                  </Button>
+                )}
               </Paper>
 
               <AnimatePresence>
                 {compatibilityIssues.length > 0 && (
                   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9 }}>
-                    <Alert 
+                    <Alert
                       severity={compatibilityIssues.some(i => i.type === 'error') ? 'error' : 'warning'}
                       icon={<AlertTriangle size={20} />}
                       sx={{ borderRadius: 3, mb: 2 }}
@@ -378,12 +420,6 @@ const PCBuilderPage = () => {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {activeStep > 0 && (
-                <Button fullWidth onClick={handleBack} startIcon={<ChevronLeft />} sx={{ mt: 2 }}>
-                  Paso Anterior
-                </Button>
-              )}
             </Box>
           </Grid>
         </Grid>

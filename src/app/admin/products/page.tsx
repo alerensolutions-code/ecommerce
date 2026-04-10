@@ -31,9 +31,10 @@ import {
   Tooltip,
   MenuItem
 } from '@mui/material';
-import { Plus, Search, Edit2, Trash2, FileDown } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, FileDown, Star } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { exportToCSV } from '../../../lib/export';
+import { FormControlLabel, Switch } from '@mui/material';
 
 type Product = {
   id: string;
@@ -44,6 +45,7 @@ type Product = {
   category_id: string;
   category?: { name: string; parent_id?: string | null; parent?: { name: string } };
   stock: number;
+  featured?: boolean;
   technical_specs?: Record<string, any>;
 };
 
@@ -73,6 +75,7 @@ const ProductsManagement = () => {
     category_id: '',
     price: 0,
     stock: 0,
+    featured: false,
     images: [] as string[],
     technical_specs: [] as { key: string, value: string }[]
   });
@@ -80,6 +83,7 @@ const ProductsManagement = () => {
   // Filtros y Paginación
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [filterStock, setFilterStock] = useState<string>('all');
+  const [filterFeatured, setFilterFeatured] = useState<string>('all');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -150,8 +154,15 @@ const ProductsManagement = () => {
       });
     }
 
+    // Filtro por destacados
+    if (filterFeatured !== 'all') {
+      result = result.filter((p: Product) => 
+        filterFeatured === 'yes' ? p.featured : !p.featured
+      );
+    }
+
     return result;
-  }, [allProducts, searchTerm, selectedCategory, filterStock]);
+  }, [allProducts, searchTerm, selectedCategory, filterStock, filterFeatured]);
 
   const pagedProducts = useMemo(() => {
     return filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -165,6 +176,7 @@ const ProductsManagement = () => {
       category_id: product?.category_id || '',
       price: product?.price || 0,
       stock: product?.stock || 0,
+      featured: product?.featured || false,
       images: product?.images || [],
       technical_specs: product?.technical_specs
         ? Object.entries(product.technical_specs).map(([key, value]) => ({ key, value: String(value) }))
@@ -192,17 +204,34 @@ const ProductsManagement = () => {
     }
   };
 
-  // Función para aplicar la plantilla de especificaciones de una categoría
+  // Función para aplicar la plantilla de especificaciones de una categoría (con herencia de padres)
   const applySpecTemplate = (categoryId: string) => {
     const category = dbCategories.find(c => c.id === categoryId);
-    if (category?.spec_template && category.spec_template.length > 0) {
-      const templateSpecs = category.spec_template.map(key => ({ key, value: '' }));
+    if (!category) return;
+
+    let allSpecs: string[] = [];
+
+    // 1. Si es una subcategoría, intentamos obtener las specs del padre primero
+    if (category.parent_id) {
+      const parent = dbCategories.find(c => c.id === category.parent_id);
+      if (parent?.spec_template) {
+        allSpecs = [...parent.spec_template];
+      }
+    }
+
+    // 2. Añadimos las specs de la propia categoría (evitando duplicados)
+    if (category.spec_template) {
+      const uniqueNewSpecs = category.spec_template.filter(s => !allSpecs.includes(s));
+      allSpecs = [...allSpecs, ...uniqueNewSpecs];
+    }
+
+    if (allSpecs.length > 0) {
+      const templateSpecs = allSpecs.map(key => ({ key, value: '' }));
       setFormValues(prev => ({
         ...prev,
         technical_specs: templateSpecs
       }));
     } else {
-      // Si la categoría no tiene plantilla, limpiamos las specs existentes
       setFormValues(prev => ({
         ...prev,
         technical_specs: []
@@ -277,6 +306,7 @@ const ProductsManagement = () => {
       category_id: formValues.category_id,
       price: formValues.price,
       stock: formValues.stock,
+      featured: formValues.featured,
       images: finalImages,
       technical_specs: formValues.technical_specs.reduce((acc, curr) => {
         if (curr.key.trim()) {
@@ -395,6 +425,23 @@ const ProductsManagement = () => {
                 <MenuItem value="out">Sin Stock (0)</MenuItem>
               </MuiSelect>
             </FormControl>
+            
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel id="featured-filter-label">Destacados</InputLabel>
+              <MuiSelect
+                labelId="featured-filter-label"
+                value={filterFeatured}
+                label="Destacados"
+                onChange={(e: any) => {
+                  setFilterFeatured(e.target.value);
+                  setPage(0);
+                }}
+              >
+                <MenuItem value="all">Ver Todos</MenuItem>
+                <MenuItem value="yes">Solo Destacados</MenuItem>
+                <MenuItem value="no">No Destacados</MenuItem>
+              </MuiSelect>
+            </FormControl>
 
             <Tooltip title="Exportar Inventario (CSV)">
               <IconButton
@@ -413,6 +460,7 @@ const ProductsManagement = () => {
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>Producto</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Categoría</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Dest.</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Precio</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Stock / Estado</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Acciones</TableCell>
@@ -437,6 +485,13 @@ const ProductsManagement = () => {
                   </TableCell>
                   <TableCell>
                     <Chip label={product.category?.name || 'Sin categoría'} size="small" variant="outlined" />
+                  </TableCell>
+                  <TableCell>
+                    {product.featured && (
+                      <Tooltip title="Producto Destacado">
+                        <Star size={20} fill="#FFD700" color="#FFD700" />
+                      </Tooltip>
+                    )}
                   </TableCell>
                   <TableCell sx={{ fontWeight: 600 }}>${product.price.toLocaleString('es-ES')}</TableCell>
                   <TableCell>
@@ -571,6 +626,8 @@ const ProductsManagement = () => {
                   </Grid>
                 </Grid>
 
+
+
                 <Box sx={{ mt: 2 }}>
                   <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>Especificaciones Técnicas (Basadas en Categoría)</Typography>
                   <Stack spacing={2}>
@@ -614,8 +671,31 @@ const ProductsManagement = () => {
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
-              <Stack spacing={2}>
-                <Typography variant="subtitle2" fontWeight={700}>Imágenes (Max 5)</Typography>
+              <Stack spacing={3}>
+                <Box sx={{ p: 2, bgcolor: 'rgba(255,215,0,0.05)', borderRadius: 3, border: '1px solid rgba(255,215,0,0.2)' }}>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={formValues.featured}
+                        onChange={(e) => setFormValues({ ...formValues, featured: e.target.checked })}
+                        color="primary"
+                      />
+                    }
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography sx={{ fontWeight: 700 }}>Producto Destacado</Typography>
+                        <Star size={16} fill={formValues.featured ? "#FFD700" : "none"} color="#FFD700" />
+                      </Box>
+                    }
+                  />
+                  <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                    Aparecerá en el carrusel de la landing page.
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>Imágenes (Max 5)</Typography>
+                </Box>
 
                 <Box
                   sx={{

@@ -3,8 +3,8 @@ import "./globals.css";
 import Providers from "./Providers";
 
 export const metadata: Metadata = {
-  title: "Devil Gaming",
-  description: "Hardware de alto rendimiento",
+  title: "Devil Gaming | Elite Hardware & Gaming Setup",
+  description: "Dominá tu mundo con el estándar de élite en hardware. PCs armadas, componentes premium y periféricos de alto rendimiento.",
 };
 
 export default function RootLayout({
