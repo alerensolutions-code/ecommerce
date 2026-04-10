@@ -67,7 +67,7 @@ const WhatsAppIcon = () => (
 // ─── Types ────────────────────────────────────────────────────────────────────
 type OrderItem = { id: string; name: string; price: number; quantity: number; images?: string[] };
 type Product = { id: string; name: string; price: number; stock: number; category_id: string; images?: string[]; category?: { name: string } };
-type Category = { id: string; name: string };
+type Category = { id: string; name: string; parent_id?: string | null };
 
 // ─── Wizard para crear pedido ─────────────────────────────────────────────────
 const STEPS = ['Seleccionar Productos', 'Datos de Contacto', 'Confirmar Pedido'];
@@ -82,7 +82,8 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
   const [activeStep, setActiveStep] = useState(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState('');
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -95,16 +96,17 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
   }, [open]);
 
   useEffect(() => {
-    if (selectedCategoryId) {
+    const targetId = selectedSubCategoryId || selectedParentId;
+    if (targetId) {
       supabase
         .from('products')
         .select('*, category:categories(name)')
-        .eq('category_id', selectedCategoryId)
+        .eq('category_id', targetId)
         .then(({ data }) => setProducts(data || []));
     } else {
       setProducts([]);
     }
-  }, [selectedCategoryId]);
+  }, [selectedParentId, selectedSubCategoryId]);
 
   const handleAddProduct = (product: Product) => {
     setCartItems(prev => {
@@ -149,7 +151,8 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
 
   const handleReset = () => {
     setActiveStep(0);
-    setSelectedCategoryId('');
+    setSelectedParentId('');
+    setSelectedSubCategoryId('');
     setCartItems([]);
     setContactName('');
     setContactPhone('');
@@ -192,18 +195,38 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                   Buscá y seleccioná los productos para este pedido:
                 </Typography>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Categoría</InputLabel>
-                  <Select
-                    value={selectedCategoryId}
-                    label="Categoría"
-                    onChange={(e) => setSelectedCategoryId(e.target.value)}
-                    sx={{ bgcolor: 'white' }}
-                  >
-                    <MenuItem value="">Seleccionar categoría...</MenuItem>
-                    {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-                  </Select>
-                </FormControl>
+                <Stack spacing={2}>
+                  <FormControl fullWidth size="small">
+                    <InputLabel>Categoría</InputLabel>
+                    <Select
+                      value={selectedParentId}
+                      label="Categoría"
+                      onChange={(e) => {
+                        setSelectedParentId(e.target.value);
+                        setSelectedSubCategoryId('');
+                      }}
+                      sx={{ bgcolor: 'white' }}
+                    >
+                      <MenuItem value="">Seleccionar categoría...</MenuItem>
+                      {categories.filter(c => !c.parent_id).map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                    </Select>
+                  </FormControl>
+
+                  {selectedParentId && categories.some(c => c.parent_id === selectedParentId) && (
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Subcategoría</InputLabel>
+                      <Select
+                        value={selectedSubCategoryId}
+                        label="Subcategoría"
+                        onChange={(e) => setSelectedSubCategoryId(e.target.value)}
+                        sx={{ bgcolor: 'white' }}
+                      >
+                        <MenuItem value="">Todas las de {categories.find(c => c.id === selectedParentId)?.name}</MenuItem>
+                        {categories.filter(c => c.parent_id === selectedParentId).map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+                  )}
+                </Stack>
               </Box>
 
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -224,7 +247,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
                   <Box sx={{ py: 6, textAlign: 'center' }}>
                     <Search size={32} color="rgba(0,0,0,0.1)" style={{ margin: '0 auto 12px' }} />
                     <Typography variant="body2" color="text.secondary">
-                      {selectedCategoryId ? 'No hay productos en esta categoría.' : 'Seleccioná una categoría para ver productos.'}
+                    {(selectedSubCategoryId || selectedParentId) ? 'No hay productos en esta categoría.' : 'Seleccioná una categoría para ver productos.'}
                     </Typography>
                   </Box>
                 ) : products.map(p => (
@@ -430,7 +453,8 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [selectedParentId, setSelectedParentId] = useState('');
+  const [selectedSubCategoryId, setSelectedSubCategoryId] = useState('');
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
 
   useEffect(() => {
@@ -448,16 +472,17 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
   }, [open]);
 
   useEffect(() => {
-    if (selectedCategoryId) {
+    const targetId = selectedSubCategoryId || selectedParentId;
+    if (targetId) {
       supabase
         .from('products')
         .select('*, category:categories(name)')
-        .eq('category_id', selectedCategoryId)
+        .eq('category_id', targetId)
         .then(({ data }) => setProducts(data || []));
     } else {
       setProducts([]);
     }
-  }, [selectedCategoryId]);
+  }, [selectedParentId, selectedSubCategoryId]);
 
   const handleAddProduct = (product: Product) => {
     setCartItems(prev => {
@@ -556,18 +581,38 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
                     Agregar nuevos productos al pedido:
                   </Typography>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Categoría</InputLabel>
-                    <Select
-                      value={selectedCategoryId}
-                      label="Categoría"
-                      onChange={(e) => setSelectedCategoryId(e.target.value)}
-                      sx={{ bgcolor: 'white' }}
-                    >
-                      <MenuItem value="">Seleccionar categoría...</MenuItem>
-                      {categories.map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
-                    </Select>
-                  </FormControl>
+                  <Stack spacing={2}>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Categoría</InputLabel>
+                      <Select
+                        value={selectedParentId}
+                        label="Categoría"
+                        onChange={(e) => {
+                          setSelectedParentId(e.target.value);
+                          setSelectedSubCategoryId('');
+                        }}
+                        sx={{ bgcolor: 'white' }}
+                      >
+                        <MenuItem value="">Seleccionar categoría...</MenuItem>
+                        {categories.filter(c => !c.parent_id).map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                      </Select>
+                    </FormControl>
+
+                    {selectedParentId && categories.some(c => c.parent_id === selectedParentId) && (
+                      <FormControl fullWidth size="small">
+                        <InputLabel>Subcategoría</InputLabel>
+                        <Select
+                          value={selectedSubCategoryId}
+                          label="Subcategoría"
+                          onChange={(e) => setSelectedSubCategoryId(e.target.value)}
+                          sx={{ bgcolor: 'white' }}
+                        >
+                          <MenuItem value="">Todas las de {categories.find(c => c.id === selectedParentId)?.name}</MenuItem>
+                          {categories.filter(c => c.parent_id === selectedParentId).map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+                        </Select>
+                      </FormControl>
+                    )}
+                  </Stack>
                 </Box>
 
                 <Box sx={{ 
@@ -584,7 +629,7 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                     <Box sx={{ py: 4, textAlign: 'center' }}>
                       <Search size={28} color="rgba(0,0,0,0.1)" style={{ margin: '0 auto 8px' }} />
                       <Typography variant="body2" color="text.secondary">
-                        {selectedCategoryId ? 'No hay productos en esta categoría.' : 'Seleccioná una categoría para ver productos.'}
+                        {(selectedSubCategoryId || selectedParentId) ? 'No hay productos en esta categoría.' : 'Seleccioná una categoría para ver productos.'}
                       </Typography>
                     </Box>
                   ) : products.map(p => (

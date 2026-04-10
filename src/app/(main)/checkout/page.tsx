@@ -1,18 +1,18 @@
 "use client";
 
 import { useState } from 'react';
-import { 
-  Box, 
-  Container, 
-  Typography, 
-  Grid, 
-  Paper, 
-  Button, 
-  TextField, 
-  Stack, 
-  Divider, 
-  Stepper, 
-  Step, 
+import {
+  Box,
+  Container,
+  Typography,
+  Grid,
+  Paper,
+  Button,
+  TextField,
+  Stack,
+  Divider,
+  Stepper,
+  Step,
   StepLabel,
   Alert,
   AlertTitle
@@ -31,7 +31,7 @@ const CheckoutPage = () => {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [whatsappUrl, setWhatsappUrl] = useState('');
-  
+
   // Form State
   const [formData, setFormData] = useState({
     firstName: '',
@@ -53,7 +53,7 @@ const CheckoutPage = () => {
   const handleNext = async () => {
     if (activeStep === 0) {
       const orderId = `#DG-${Math.floor(Math.random() * 1000000)}`;
-      
+
       // 1. Save to Supabase
       const newOrder = {
         id: orderId,
@@ -70,7 +70,7 @@ const CheckoutPage = () => {
       };
 
       const { error } = await supabase.from('orders').insert([newOrder]);
-      
+
       if (error) {
         console.error('Error saving order:', error);
         alert('Hubo un error al registrar el pedido. Intenta nuevamente.');
@@ -92,7 +92,7 @@ const CheckoutPage = () => {
       // 3. Clear Cart and go to confirmation
       dispatch({ type: 'CLEAR_CART' });
       setActiveStep(1);
-      
+
       window.open(generatedLink, '_blank');
     }
   };
@@ -119,7 +119,7 @@ const CheckoutPage = () => {
 
       <Alert icon={<MessageCircle size={20} />} severity="info" sx={{ borderRadius: 2 }}>
         <AlertTitle sx={{ fontWeight: 700 }}>Gestión por WhatsApp</AlertTitle>
-        Al finalizar, se generará un mensaje automático para enviarnos por WhatsApp y coordinar el **pago y seguimiento**.
+        Al finalizar, se generará un mensaje automático para enviarnos por WhatsApp y coordinar el{' '}<Typography component="span" sx={{ fontWeight: 700 }}>pago y seguimiento</Typography>.
       </Alert>
 
       <Grid container spacing={2}>
@@ -150,22 +150,22 @@ const CheckoutPage = () => {
       <CheckCircle2 size={80} color="#4caf50" style={{ marginBottom: '24px' }} />
       <Typography variant="h3" sx={{ fontWeight: 800, mb: 2 }}>¡Pedido Registrado!</Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: 500, mx: 'auto' }}>
-        Hemos registrado tu pedido en el sistema. Para concretar la compra, es **indispensable** que nos envíes el mensaje por WhatsApp.
+        Hemos registrado tu pedido en el sistema. Para concretar la compra, es {' '}<Typography component="span" sx={{ fontWeight: 700 }}>indispensable</Typography> que nos envíes el mensaje por WhatsApp.
       </Typography>
-      
+
       <Stack spacing={2} alignItems="center">
-        <Button 
-          variant="contained" 
+        <Button
+          variant="contained"
           color="success"
-          size="large" 
+          size="large"
           startIcon={<Send size={20} />}
           onClick={() => window.open(whatsappUrl, '_blank')}
           sx={{ py: 2, px: 6, fontWeight: 900, borderRadius: 3, fontSize: '1.1rem' }}
         >
           ENVIAR PEDIDO POR WHATSAPP
         </Button>
-        <Button 
-          variant="text" 
+        <Button
+          variant="text"
           onClick={() => router.push('/')}
           sx={{ fontWeight: 600, color: 'text.secondary' }}
         >
@@ -181,7 +181,7 @@ const CheckoutPage = () => {
         {activeStep < 1 ? (
           <>
             <Typography variant="h4" sx={{ mb: 6, fontWeight: 800, textAlign: 'center' }}>Finalizar Compra</Typography>
-            
+
             <Stepper activeStep={activeStep} sx={{ mb: 8, display: { xs: 'none', sm: 'flex' } }}>
               {steps.map((label) => (
                 <Step key={label}>
@@ -249,7 +249,7 @@ const CheckoutPage = () => {
                     </Box>
                   </Stack>
                 </Paper>
-                
+
                 <Stack spacing={2} sx={{ mt: 3, px: 2 }}>
                   <Stack direction="row" spacing={1.5} alignItems="center">
                     <Truck size={18} opacity={0.5} />

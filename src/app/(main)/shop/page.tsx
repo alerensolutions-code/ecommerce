@@ -16,10 +16,12 @@ import {
   Paper,
   Button,
   CircularProgress,
-  Drawer
+  Drawer,
+  TextField,
+  InputAdornment
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import { LayoutGrid, List as ListIcon, Filter } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Filter, Search, X } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import NextLink from 'next/link';
 
@@ -34,37 +36,84 @@ const ShopPage = () => {
 
   const category = searchParams?.get('category') || '';
   const minPrice = Number(searchParams?.get('minPrice')) || 0;
-  const maxPrice = Number(searchParams?.get('maxPrice')) || 3000;
+  const maxPrice = Number(searchParams?.get('maxPrice')) || 10000000;
   const sortBy = searchParams?.get('sort') || 'newest';
   const stockFilter = searchParams?.get('stock') || '';
+  const searchQuery = searchParams?.get('q') || '';
 
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [localSearch, setLocalSearch] = useState(searchQuery);
 
+  // Sincronizar local con búsqueda externa (navbar)
   useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
+    setLocalSearch(searchQuery);
+  }, [searchQuery]);
+
+  const fetchInitialData = async () => {
+    setLoading(true);
+    try {
+      const { data: allProducts, error: pError } = await supabase
         .from('products')
         .select('*, category:categories(name)');
+      
+      const { data: allCategories, error: cError } = await supabase
+        .from('categories')
+        .select('*');
 
-      if (!error) {
-        setProducts(data || []);
-      }
+      if (allProducts) setProducts(allProducts);
+      if (allCategories) setCategories(allCategories);
+    } catch (error) {
+      console.error("Error fetching shop data:", error);
+    } finally {
       setLoading(false);
-    };
+    }
+  };
 
-    fetchProducts();
+  useEffect(() => {
+    fetchInitialData();
   }, []);
+
+  // Función para obtener IDs de categorías de forma recursiva (hijos, nietos, etc)
+  const getRecursiveIds = (parentId: string, allCats: any[]): string[] => {
+    let ids = [parentId];
+    const children = allCats.filter(c => c.parent_id === parentId);
+    children.forEach(child => {
+      ids = [...ids, ...getRecursiveIds(child.id, allCats)];
+    });
+    return ids;
+  };
 
   const filteredProducts = useMemo(() => {
     let result = [...products];
 
-    // Category Filter
+    // Search Filter
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(q) || 
+        (p.description && p.description.toLowerCase().includes(q))
+      );
+    }
+
+    // Category Filter (Soporte Jerárquico Completo)
     if (category) {
-      result = result.filter(p => p.category?.name === category);
+      const selectedCat = categories.find(c => 
+        c.name.toLowerCase() === category.toLowerCase()
+      );
+      
+      if (selectedCat) {
+        const allowedIds = getRecursiveIds(selectedCat.id, categories);
+        result = result.filter(p => allowedIds.includes(p.category_id));
+      } else {
+        // Fallback por si el nombre no coincide exactamente (case sensitive o tildes)
+        result = result.filter(p => 
+          p.category?.name?.toLowerCase().includes(category.toLowerCase())
+        );
+      }
     }
 
     // Price Filter
@@ -72,9 +121,9 @@ const ShopPage = () => {
 
     // Stock Filter
     if (stockFilter === 'in-stock') {
-      result = result.filter(p => p.stock && p.stock > 0);
+      result = result.filter(p => (p.stock || 0) > 0);
     } else if (stockFilter === 'out-of-stock') {
-      result = result.filter(p => !p.stock || p.stock === 0);
+      result = result.filter(p => (p.stock || 0) === 0);
     }
 
     // Sorting
@@ -93,7 +142,7 @@ const ShopPage = () => {
     }
 
     return result;
-  }, [products, category, minPrice, maxPrice, sortBy, stockFilter]);
+  }, [products, category, minPrice, maxPrice, sortBy, stockFilter, categories, searchQuery]);
 
   const handleSortChange = (event: SelectChangeEvent) => {
     const newParams = new URLSearchParams(searchParams?.toString() || '');
@@ -101,18 +150,42 @@ const ShopPage = () => {
     router.push(`${pathname}?${newParams.toString()}`);
   };
 
+  const updateSearch = (term: string) => {
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
+    if (term) {
+      newParams.set('q', term);
+    } else {
+      newParams.delete('q');
+    }
+    router.push(`${pathname}?${newParams.toString()}`);
+  };
+
   return (
-    <Box sx={{ bgcolor: '#f4f4f4', minHeight: '100vh', pb: 10 }}>
+    <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', pb: 10 }}>
       {/* Header / Breadcrumbs */}
       <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 4, mb: 4 }}>
         <Container maxWidth="xl">
           <Breadcrumbs separator="›" aria-label="breadcrumb" sx={{ mb: 2 }}>
             <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
-            <Typography color="text.primary">Tienda</Typography>
+            <Link component={NextLink} href="/shop" color="inherit" underline="hover">Tienda</Link>
+            {category && <Typography color="text.secondary">{category}</Typography>}
+            {searchQuery && <Typography color="primary" sx={{ fontWeight: 700 }}>Búsqueda: {searchQuery}</Typography>}
           </Breadcrumbs>
-          <Typography variant="h3" sx={{ fontWeight: 800 }}>
-            {category || 'Todos los Productos'}
+          <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: -1 }}>
+            {searchQuery ? `Resultados para: "${searchQuery}"` : (category || 'Todos los Productos')}
           </Typography>
+          {searchQuery && (
+            <Button 
+              size="small" 
+              startIcon={<X size={14} />} 
+              onClick={() => updateSearch('')}
+              sx={{ mt: 1, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
+              variant="outlined"
+              color="inherit"
+            >
+              Borrar búsqueda
+            </Button>
+          )}
         </Container>
       </Box>
 
@@ -134,18 +207,44 @@ const ShopPage = () => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                borderRadius: 2,
-                border: '1px solid rgba(0,0,0,0.05)'
+                borderRadius: 3,
+                border: '1px solid rgba(0,0,0,0.05)',
+                bgcolor: 'white'
               }}
             >
-              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                Mostrando <strong>{filteredProducts.length}</strong> productos
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 500, mr: 3 }}>
+                  Mostrando <strong style={{ color: '#000' }}>{filteredProducts.length}</strong> productos
+                </Typography>
+                
+                <TextField
+                  size="small"
+                  placeholder="Buscar en el catálogo..."
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && updateSearch(localSearch)}
+                  InputProps={{
+                    sx: { borderRadius: 2, bgcolor: 'rgba(0,0,0,0.02)', fontSize: '0.85rem', width: { xs: '100%', sm: 250 } },
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search size={16} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: localSearch && (
+                      <InputAdornment position="end">
+                        <IconButton size="small" onClick={() => updateSearch('')}>
+                          <X size={14} />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                />
+              </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
                 <Button
                   startIcon={<Filter size={16} />}
-                  sx={{ display: { xs: 'flex', md: 'none' } }}
+                  sx={{ display: { xs: 'flex', md: 'none' }, borderRadius: 2, fontWeight: 700 }}
                   onClick={() => setMobileFiltersOpen(true)}
                   variant="outlined"
                   size="small"
@@ -158,6 +257,7 @@ const ShopPage = () => {
                     size="small"
                     color={viewMode === 'grid' ? 'primary' : 'default'}
                     onClick={() => setViewMode('grid')}
+                    sx={{ bgcolor: viewMode === 'grid' ? 'rgba(204,0,0,0.05)' : 'transparent' }}
                   >
                     <LayoutGrid size={20} />
                   </IconButton>
@@ -165,6 +265,7 @@ const ShopPage = () => {
                     size="small"
                     color={viewMode === 'list' ? 'primary' : 'default'}
                     onClick={() => setViewMode('list')}
+                    sx={{ bgcolor: viewMode === 'list' ? 'rgba(204,0,0,0.05)' : 'transparent' }}
                   >
                     <ListIcon size={20} />
                   </IconButton>
@@ -177,6 +278,7 @@ const ShopPage = () => {
                     value={sortBy}
                     label="Ordenar por"
                     onChange={handleSortChange}
+                    sx={{ borderRadius: 2, fontWeight: 600 }}
                   >
                     <MenuItem value="newest">Lo más nuevo</MenuItem>
                     <MenuItem value="price-low">Precio: Menor a Mayor</MenuItem>
@@ -189,8 +291,8 @@ const ShopPage = () => {
             {/* Grid */}
             {loading ? (
               <Box sx={{ py: 10, textAlign: 'center' }}>
-                <CircularProgress color="primary" />
-                <Typography sx={{ mt: 2 }} color="text.secondary">Cargando productos...</Typography>
+                <CircularProgress color="primary" thickness={5} />
+                <Typography sx={{ mt: 2, fontWeight: 500 }} color="text.secondary">Cargando productos...</Typography>
               </Box>
             ) : filteredProducts.length > 0 ? (
               <Grid container spacing={3}>
@@ -201,15 +303,19 @@ const ShopPage = () => {
                 ))}
               </Grid>
             ) : (
-              <Box sx={{ py: 10, textAlign: 'center' }}>
-                <Typography variant="h5" color="text.secondary">No se encontraron productos con estos filtros.</Typography>
+              <Paper elevation={0} sx={{ py: 10, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)' }}>
+                <Typography variant="h5" color="text.secondary" sx={{ fontWeight: 700 }}>
+                  {searchQuery ? `No encontramos resultados para "${searchQuery}"` : "No se encontraron productos."}
+                </Typography>
+                <Typography color="text.secondary" sx={{ mb: 3 }}>Intentá con otros filtros o categorías.</Typography>
                 <Button
+                  variant="contained"
                   onClick={() => router.push(pathname || '/')}
-                  sx={{ mt: 2 }}
+                  sx={{ borderRadius: 2, px: 4, fontWeight: 800 }}
                 >
                   Limpiar Filtros
                 </Button>
-              </Box>
+              </Paper>
             )}
           </Grid>
         </Grid>
@@ -220,11 +326,13 @@ const ShopPage = () => {
         anchor="left"
         open={mobileFiltersOpen}
         onClose={() => setMobileFiltersOpen(false)}
-        PaperProps={{ sx: { width: 280, p: 2, bgcolor: '#f4f4f4' } }}
+        PaperProps={{ sx: { width: 300, p: 3, bgcolor: '#f8f9fa' } }}
       >
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" fontWeight={800}>Filtros</Typography>
-          <Button size="small" onClick={() => setMobileFiltersOpen(false)} color="inherit">Cerrar</Button>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h6" fontWeight={900}>Filtros</Typography>
+          <IconButton onClick={() => setMobileFiltersOpen(false)} size="small">
+            <Filter size={20} />
+          </IconButton>
         </Box>
         <CategorySidebar />
       </Drawer>

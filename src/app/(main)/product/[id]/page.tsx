@@ -17,7 +17,12 @@ import {
   Tabs,
   Tab,
   IconButton,
-  CircularProgress
+  CircularProgress,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow
 } from '@mui/material';
 import {
   ShoppingCart,
@@ -300,17 +305,76 @@ const ProductDetailPage = () => {
           </Grid>
         </Grid>
 
-        {/* Description Section */}
+        {/* Description & Specs Section */}
         <Box sx={{ mt: 10 }}>
-          <Typography variant="h5" sx={{ mb: 4, fontWeight: 800, borderBottom: '1px solid rgba(0,0,0,0.05)', pb: 2 }}>
-            Descripción Detallada
-          </Typography>
+          <Tabs
+            value={activeTab}
+            onChange={(_e, newValue) => setActiveTab(newValue)}
+            sx={{
+              borderBottom: '1px solid rgba(0,0,0,0.1)',
+              mb: 4,
+              '& .MuiTab-root': {
+                fontWeight: 800,
+                fontSize: '1rem',
+                textTransform: 'none',
+                minWidth: 150,
+              }
+            }}
+          >
+            <Tab label="Descripción" />
+            <Tab label="Especificaciones" />
+          </Tabs>
 
-          <Box sx={{ py: 2 }}>
-            <Typography variant="body1" sx={{ lineHeight: 1.8, maxWidth: 900, fontSize: '1.1rem' }}>
-              {product.description || 'No hay una descripción detallada para este producto yet.'}
-            </Typography>
-          </Box>
+          <AnimatePresence mode="wait">
+            {activeTab === 0 ? (
+              <motion.div
+                key="desc"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Box sx={{ py: 2 }}>
+                  <Typography variant="body1" sx={{ lineHeight: 1.8, maxWidth: 900, fontSize: '1.1rem', color: 'text.secondary' }}>
+                    {product.description || 'No hay una descripción detallada para este producto.'}
+                  </Typography>
+                </Box>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="specs"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Box sx={{ py: 2, maxWidth: 800 }}>
+                  {product.technical_specs && Object.keys(product.technical_specs).length > 0 ? (
+                    <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid rgba(0,0,0,0.05)', borderRadius: 2 }}>
+                      <Table>
+                        <TableBody>
+                          {Object.entries(product.technical_specs).map(([key, value]: [string, any]) => (
+                            <TableRow key={key}>
+                              <TableCell sx={{ fontWeight: 700, width: '40%', borderBottom: '1px solid rgba(0,0,0,0.03)', color: 'text.secondary' }}>
+                                {key}
+                              </TableCell>
+                              <TableCell sx={{ borderBottom: '1px solid rgba(0,0,0,0.03)', fontWeight: 500 }}>
+                                {String(value)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  ) : (
+                    <Typography color="text.secondary">
+                      No hay especificaciones técnicas detalladas para este producto.
+                    </Typography>
+                  )}
+                </Box>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </Box>
 
         {/* Related Products */}

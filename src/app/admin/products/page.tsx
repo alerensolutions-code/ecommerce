@@ -42,13 +42,17 @@ type Product = {
   images?: string[];
   description: string;
   category_id: string;
-  category?: { name: string };
+  category?: { name: string; parent_id?: string | null; parent?: { name: string } };
   stock: number;
+  technical_specs?: Record<string, any>;
 };
 
 type Category = {
   id: string;
   name: string;
+  parent_id?: string | null;
+  parent?: { name: string };
+  spec_template?: string[];
 };
 
 const ProductsManagement = () => {
@@ -61,13 +65,16 @@ const ProductsManagement = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
 
+  const [selectedParentId, setSelectedParentId] = useState<string>('');
+
   const [formValues, setFormValues] = useState({
     name: '',
     description: '',
     category_id: '',
     price: 0,
     stock: 0,
-    images: [] as string[]
+    images: [] as string[],
+    technical_specs: [] as { key: string, value: string }[]
   });
 
   // Filtros y Paginación
@@ -75,7 +82,7 @@ const ProductsManagement = () => {
   const [filterStock, setFilterStock] = useState<string>('all');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  
+
   const searchParams = useSearchParams();
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -87,10 +94,13 @@ const ProductsManagement = () => {
       // Fetch products with their category names using a join
       const { data: productsData, error: pError } = await supabase
         .from('products')
-        .select('*, category:categories(name)')
+        .select('*, category:categories(name, parent_id, parent:parent_id(name))')
         .order('created_at', { ascending: false });
 
-      const { data: catsData, error: cError } = await supabase.from('categories').select('*').order('name');
+      const { data: catsData, error: cError } = await supabase
+        .from('categories')
+        .select('*, parent:parent_id(name)')
+        .order('name');
 
       if (pError) throw pError;
       if (cError) throw cError;
@@ -114,7 +124,7 @@ const ProductsManagement = () => {
 
   const filteredProducts = useMemo(() => {
     let result = [...allProducts];
-    
+
     // Filtro por término de búsqueda
     if (searchTerm) {
       result = result.filter((p: Product) =>
@@ -122,10 +132,13 @@ const ProductsManagement = () => {
         p.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
-    // Filtro por categoría
+
+    // Filtro por categoría (padre o hijo)
     if (selectedCategory !== 'all') {
-      result = result.filter((p: Product) => p.category_id === selectedCategory);
+      result = result.filter((p: Product) =>
+        p.category_id === selectedCategory ||
+        p.category?.parent_id === selectedCategory
+      );
     }
 
     // Filtro por stock
@@ -136,7 +149,7 @@ const ProductsManagement = () => {
         return true;
       });
     }
-    
+
     return result;
   }, [allProducts, searchTerm, selectedCategory, filterStock]);
 
@@ -152,8 +165,12 @@ const ProductsManagement = () => {
       category_id: product?.category_id || '',
       price: product?.price || 0,
       stock: product?.stock || 0,
-      images: product?.images || []
+      images: product?.images || [],
+      technical_specs: product?.technical_specs
+        ? Object.entries(product.technical_specs).map(([key, value]) => ({ key, value: String(value) }))
+        : []
     });
+    setSelectedParentId(product?.category?.parent_id || '');
     setSelectedFiles([]);
     setOpen(true);
   };
@@ -161,6 +178,7 @@ const ProductsManagement = () => {
   const handleClose = () => {
     setOpen(false);
     setSelectedProduct(null);
+    setSelectedParentId('');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,6 +189,40 @@ const ProductsManagement = () => {
         return;
       }
       setSelectedFiles(prev => [...prev, ...filesArray]);
+    }
+  };
+
+  // Función para aplicar la plantilla de especificaciones de una categoría
+  const applySpecTemplate = (categoryId: string) => {
+    const category = dbCategories.find(c => c.id === categoryId);
+    if (category?.spec_template && category.spec_template.length > 0) {
+      const templateSpecs = category.spec_template.map(key => ({ key, value: '' }));
+      setFormValues(prev => ({
+        ...prev,
+        technical_specs: templateSpecs
+      }));
+    } else {
+      // Si la categoría no tiene plantilla, limpiamos las specs existentes
+      setFormValues(prev => ({
+        ...prev,
+        technical_specs: []
+      }));
+    }
+  };
+
+  const handleParentChange = (parentId: string) => {
+    setSelectedParentId(parentId);
+    setFormValues(prev => ({ ...prev, category_id: parentId }));
+    applySpecTemplate(parentId);
+  };
+
+  const handleSubCategoryChange = (subId: string) => {
+    setFormValues(prev => ({ ...prev, category_id: subId }));
+    if (subId) {
+      applySpecTemplate(subId);
+    } else {
+      // Si deseleccionamos la subcategoría, volvemos a la plantilla del padre
+      applySpecTemplate(selectedParentId);
     }
   };
 
@@ -225,7 +277,13 @@ const ProductsManagement = () => {
       category_id: formValues.category_id,
       price: formValues.price,
       stock: formValues.stock,
-      images: finalImages
+      images: finalImages,
+      technical_specs: formValues.technical_specs.reduce((acc, curr) => {
+        if (curr.key.trim()) {
+          acc[curr.key.trim()] = curr.value;
+        }
+        return acc;
+      }, {} as Record<string, any>)
     };
 
     try {
@@ -300,7 +358,7 @@ const ProductsManagement = () => {
               }}
               sx={{ maxWidth: 400 }}
             />
-            
+
             <FormControl size="small" sx={{ minWidth: 200 }}>
               <InputLabel id="category-filter-label">Categoría</InputLabel>
               <MuiSelect
@@ -313,8 +371,10 @@ const ProductsManagement = () => {
                 }}
               >
                 <MenuItem value="all">Todas las categorías</MenuItem>
-                {dbCategories.map((cat) => (
-                  <MenuItem key={cat.id} value={cat.id}>{cat.name}</MenuItem>
+                {dbCategories.filter(cat => !cat.parent_id).map((cat) => (
+                  <MenuItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </MenuItem>
                 ))}
               </MuiSelect>
             </FormControl>
@@ -337,7 +397,7 @@ const ProductsManagement = () => {
             </FormControl>
 
             <Tooltip title="Exportar Inventario (CSV)">
-              <IconButton 
+              <IconButton
                 onClick={() => exportToCSV(allProducts, 'inventario_devil_game')}
                 sx={{ bgcolor: 'rgba(0,0,0,0.02)', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.05)' } }}
               >
@@ -387,14 +447,14 @@ const ProductsManagement = () => {
                       <Chip
                         label={
                           product.stock === 0 ? 'Sin Stock' :
-                          product.stock < 5 ? 'Stock Bajo' :
-                          'En Stock'
+                            product.stock < 5 ? 'Stock Bajo' :
+                              'En Stock'
                         }
                         size="small"
                         color={
                           product.stock === 0 ? 'error' :
-                          product.stock < 5 ? 'warning' :
-                          'success'
+                            product.stock < 5 ? 'warning' :
+                              'success'
                         }
                         sx={{ fontWeight: 600 }}
                       />
@@ -454,21 +514,43 @@ const ProductsManagement = () => {
                   onChange={(e) => setFormValues({ ...formValues, description: e.target.value })}
                 />
                 <Grid container spacing={2}>
-                  <Grid size={12}>
+                  <Grid size={6}>
                     <TextField
                       select
                       fullWidth
                       label="Categoría"
-                      value={formValues.category_id}
-                      onChange={(e) => setFormValues({ ...formValues, category_id: e.target.value })}
+                      value={selectedParentId}
+                      onChange={(e) => handleParentChange(e.target.value)}
                     >
-                      {dbCategories.map((option) => (
+                      <MenuItem value="">Seleccionar...</MenuItem>
+                      {dbCategories.filter(c => !c.parent_id).map((option) => (
                         <MenuItem key={option.id} value={option.id}>
                           {option.name}
                         </MenuItem>
                       ))}
                     </TextField>
                   </Grid>
+                  {/* Solo mostrar subcategoría si el padre tiene hijos */}
+                  {selectedParentId && dbCategories.some(c => c.parent_id === selectedParentId) && (
+                    <Grid size={6}>
+                      <TextField
+                        select
+                        fullWidth
+                        label="Subcategoría (Opcional)"
+                        value={formValues.category_id === selectedParentId ? '' : formValues.category_id}
+                        onChange={(e) => handleSubCategoryChange(e.target.value)}
+                      >
+                        <MenuItem value="">Ninguna / Usar Principal</MenuItem>
+                        {dbCategories
+                          .filter(c => c.parent_id === selectedParentId)
+                          .map((option) => (
+                            <MenuItem key={option.id} value={option.id}>
+                              {option.name}
+                            </MenuItem>
+                          ))}
+                      </TextField>
+                    </Grid>
+                  )}
                   <Grid size={6}>
                     <TextField
                       fullWidth
@@ -488,6 +570,47 @@ const ProductsManagement = () => {
                     />
                   </Grid>
                 </Grid>
+
+                <Box sx={{ mt: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>Especificaciones Técnicas (Basadas en Categoría)</Typography>
+                  <Stack spacing={2}>
+                    {formValues.technical_specs.map((spec, idx) => (
+                      <Stack key={idx} direction="row" spacing={2} alignItems="center">
+                        <TextField
+                          size="small"
+                          label="Propiedad"
+                          value={spec.key}
+                          disabled
+                          sx={{
+                            flex: 1,
+                            '& .MuiInputBase-input.Mui-disabled': {
+                              WebkitTextFillColor: 'rgba(0, 0, 0, 0.6)',
+                              fontWeight: 700
+                            }
+                          }}
+                        />
+                        <TextField
+                          size="small"
+                          label={`Valor para ${spec.key}`}
+                          value={spec.value}
+                          onChange={(e) => {
+                            const newSpecs = [...formValues.technical_specs];
+                            newSpecs[idx].value = e.target.value;
+                            setFormValues({ ...formValues, technical_specs: newSpecs });
+                          }}
+                          sx={{ flex: 1.5 }}
+                        />
+                      </Stack>
+                    ))}
+                    {formValues.technical_specs.length === 0 && (
+                      <Paper variant="outlined" sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderStyle: 'dashed' }}>
+                        <Typography variant="caption" color="text.secondary" display="block" textAlign="center">
+                          Esta categoría no tiene una plantilla de especificaciones definida.
+                        </Typography>
+                      </Paper>
+                    )}
+                  </Stack>
+                </Box>
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>

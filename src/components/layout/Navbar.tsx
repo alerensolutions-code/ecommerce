@@ -1,17 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  Button, 
-  IconButton, 
-  Badge, 
-  Box, 
-  InputBase, 
-  Menu, 
-  MenuItem, 
+import React, { useState } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  IconButton,
+  Badge,
+  Box,
+  InputBase,
+  Menu,
+  MenuItem,
   Container,
   useScrollTrigger,
   Slide,
@@ -20,21 +20,21 @@ import {
   ListItem,
   ListItemButton,
   ListItemText,
-  ListItemIcon,
-  CircularProgress
+  CircularProgress,
+  TextField
 } from '@mui/material';
-import { 
-  Search, 
-  ShoppingCart, 
-  Menu as MenuIcon, 
+import {
+  Search,
+  ShoppingCart,
+  Menu as MenuIcon,
   ChevronDown,
-  Monitor,
-  Cpu,
-  Gamepad,
-  Keyboard,
-  Layers,
-  Box as BoxIcon,
-  LayoutDashboard
+  LayoutDashboard,
+  X,
+  Zap,
+  Mail,
+  Phone,
+  Instagram,
+  Facebook
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -48,13 +48,25 @@ import { useAuth } from '../../context/AuthContext';
 
 const SearchWrapper = styled('div')(({ theme }) => ({
   position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.secondary.main, 0.05),
+  borderRadius: '20px',
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
   '&:hover': {
-    backgroundColor: alpha(theme.palette.secondary.main, 0.1),
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
+  marginRight: theme.spacing(2),
   marginLeft: 0,
   width: '100%',
+  border: '1px solid rgba(0,0,0,0.05)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  display: 'flex',
+  alignItems: 'center',
+  maxWidth: '400px',
+  '&:focus-within': {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+    borderColor: theme.palette.primary.main,
+    maxWidth: '450px',
+  },
   [theme.breakpoints.up('sm')]: {
     marginLeft: theme.spacing(3),
     width: 'auto',
@@ -69,31 +81,27 @@ const SearchIconWrapper = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: theme.palette.text.secondary,
+  color: 'rgba(255, 255, 255, 0.7)',
 }));
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
   color: 'inherit',
+  width: '100%',
   '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 0),
     paddingLeft: `calc(1em + ${theme.spacing(4)})`,
     transition: theme.transitions.create('width'),
     width: '100%',
+    fontSize: '0.9rem',
+    fontWeight: 500,
     [theme.breakpoints.up('md')]: {
-      width: '20ch',
+      width: '25ch',
+      '&:focus': {
+        width: '30ch',
+      },
     },
   },
 }));
-
-function HideOnScroll(props: { children: React.ReactElement }) {
-  const { children } = props;
-  const trigger = useScrollTrigger();
-  return (
-    <Slide direction="down" in={!trigger}>
-      {children}
-    </Slide>
-  );
-}
 
 const Navbar = () => {
   const { state } = useCart();
@@ -102,31 +110,36 @@ const Navbar = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  
-  // Categorías base estáticas (siempre presentes)
-  const [dbCategories, setDbCategories] = useState<{name: string, icon: any, path: string}[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Categorías
+  const [dbCategories, setDbCategories] = useState<{ id: string, name: string, path: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
 
   const fetchCategories = async () => {
     if (categoriesLoaded || loadingCategories) return;
-    
+
     setLoadingCategories(true);
     try {
-      const { data, error } = await supabase.from('categories').select('name').order('name');
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name, parent_id')
+        .order('name');
+
       if (error) throw error;
 
       if (data) {
-        const dynamicCats = data.map(c => ({
-          name: c.name,
-          icon: getCategoryIcon(c.name),
-          path: `/shop?category=${encodeURIComponent(c.name)}`
-        }));
+        // En el Navbar mostramos solo las categorías padre (parent_id is null)
+        const parentCats = data
+          .filter(c => !c.parent_id)
+          .map(c => ({
+            id: c.id,
+            name: c.name,
+            path: `/shop?category=${encodeURIComponent(c.name)}`
+          }));
 
-        setDbCategories([
-          { name: 'Todas', icon: <BoxIcon size={20} />, path: '/shop' },
-          ...dynamicCats
-        ]);
+        setDbCategories(parentCats);
         setCategoriesLoaded(true);
       }
     } catch (err) {
@@ -135,19 +148,6 @@ const Navbar = () => {
       setLoadingCategories(false);
     }
   };
-
-  // Mapeo de iconos basado en el nombre de la categoría
-  const getCategoryIcon = (name: string) => {
-    const n = name.toLowerCase();
-    if (n.includes('monitor')) return <Monitor size={20} />;
-    if (n.includes('grafica') || n.includes('gpu') || n.includes('cpu')) return <Cpu size={20} />;
-    if (n.includes('consola') || n.includes('gamer') || n.includes('juego')) return <Gamepad size={20} />;
-    if (n.includes('periferico') || n.includes('teclado') || n.includes('mouse')) return <Keyboard size={20} />;
-    return <Layers size={20} />;
-  };
-
-  // Ya no usamos useEffect para fetchCategories al montar
-  // Se ejecutará on-demand en handleOpenMenu o toggleDrawer(true)
 
   const cartCount = state.items.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -160,6 +160,13 @@ const Navbar = () => {
     setAnchorEl(null);
   };
 
+  const handleSearchSubmit = (e: React.FormEvent | React.KeyboardEvent) => {
+    if (searchQuery.trim()) {
+      router.push(`/shop?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
+
   const toggleDrawer = (open: boolean) => (event: React.KeyboardEvent | React.MouseEvent) => {
     if (event.type === 'keydown' && ((event as React.KeyboardEvent).key === 'Tab' || (event as React.KeyboardEvent).key === 'Shift')) {
       return;
@@ -170,204 +177,361 @@ const Navbar = () => {
 
   return (
     <>
-      <HideOnScroll>
-        <AppBar position="sticky" color="inherit" elevation={1} sx={{ bgcolor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)' }}>
-          <Container maxWidth="xl">
-            <Toolbar disableGutters>
-              {/* Mobile Menu Icon */}
-              <IconButton
-                color="inherit"
-                aria-label="open drawer"
-                edge="start"
-                onClick={toggleDrawer(true)}
-                sx={{ mr: 2, display: { md: 'none' } }}
-              >
-                <MenuIcon />
-              </IconButton>
+      <AppBar
+        position="sticky"
+        color="inherit"
+        elevation={0}
+        sx={{
+          bgcolor: '#000000',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.1)',
+          transition: 'all 0.3s ease-in-out',
+          color: 'white'
+        }}
+      >
+        <Container maxWidth="xl">
+          <Toolbar disableGutters sx={{ minHeight: { xs: 70, md: 80 } }}>
+            {/* Mobile Menu Icon */}
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={toggleDrawer(true)}
+              sx={{ mr: 2, display: { md: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
 
-              {/* Logo */}
-              <Typography
-                variant="h6"
-                noWrap
-                component={Link}
-                href="/"
-                sx={{
-                  mr: 2,
-                  display: 'flex',
-                  fontWeight: 800,
+            {/* Logo */}
+            <Typography
+              variant="h6"
+              noWrap
+              component={Link}
+              href="/"
+              sx={{
+                mr: 2,
+                display: 'flex',
+                fontWeight: 900,
+                color: 'white',
+                textDecoration: 'none',
+                fontSize: { xs: '1.2rem', md: '1.5rem' },
+                letterSpacing: '-0.02em',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.02)',
+                },
+                '& span': {
                   color: 'primary.main',
-                  textDecoration: 'none',
-                  fontSize: '1.5rem',
-                  letterSpacing: '.1rem',
-                  '& span': { color: 'secondary.main' }
+                  ml: 0.5
+                }
+              }}
+            >
+              DEVIL<span>GAMING</span>
+            </Typography>
+
+            {/* Desktop Categories */}
+            <Box sx={{ flexGrow: { xs: 0, md: 1 }, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center' }}>
+              <Box
+                onClick={handleOpenMenu}
+                sx={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontWeight: 700,
+                  fontSize: '0.9rem',
+                  transition: 'all 0.3s',
+                  color: 'rgba(255,255,255,0.9)',
+                  '&:hover': { color: 'primary.main' },
+                  position: 'relative',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    width: '0%',
+                    height: '2px',
+                    bottom: -4,
+                    left: 0,
+                    backgroundColor: 'primary.main',
+                    transition: 'width 0.3s'
+                  },
+                  '&:hover::after': { width: '100%' }
                 }}
               >
-                DEVIL<span>GAMING</span>
-              </Typography>
-
-              {/* Desktop Categories */}
-              <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center' }}>
-                <Box
-                  onClick={handleOpenMenu}
-                  sx={{ 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    fontWeight: 600, 
-                    fontSize: '0.95rem',
-                    transition: 'all 0.3s',
-                    color: 'text.primary',
-                    '&:hover': { color: 'primary.main' },
-                    position: 'relative',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      width: '0%',
-                      height: '2px',
-                      bottom: -4,
-                      left: 0,
-                      backgroundColor: 'primary.main',
-                      transition: 'width 0.3s'
-                    },
-                    '&:hover::after': { width: '100%' }
-                  }}
-                >
-                  Categorías <ChevronDown size={16} style={{ marginLeft: 4 }} />
-                </Box>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleCloseMenu}
-                  elevation={3}
-                  sx={{ mt: '15px' }}
-                  PaperProps={{
-                    sx: {
-                      borderRadius: 2,
-                      minWidth: 220,
-                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                      border: '1px solid rgba(0,0,0,0.05)'
-                    }
-                  }}
-                >
-                  {loadingCategories ? (
-                    <MenuItem disabled sx={{ justifyContent: 'center', py: 2 }}>
-                      <CircularProgress size={20} />
-                    </MenuItem>
-                  ) : dbCategories.map((cat) => (
-                    <MenuItem 
-                      key={cat.name} 
+                Categorías <ChevronDown size={14} style={{ marginLeft: 4 }} />
+              </Box>
+              <Button
+                component={Link}
+                href="/pc-builder"
+                color="inherit"
+                startIcon={<Zap size={16} color="#cc0000" />}
+                sx={{
+                  ml: 3,
+                  fontWeight: 800,
+                  textTransform: 'none',
+                  fontSize: '0.9rem',
+                  transition: 'all 0.3s',
+                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' }
+                }}
+              >
+                Armá tu PC
+              </Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleCloseMenu}
+                elevation={0}
+                sx={{ mt: '20px' }}
+                PaperProps={{
+                  sx: {
+                    borderRadius: 3,
+                    minWidth: 220,
+                    p: 1,
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(20px)',
+                    boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
+                    border: '1px solid rgba(0,0,0,0.06)'
+                  }
+                }}
+              >
+                {loadingCategories ? (
+                  <MenuItem disabled sx={{ justifyContent: 'center', py: 4 }}>
+                    <CircularProgress size={24} thickness={5} />
+                  </MenuItem>
+                ) : dbCategories.map((cat, index) => (
+                  <motion.div
+                    key={cat.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <MenuItem
                       onClick={() => {
                         router.push(cat.path);
                         handleCloseMenu();
                       }}
-                      sx={{ 
-                        py: 1.5, 
-                        px: 3,
+                      sx={{
+                        py: 1.5,
+                        px: 2,
+                        borderRadius: 2,
                         transition: 'all 0.2s',
-                        '&:hover': { 
-                          bgcolor: 'rgba(204,0,0,0.04)',
+                        mb: 0.5,
+                        '&:hover': {
+                          bgcolor: 'rgba(204,0,0,0.06)',
                           color: 'primary.main',
-                          pl: 3.5
-                        } 
+                          transform: 'translateX(5px)'
+                        }
                       }}
                     >
-                      <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }} />
+                      <ListItemText
+                        primary={cat.name}
+                        primaryTypographyProps={{
+                          fontWeight: 800,
+                          fontSize: '0.85rem'
+                        }}
+                      />
                     </MenuItem>
-                  ))}
-                </Menu>
-              </Box>
+                  </motion.div>
+                ))}
+              </Menu>
+            </Box>
 
-              {/* Search Bar */}
-              <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, justifyContent: 'center' }}>
-                <SearchWrapper>
-                  <SearchIconWrapper>
-                    <Search size={18} />
-                  </SearchIconWrapper>
-                  <StyledInputBase
-                    placeholder="Buscar hardware..."
-                    inputProps={{ 'aria-label': 'search' }}
-                  />
-                </SearchWrapper>
-              </Box>
+            {/* Spacer for Mobile */}
+            <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }} />
 
-              {/* Icons */}
-              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, gap: 1 }}>
-                {/* Admin button — only visible when logged in as admin */}
-                {user?.role === 'admin' && (
-                  <Button
-                    component={Link}
-                    href="/admin"
-                    size="small"
-                    variant="outlined"
-                    startIcon={<LayoutDashboard size={16} />}
-                    sx={{
-                      fontWeight: 700,
-                      fontSize: '0.78rem',
-                      borderColor: 'primary.main',
-                      color: 'primary.main',
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 2,
-                      display: { xs: 'none', sm: 'flex' },
-                      '&:hover': {
-                        bgcolor: 'rgba(204,0,0,0.06)',
-                        borderColor: 'primary.dark',
-                      }
-                    }}
-                  >
-                    Panel Admin
-                  </Button>
-                )}
-                <IconButton 
-                  color="inherit"
-                  sx={{ ml: 0.5, '&:hover': { color: 'primary.main' } }}
-                  onClick={() => setCartOpen(true)}
+            {/* Search Bar */}
+            <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, justifyContent: 'center' }}>
+              <SearchWrapper>
+                <SearchIconWrapper>
+                  <Search size={18} />
+                </SearchIconWrapper>
+                <StyledInputBase
+                  placeholder="Buscar hardware..."
+                  inputProps={{ 'aria-label': 'search' }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearchSubmit(e);
+                    }
+                  }}
+                />
+              </SearchWrapper>
+            </Box>
+
+            {/* Icons */}
+            <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, gap: 1 }}>
+              {user?.role === 'admin' && (
+                <Button
+                  component={Link}
+                  href="/admin"
+                  size="small"
+                  variant="outlined"
+                  startIcon={<LayoutDashboard size={16} />}
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: '0.75rem',
+                    borderColor: 'primary.main',
+                    color: 'primary.main',
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 2,
+                    display: { xs: 'none', sm: 'flex' },
+                    '&:hover': {
+                      bgcolor: 'rgba(204,0,0,0.06)',
+                      borderColor: 'primary.dark',
+                    }
+                  }}
                 >
-                  <Badge badgeContent={cartCount} color="primary">
-                    <motion.div
-                      key={cartCount}
-                      initial={{ scale: 1.5, rotate: -15 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 300, damping: 10 }}
-                    >
-                      <ShoppingCart size={22} />
-                    </motion.div>
-                  </Badge>
-                </IconButton>
-              </Box>
-            </Toolbar>
-          </Container>
-        </AppBar>
-      </HideOnScroll>
+                  Admin
+                </Button>
+              )}
+              <IconButton
+                color="inherit"
+                sx={{ ml: 0.5, '&:hover': { color: 'primary.main' } }}
+                onClick={() => setCartOpen(true)}
+              >
+                <Badge badgeContent={cartCount} color="primary">
+                  <motion.div
+                    key={cartCount}
+                    initial={{ scale: 1.5, color: '#cc0000' }}
+                    animate={{ scale: 1, color: 'inherit' }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 10 }}
+                  >
+                    <ShoppingCart size={22} />
+                  </motion.div>
+                </Badge>
+              </IconButton>
+            </Box>
+          </Toolbar>
+        </Container>
+      </AppBar>
 
       {/* Mobile Drawer */}
       <Drawer
         anchor="left"
         open={mobileOpen}
         onClose={toggleDrawer(false)}
+        PaperProps={{
+          sx: {
+            width: 300,
+            background: 'white',
+          }
+        }}
       >
         <Box
-          sx={{ width: 280 }}
+          sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}
           role="presentation"
-          onClick={toggleDrawer(false)}
-          onKeyDown={toggleDrawer(false)}
         >
-          <Box sx={{ p: 3, textAlign: 'center', borderBottom: '1px solid #eee' }}>
-            <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main' }}>
+          {/* Drawer Header */}
+          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 900,
+                color: 'secondary.main',
+                fontSize: '1.2rem',
+                textDecoration: 'none',
+                '& span': { color: 'primary.main', ml: 0.5 }
+              }}
+            >
               DEVIL<span>GAMING</span>
             </Typography>
+            <IconButton onClick={toggleDrawer(false)}>
+              <X size={20} />
+            </IconButton>
           </Box>
-          <List>
-            {loadingCategories ? (
-              <Box sx={{ p: 3, textAlign: 'center' }}><CircularProgress size={24} /></Box>
-            ) : dbCategories.map((cat) => (
-              <ListItem key={cat.name} disablePadding>
-                <ListItemButton component={Link} href={cat.path}>
-                  <ListItemText primary={cat.name} primaryTypographyProps={{ fontWeight: 600 }} />
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
+
+          {/* Drawer Categories */}
+          <Box sx={{ flexGrow: 1, py: 2, overflowY: 'auto' }}>
+            <Typography variant="overline" sx={{ px: 3, fontWeight: 800, color: 'text.secondary', letterSpacing: '0.1em' }}>
+              Búsqueda
+            </Typography>
+            <Box sx={{ px: 3, mb: 3 }}>
+              <TextField 
+                fullWidth 
+                placeholder="¿Qué estás buscando?"
+                size="small"
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit(e);
+                    toggleDrawer(false)(e as any);
+                  }
+                }}
+                InputProps={{
+                  sx: { borderRadius: 2, bgcolor: 'rgba(0,0,0,0.02)' },
+                  startAdornment: <Search size={16} style={{ marginRight: 8, opacity: 0.5 }} />
+                }}
+              />
+            </Box>
+
+            <Typography variant="overline" sx={{ px: 3, fontWeight: 800, color: 'text.secondary', letterSpacing: '0.1em' }}>
+              Categorías
+            </Typography>
+            <List>
+              {loadingCategories ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                  <CircularProgress size={24} />
+                </Box>
+              ) : dbCategories.map((cat, index) => (
+                <motion.div
+                  key={cat.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <ListItem disablePadding>
+                    <ListItemButton
+                      component={Link}
+                      href={cat.path}
+                      onClick={toggleDrawer(false)}
+                      sx={{
+                        py: 2,
+                        px: 3,
+                        '&:hover': { bgcolor: 'rgba(204,0,0,0.04)', color: 'primary.main' }
+                      }}
+                    >
+                      <ListItemText
+                        primary={cat.name}
+                        primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem' }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                </motion.div>
+              ))}
+            </List>
+          </Box>
+
+          {/* Drawer Footer */}
+          <Box sx={{ p: 3, borderTop: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(0,0,0,0.01)' }}>
+            <Box sx={{ mb: 2 }}>
+              <Button
+                component={Link}
+                href="/pc-builder"
+                variant="contained"
+                fullWidth
+                onClick={toggleDrawer(false)}
+                startIcon={<Zap size={18} />}
+                sx={{
+                  borderRadius: 2,
+                  py: 1.5,
+                  mb: 1.5,
+                  fontWeight: 900,
+                  bgcolor: 'primary.main',
+                  boxShadow: '0 4px 12px rgba(204,0,0,0.3)'
+                }}
+              >
+                Armá tu PC
+              </Button>
+            </Box>
+
+            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, color: 'text.secondary' }}>
+              <Instagram size={20} cursor="pointer" />
+              <Facebook size={20} cursor="pointer" />
+              <Mail size={20} cursor="pointer" />
+              <Phone size={20} cursor="pointer" />
+            </Box>
+          </Box>
         </Box>
       </Drawer>
 

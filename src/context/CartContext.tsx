@@ -12,7 +12,8 @@ type CartAction =
   | { type: 'REMOVE_FROM_CART'; payload: string }
   | { type: 'UPDATE_QUANTITY'; payload: { id: string; quantity: number } }
   | { type: 'CLEAR_CART' }
-  | { type: 'LOAD_CART'; payload: CartItem[] };
+  | { type: 'LOAD_CART'; payload: CartItem[] }
+  | { type: 'ADD_MULTIPLE_TO_CART'; payload: Product[] };
 
 const CartContext = createContext<{
   state: CartState;
@@ -34,6 +35,21 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
         };
       }
       return { ...state, items: [...state.items, { ...action.payload, quantity: 1 }] };
+    }
+    case 'ADD_MULTIPLE_TO_CART': {
+      const newItems = [...state.items];
+      action.payload.forEach(product => {
+        const existingIndex = newItems.findIndex(item => item.id === product.id);
+        if (existingIndex > -1) {
+          newItems[existingIndex] = {
+            ...newItems[existingIndex],
+            quantity: newItems[existingIndex].quantity + 1
+          };
+        } else {
+          newItems.push({ ...product, quantity: 1 });
+        }
+      });
+      return { ...state, items: newItems };
     }
     case 'REMOVE_FROM_CART':
       return { ...state, items: state.items.filter(item => item.id !== action.payload) };

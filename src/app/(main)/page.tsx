@@ -10,7 +10,7 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { supabase } from '../../lib/supabase';
 import ProductCard from '../../components/product/ProductCard';
-import { ArrowRight, Truck, ShieldCheck, Zap, Headphones } from 'lucide-react';
+import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Cpu, Monitor } from 'lucide-react';
 import Link from 'next/link';
 
 const Hero = () => (
@@ -20,7 +20,7 @@ const Hero = () => (
     minHeight: { xs: '500px', md: '550px' },
     position: 'relative',
     overflow: 'hidden',
-    bgcolor: '#0a0a0a',
+    bgcolor: '#000000ff',
     display: 'flex',
     alignItems: 'center',
     py: { xs: 6, md: 0 }
@@ -77,12 +77,25 @@ const Hero = () => (
             mb: 1.5,
             fontSize: { xs: '2.2rem', md: '3.4rem' },
             lineHeight: 1.1,
+            fontWeight: 900,
             textShadow: '0 10px 30px rgba(0,0,0,0.5)'
           }}>
             DOMINA TU MUNDO <br />
-            CON <span style={{ color: '#cc0000', position: 'relative' }}>
+            CON{' '}
+            <motion.span
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.7, ease: "easeOut" }}
+              style={{
+                background: 'linear-gradient(90deg, #ff0000, #cc0000)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+                textShadow: '0 0 40px rgba(255,0,0,0.6)'
+              }}
+            >
               DEVIL GAMING
-            </span>
+            </motion.span>
           </Typography>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
             <Button
@@ -107,27 +120,6 @@ const Hero = () => (
             >
               Explorar Arsenal
             </Button>
-            <Button
-              component={Link}
-              href="/shop?featured=true"
-              variant="outlined"
-              size="large"
-              sx={{
-                py: 1.5,
-                px: 4,
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                borderRadius: 3,
-                borderColor: 'rgba(255,255,255,0.3)',
-                color: 'white',
-                '&:hover': {
-                  borderColor: 'white',
-                  background: 'rgba(255,255,255,0.05)'
-                }
-              }}
-            >
-              Ofertas Top
-            </Button>
           </Stack>
         </Grid>
       </Grid>
@@ -139,6 +131,7 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
   <motion.div
     whileHover={{ y: -10 }}
     transition={{ type: "spring", stiffness: 400, damping: 17 }}
+    style={{ height: '100%' }}
   >
     <Paper
       elevation={0}
@@ -148,6 +141,11 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
         bgcolor: 'white',
         border: '1px solid rgba(0,0,0,0.05)',
         borderRadius: 4,
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
         boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         cursor: 'default',
@@ -206,29 +204,171 @@ const HomePage = () => {
 
       {/* Features Section */}
       <Container maxWidth="xl" sx={{ py: 10 }}>
-        <Grid container spacing={4}>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<Truck size={32} />} title="Envío Express" desc="En 24/48h en tu casa listo para viciar." />
+        <Grid container spacing={4} alignItems="stretch">
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<Truck size={32} />} title="Envío Express" desc="En 24/48h en tu casa listo para viciar." />
+            </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<ShieldCheck size={32} />} title="Garantía Premium" desc="3 años de garantía oficial en todo el hardware." />
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<ShieldCheck size={32} />} title="Garantía Premium" desc="3 años de garantía oficial en todo el hardware." />
+            </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<Zap size={32} />} title="Soporte Técnico" desc="Expertos disponibles para ayudarte con tu setup." />
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<Zap size={32} />} title="Soporte Técnico" desc="Expertos disponibles para ayudarte con tu setup." />
+            </Box>
           </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-            <Feature icon={<Headphones size={32} />} title="Atención 24/7" desc="Siempre estamos ahí cuando nos necesitas." />
+          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+            <Box sx={{ width: '100%' }}>
+              <Feature icon={<Headphones size={32} />} title="Atención 24/7" desc="Siempre estamos ahí cuando nos necesitas." />
+            </Box>
           </Grid>
         </Grid>
       </Container>
 
+      {/* Build PC Highlight Section */}
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <motion.div
+          animate={{ 
+            y: [0, -15, 0],
+          }}
+          transition={{ 
+            duration: 6, 
+            repeat: Infinity, 
+            ease: "easeInOut" 
+          }}
+        >
+          <Box sx={{ 
+            position: 'relative', 
+            overflow: 'hidden',
+            bgcolor: '#050505',
+            borderRadius: { xs: 6, md: 8 },
+            backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(204, 0, 0, 0.2) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(204, 0, 0, 0.15) 0%, transparent 40%)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(204,0,0,0.1)',
+            p: { xs: 4, md: 6 }
+          }}>
+          <Grid container spacing={6} alignItems="center">
+            <Grid size={{ xs: 12, md: 6 }}>
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+              >
+                <Typography variant="overline" color="primary" sx={{ fontWeight: 900, letterSpacing: 4 }}>
+                  POTENCIA SIN LÍMITES
+                </Typography>
+                <Typography variant="h2" color="white" sx={{ fontWeight: 900, mt: 1, mb: 3, lineHeight: 1 }}>
+                  ARMÁ EL SETUP <br />
+                  <span style={{ color: '#cc0000' }}>DE TUS SUEÑOS</span>
+                </Typography>
+                <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 5, maxWidth: 500, fontSize: '1.1rem' }}>
+                  Usá nuestra herramienta inteligente. Seleccioná componente por componente y nosotros nos encargamos de validar que todo sea 100% compatible.
+                </Typography>
+
+                <Stack direction="row" spacing={3}>
+                  <Button
+                    component={Link}
+                    href="/pc-builder"
+                    variant="contained"
+                    size="large"
+                    startIcon={<Zap />}
+                    sx={{
+                      px: 5,
+                      py: 2,
+                      borderRadius: 3,
+                      fontWeight: 800,
+                      boxShadow: '0 0 30px rgba(204,0,0,0.4)',
+                      '&:hover': { boxShadow: '0 0 50px rgba(204,0,0,0.6)' }
+                    }}
+                  >
+                    EMPEZAR AHORA
+                  </Button>
+                </Stack>
+              </motion.div>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8 }}
+                viewport={{ once: true }}
+                style={{ position: 'relative' }}
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '80%',
+                    height: '80%',
+                    bgcolor: 'primary.main',
+                    filter: 'blur(100px)',
+                    opacity: 0.2,
+                    zIndex: 0
+                  }}
+                />
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 4,
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: 6,
+                    position: 'relative',
+                    zIndex: 1,
+                    overflow: 'hidden'
+                  }}
+                >
+                  <Stack spacing={3}>
+                    {[
+                      { icon: <Cpu color="#cc0000" />, step: "1. Procesador", label: "Intel Core i9-14900K" },
+                      { icon: <Monitor color="#cc0000" />, step: "2. Motherboard", label: "Z790 Premium Elite" },
+                      { icon: <Zap color="#cc0000" />, step: "3. GPU", label: "NVIDIA RTX 4090 24GB" }
+                    ].map((item, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 + (i * 0.1) }}
+                      >
+                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                          <Box sx={{ p: 1.5, bgcolor: 'rgba(204,0,0,0.1)', borderRadius: 2 }}>{item.icon}</Box>
+                          <Box>
+                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>{item.step}</Typography>
+                            <Typography variant="body1" sx={{ color: 'white', fontWeight: 800 }}>{item.label}</Typography>
+                          </Box>
+                        </Box>
+                      </motion.div>
+                    ))}
+                  </Stack>
+                </Paper>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Box>
+        </motion.div>
+      </Container>
+
       {/* Featured Carousel */}
-      <Box sx={{ py: 10, bgcolor: 'rgba(0,0,0,0.02)' }}>
+      <Box sx={{ py: 10 }}>
         <Container maxWidth="xl">
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 6 }}>
             <Box>
-              <Typography variant="overline" color="primary.main" sx={{ fontWeight: 800 }}>MÁS DESEADOS</Typography>
-              <Typography variant="h2">Productos Destacados</Typography>
+              <Typography variant="h2" sx={{
+                fontWeight: 900,
+                background: 'linear-gradient(90deg, #ff0000, #cc0000)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                display: 'inline-block',
+                textShadow: '0 0 20px rgba(255,0,0,0.15)'
+              }}>
+                Productos Destacados
+              </Typography>
             </Box>
             <Button component={Link} href="/shop" endIcon={<ArrowRight size={20} />} sx={{ fontWeight: 700 }}>
               Ver Todos
@@ -263,71 +403,6 @@ const HomePage = () => {
         </Container>
       </Box>
 
-      {/* Categories Highlights */}
-      <Container maxWidth="xl" sx={{ py: 10 }}>
-        <Typography variant="h2" align="center" sx={{ mb: 6 }}>Explora por Categoría</Typography>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper component={Link} href="/shop" sx={{
-              height: 400,
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              alignItems: 'end',
-              p: 4,
-              textDecoration: 'none',
-              '&:hover img': { transform: 'scale(1.05)' }
-            }}>
-              <Box component="img" src="https://images.unsplash.com/photo-1591488320449-011701bb6704?auto=format&fit=crop&q=80&w=1000" sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, transition: 'transform 0.6s ease' }} />
-              <Box sx={{ position: 'relative', zIndex: 1, color: 'white' }}>
-                <Typography variant="h4" sx={{ fontWeight: 800 }}>Tarjetas Gráficas</Typography>
-                <Typography variant="body1" sx={{ opacity: 0.8 }}>Potencia sin límites</Typography>
-              </Box>
-              <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%)', zIndex: 0 }} />
-            </Paper>
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Grid container spacing={3}>
-              <Grid size={12}>
-                <Paper component={Link} href="/shop" sx={{
-                  height: 188,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  p: 4,
-                  textDecoration: 'none',
-                  '&:hover img': { transform: 'scale(1.05)' }
-                }}>
-                  <Box component="img" src="https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&q=80&w=1000" sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, transition: 'transform 0.6s ease' }} />
-                  <Box sx={{ position: 'relative', zIndex: 1, color: 'white' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>Monitores 4K</Typography>
-                  </Box>
-                  <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, rgba(0,0,0,0.7) 0%, transparent 60%)', zIndex: 0 }} />
-                </Paper>
-              </Grid>
-              <Grid size={12}>
-                <Paper component={Link} href="/shop" sx={{
-                  height: 188,
-                  position: 'relative',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  p: 4,
-                  textDecoration: 'none',
-                  '&:hover img': { transform: 'scale(1.05)' }
-                }}>
-                  <Box component="img" src="https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?auto=format&fit=crop&q=80&w=1000" sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: 0, transition: 'transform 0.6s ease' }} />
-                  <Box sx={{ position: 'relative', zIndex: 1, color: 'white' }}>
-                    <Typography variant="h5" sx={{ fontWeight: 800 }}>Periféricos Pro</Typography>
-                  </Box>
-                  <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(to right, rgba(0,0,0,0.7) 0%, transparent 60%)', zIndex: 0 }} />
-                </Paper>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
-      </Container>
     </Box>
   );
 };

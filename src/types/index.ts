@@ -1,11 +1,21 @@
-export type Category = string;
+export interface Category {
+  id: string;
+  name: string;
+  parent_id?: string | null;
+  spec_template?: string[];
+  created_at?: string;
+}
 
 export interface Product {
   id: string;
   name: string;
   brand: string;
   category_id: string; // UUID from Supabase
-  category?: { name: string }; // For joins
+  category?: { 
+    name: string;
+    parent_id?: string | null;
+    parent?: { name: string };
+  }; // For joins
   price: number;
   discountPrice?: number;
   description: string;
@@ -16,6 +26,7 @@ export interface Product {
     label: string;
     value: string;
   }[];
+  technical_specs?: Record<string, any>;
   created_at?: string;
 }
 
