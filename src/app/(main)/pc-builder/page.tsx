@@ -151,7 +151,7 @@ const PCBuilderPage = () => {
                     <CardMedia
                       component="img"
                       sx={{ width: 80, objectFit: 'contain', p: 1 }}
-                      image={product.images?.[0] || '/placeholder.png'}
+                      image={product.images?.[0] || '/default-gaming-product.png'}
                     />
                     <Box sx={{ p: 2 }}>
                       <Typography variant="caption" color="primary" fontWeight={700}>{step.name}</Typography>
@@ -314,7 +314,7 @@ const PCBuilderPage = () => {
                           <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
                             <Box
                               component="img"
-                              src={p.images?.[0] || '/placeholder.png'}
+                              src={p.images?.[0] || '/default-gaming-product.png'}
                               sx={{
                                 width: 100,
                                 height: 100,

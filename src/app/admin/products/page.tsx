@@ -66,6 +66,7 @@ const ProductsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   const [selectedParentId, setSelectedParentId] = useState<string>('');
 
@@ -73,8 +74,8 @@ const ProductsManagement = () => {
     name: '',
     description: '',
     category_id: '',
-    price: 0,
-    stock: 0,
+    price: '' as number | string,
+    stock: '' as number | string,
     featured: false,
     images: [] as string[],
     technical_specs: [] as { key: string, value: string }[]
@@ -174,8 +175,8 @@ const ProductsManagement = () => {
       name: product?.name || '',
       description: product?.description || '',
       category_id: product?.category_id || '',
-      price: product?.price || 0,
-      stock: product?.stock || 0,
+      price: product ? product.price : '',
+      stock: product ? product.stock : '',
       featured: product?.featured || false,
       images: product?.images || [],
       technical_specs: product?.technical_specs
@@ -184,6 +185,7 @@ const ProductsManagement = () => {
     });
     setSelectedParentId(product?.category?.parent_id || '');
     setSelectedFiles([]);
+    setImageError(false);
     setOpen(true);
   };
 
@@ -201,6 +203,7 @@ const ProductsManagement = () => {
         return;
       }
       setSelectedFiles(prev => [...prev, ...filesArray]);
+      setImageError(false);
     }
   };
 
@@ -292,6 +295,12 @@ const ProductsManagement = () => {
   };
 
   const handleSave = async () => {
+    if (formValues.images.length === 0 && selectedFiles.length === 0) {
+      setImageError(true);
+      return;
+    }
+
+    setImageError(false);
     setUploadingFiles(true);
     let finalImages = [...formValues.images];
 
@@ -304,8 +313,8 @@ const ProductsManagement = () => {
       name: formValues.name,
       description: formValues.description,
       category_id: formValues.category_id,
-      price: formValues.price,
-      stock: formValues.stock,
+      price: Number(formValues.price) || 0,
+      stock: Number(formValues.stock) || 0,
       featured: formValues.featured,
       images: finalImages,
       technical_specs: formValues.technical_specs.reduce((acc, curr) => {
@@ -612,7 +621,7 @@ const ProductsManagement = () => {
                       label="Precio ($)"
                       type="number"
                       value={formValues.price}
-                      onChange={(e) => setFormValues({ ...formValues, price: parseFloat(e.target.value) })}
+                      onChange={(e) => setFormValues({ ...formValues, price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
                     />
                   </Grid>
                   <Grid size={6}>
@@ -621,7 +630,7 @@ const ProductsManagement = () => {
                       label="Stock"
                       type="number"
                       value={formValues.stock}
-                      onChange={(e) => setFormValues({ ...formValues, stock: parseInt(e.target.value) })}
+                      onChange={(e) => setFormValues({ ...formValues, stock: e.target.value === '' ? '' : parseInt(e.target.value) })}
                     />
                   </Grid>
                 </Grid>
@@ -678,7 +687,7 @@ const ProductsManagement = () => {
                       <Switch
                         checked={formValues.featured}
                         onChange={(e) => setFormValues({ ...formValues, featured: e.target.checked })}
-                        color="primary"
+                        color="success"
                       />
                     }
                     label={
@@ -689,7 +698,7 @@ const ProductsManagement = () => {
                     }
                   />
                   <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
-                    Aparecerá en el carrusel de la landing page.
+                    Aparecerá en la sección Productos Destacados de la tienda.
                   </Typography>
                 </Box>
 
@@ -699,12 +708,13 @@ const ProductsManagement = () => {
 
                 <Box
                   sx={{
-                    border: '2px dashed #ddd',
+                    border: '2px dashed',
+                    borderColor: imageError ? 'error.main' : '#ddd',
                     borderRadius: 2,
                     p: 2,
                     textAlign: 'center',
                     cursor: 'pointer',
-                    '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(204,0,0,0.02)' }
+                    '&:hover': { borderColor: imageError ? 'error.main' : 'primary.main', bgcolor: imageError ? 'rgba(211,47,47,0.02)' : 'rgba(204,0,0,0.02)' }
                   }}
                   component="label"
                 >
@@ -718,9 +728,14 @@ const ProductsManagement = () => {
                   />
                   <Plus size={32} opacity={0.5} style={{ margin: '0 auto' }} />
                   <Typography variant="caption" display="block" color="text.secondary">
-                    Subir imágenes desde el ordenador
+                    Subí las fotos del producto
                   </Typography>
                 </Box>
+                {imageError && (
+                  <Typography variant="caption" color="error" sx={{ fontWeight: 700, mt: -2, display: 'block' }}>
+                    Debés subir al menos una imagen para el producto.
+                  </Typography>
+                )}
 
                 <Grid container spacing={1}>
                   {/* Existing Images */}

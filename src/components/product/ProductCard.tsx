@@ -49,7 +49,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
   };
 
   const displayPrice = product.price;
-  const imageToShow = product.image || (product.images && product.images[0]) || '/placeholder.png';
+  const imageToShow = product.image || (product.images && product.images[0]) || '/default-gaming-product.png';
 
   return (
     <motion.div

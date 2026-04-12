@@ -426,12 +426,6 @@ const Dashboard = () => {
                     >
                       {prod.name}
                     </Typography>
-                    <Chip
-                      label={prod.category}
-                      size="small"
-                      variant="outlined"
-                      sx={{ height: 18, fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', bgcolor: 'rgba(0,0,0,0.02)', borderColor: 'transparent', flexShrink: 0 }}
-                    />
                   </Stack>
                   <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
                     <Box sx={{ width: '100%', height: 6, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 1, overflow: 'hidden', mr: 2 }}>
