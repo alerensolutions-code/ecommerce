@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -21,7 +21,10 @@ import {
   ListItemButton,
   ListItemText,
   CircularProgress,
-  TextField
+  TextField,
+  Avatar,
+  ListItemAvatar,
+  ClickAwayListener
 } from '@mui/material';
 import {
   Search,
@@ -34,11 +37,12 @@ import {
   Mail,
   Phone,
   Instagram,
-  Facebook
+  Facebook,
+  Loader2
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { useCart } from '../../context/CartContext';
 import { alpha, styled } from '@mui/material/styles';
@@ -112,6 +116,11 @@ const Navbar = () => {
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Búsqueda en vivo
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   // Categorías
   const [dbCategories, setDbCategories] = useState<{ id: string, name: string, path: string }[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
@@ -159,6 +168,32 @@ const Navbar = () => {
   const handleCloseMenu = () => {
     setAnchorEl(null);
   };
+
+  useEffect(() => {
+    const fetchSearch = async () => {
+      if (searchQuery.trim().length >= 3) {
+        setIsSearching(true);
+        setShowDropdown(true);
+        
+        const { data, error } = await supabase
+          .from('products')
+          .select('id, name, images, price')
+          .ilike('name', `%${searchQuery.trim()}%`)
+          .limit(5);
+
+        if (data && !error) {
+          setSearchResults(data);
+        }
+        setIsSearching(false);
+      } else {
+        setSearchResults([]);
+        setShowDropdown(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchSearch, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
 
   const handleSearchSubmit = (e: React.FormEvent | React.KeyboardEvent) => {
     if (searchQuery.trim()) {
@@ -339,22 +374,110 @@ const Navbar = () => {
 
             {/* Search Bar */}
             <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, justifyContent: 'center' }}>
-              <SearchWrapper>
-                <SearchIconWrapper>
-                  <Search size={18} />
-                </SearchIconWrapper>
-                <StyledInputBase
-                  placeholder="Buscar hardware..."
-                  inputProps={{ 'aria-label': 'search' }}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleSearchSubmit(e);
-                    }
-                  }}
-                />
-              </SearchWrapper>
+              <ClickAwayListener onClickAway={() => setShowDropdown(false)}>
+                <SearchWrapper>
+                  <SearchIconWrapper>
+                    <Search size={18} />
+                  </SearchIconWrapper>
+                  <StyledInputBase
+                    placeholder="Buscar hardware..."
+                    inputProps={{ 'aria-label': 'search' }}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => {
+                      if (searchQuery.trim().length >= 3) setShowDropdown(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSearchSubmit(e);
+                        setShowDropdown(false);
+                      }
+                    }}
+                  />
+                  <AnimatePresence>
+                    {showDropdown && searchQuery.trim().length >= 3 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        style={{
+                          position: 'absolute',
+                          top: '100%',
+                          left: 0,
+                          right: 0,
+                          marginTop: '8px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                          backdropFilter: 'blur(10px)',
+                          borderRadius: '12px',
+                          boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+                          zIndex: 1000,
+                          overflow: 'hidden',
+                          border: '1px solid rgba(0,0,0,0.1)',
+                          color: 'black'
+                        }}
+                      >
+                        {isSearching ? (
+                          <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                            <Loader2 className="animate-spin" size={24} color="#cc0000" />
+                          </Box>
+                        ) : searchResults.length > 0 ? (
+                          <List disablePadding>
+                            {searchResults.map((product) => (
+                              <ListItem 
+                                key={product.id} 
+                                disablePadding
+                                sx={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}
+                              >
+                                <ListItemButton
+                                  onClick={() => {
+                                    router.push(`/product/${product.id}`);
+                                    setShowDropdown(false);
+                                    setSearchQuery('');
+                                  }}
+                                  sx={{ py: 1.5, px: 2, '&:hover': { bgcolor: 'rgba(204,0,0,0.04)' } }}
+                                >
+                                  <ListItemAvatar>
+                                    <Avatar
+                                      src={product.images?.[0] || '/default-gaming-product.png'}
+                                      variant="rounded"
+                                      sx={{ width: 40, height: 40, bgcolor: '#f4f4f4', objectFit: 'contain' }}
+                                    />
+                                  </ListItemAvatar>
+                                  <ListItemText
+                                    primary={product.name}
+                                    secondary={`$${product.price.toLocaleString('es-ES')}`}
+                                    primaryTypographyProps={{ fontWeight: 700, fontSize: '0.85rem', color: 'text.primary', noWrap: true }}
+                                    secondaryTypographyProps={{ fontWeight: 800, color: 'primary.main', fontSize: '0.8rem' }}
+                                  />
+                                </ListItemButton>
+                              </ListItem>
+                            ))}
+                            <ListItem disablePadding>
+                              <ListItemButton
+                                onClick={(e) => {
+                                  handleSearchSubmit(e as any);
+                                  setShowDropdown(false);
+                                }}
+                                sx={{ py: 1.5, justifyContent: 'center', bgcolor: '#fafafa', '&:hover': { bgcolor: '#f0f0f0' } }}
+                              >
+                                <Typography variant="caption" fontWeight={800} color="secondary.main">
+                                  Ver todos los resultados
+                                </Typography>
+                              </ListItemButton>
+                            </ListItem>
+                          </List>
+                        ) : (
+                          <Box sx={{ p: 3, textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                              No se encontraron productos para "{searchQuery}"
+                            </Typography>
+                          </Box>
+                        )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </SearchWrapper>
+              </ClickAwayListener>
             </Box>
 
             {/* Icons */}
