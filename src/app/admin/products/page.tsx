@@ -124,6 +124,8 @@ const ProductsManagement = () => {
     const stockParam = searchParams.get('filter');
     if (stockParam === 'low_stock') {
       setFilterStock('low');
+    } else if (stockParam === 'critical') {
+      setFilterStock('critical');
     }
   }, [searchParams]);
 
@@ -151,13 +153,14 @@ const ProductsManagement = () => {
       result = result.filter((p: Product) => {
         if (filterStock === 'low') return p.stock > 0 && p.stock < 5;
         if (filterStock === 'out') return p.stock === 0;
+        if (filterStock === 'critical') return p.stock < 5; // stock bajo + sin stock
         return true;
       });
     }
 
     // Filtro por destacados
     if (filterFeatured !== 'all') {
-      result = result.filter((p: Product) => 
+      result = result.filter((p: Product) =>
         filterFeatured === 'yes' ? p.featured : !p.featured
       );
     }
@@ -430,11 +433,11 @@ const ProductsManagement = () => {
                 }}
               >
                 <MenuItem value="all">Todo el Stock</MenuItem>
-                <MenuItem value="low">Stock Bajo (&lt; 5)</MenuItem>
-                <MenuItem value="out">Sin Stock (0)</MenuItem>
+                <MenuItem value="low">Stock Bajo</MenuItem>
+                <MenuItem value="out">Sin Stock</MenuItem>
               </MuiSelect>
             </FormControl>
-            
+
             <FormControl size="small" sx={{ minWidth: 150 }}>
               <InputLabel id="featured-filter-label">Destacados</InputLabel>
               <MuiSelect

@@ -59,7 +59,7 @@ const ShopPage = () => {
       const { data: allProducts, error: pError } = await supabase
         .from('products')
         .select('*, category:categories(name)');
-      
+
       const { data: allCategories, error: cError } = await supabase
         .from('categories')
         .select('*');
@@ -93,24 +93,24 @@ const ShopPage = () => {
     // Search Filter
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(q) || 
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(q) ||
         (p.description && p.description.toLowerCase().includes(q))
       );
     }
 
     // Category Filter (Soporte Jerárquico Completo)
     if (category) {
-      const selectedCat = categories.find(c => 
+      const selectedCat = categories.find(c =>
         c.name.toLowerCase() === category.toLowerCase()
       );
-      
+
       if (selectedCat) {
         const allowedIds = getRecursiveIds(selectedCat.id, categories);
         result = result.filter(p => allowedIds.includes(p.category_id));
       } else {
         // Fallback por si el nombre no coincide exactamente (case sensitive o tildes)
-        result = result.filter(p => 
+        result = result.filter(p =>
           p.category?.name?.toLowerCase().includes(category.toLowerCase())
         );
       }
@@ -175,9 +175,9 @@ const ShopPage = () => {
             {searchQuery ? `Resultados para: "${searchQuery}"` : (category || 'Todos los Productos')}
           </Typography>
           {searchQuery && (
-            <Button 
-              size="small" 
-              startIcon={<X size={14} />} 
+            <Button
+              size="small"
+              startIcon={<X size={14} />}
               onClick={() => updateSearch('')}
               sx={{ mt: 1, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
               variant="outlined"
@@ -205,18 +205,21 @@ const ShopPage = () => {
                 p: 2,
                 mb: 3,
                 display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
                 borderRadius: 3,
                 border: '1px solid rgba(0,0,0,0.05)',
-                bgcolor: 'white'
+                bgcolor: 'white',
+
+                flexDirection: { xs: 'column', md: 'row' },
+                alignItems: { xs: 'flex-start', md: 'center' },
+                justifyContent: { xs: 'flex-start', md: 'space-between' },
+                gap: { xs: 2, md: 0 }
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 500, mr: 3 }}>
                   Mostrando <strong style={{ color: '#000' }}>{filteredProducts.length}</strong> productos
                 </Typography>
-                
+
                 <TextField
                   size="small"
                   placeholder="Buscar en el catálogo..."
@@ -271,7 +274,10 @@ const ShopPage = () => {
                   </IconButton>
                 </Box>
 
-                <FormControl size="small" sx={{ minWidth: 200 }}>
+                <FormControl size="small" fullWidth
+                  sx={{
+                    minWidth: { md: 200 }
+                  }}>
                   <InputLabel id="sort-label">Ordenar por</InputLabel>
                   <Select
                     labelId="sort-label"

@@ -74,7 +74,7 @@ const PCBuilderPage = () => {
   useEffect(() => {
     const fetchStepProducts = async () => {
       if (activeStep >= STEPS.length) return;
-      
+
       setLoading(true);
       const currentCategory = STEPS[activeStep].category;
 
@@ -188,7 +188,13 @@ const PCBuilderPage = () => {
   return (
     <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', pb: 10 }}>
       {/* Header / Stepper */}
-      <Box sx={{ bgcolor: 'white', pt: 6, pb: 4, borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+      <Box sx={{
+        bgcolor: 'white',
+        pt: 6, pb: 4,
+        borderBottom: '1px solid rgba(0,0,0,0.05)',
+        overflowX: { xs: 'auto', md: 'hidden' },
+        overflowY: 'hidden'
+      }}>
         <Container maxWidth="xl">
           <Typography variant="h4" fontWeight={800} gutterBottom align="center">
             Armá tu PC Gamer
@@ -196,11 +202,26 @@ const PCBuilderPage = () => {
           <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 6 }}>
             Seleccioná componente por componente. Validaremos la compatibilidad por vos.
           </Typography>
-
-          <Stepper activeStep={activeStep} alternativeLabel nonLinear>
+          <Stepper
+            activeStep={activeStep}
+            alternativeLabel
+            nonLinear
+            sx={{
+              width: '100%',
+              flexWrap: { xs: 'nowrap', md: 'wrap' }
+            }}
+          >
             {STEPS.map((step, index) => (
               <Step key={step.name}>
-                <StepButton color="inherit" onClick={() => setActiveStep(index)}>
+                <StepButton
+                  onClick={() => setActiveStep(index)}
+                  sx={{
+                    '& .MuiStepLabel-label': {
+                      fontSize: { xs: '0.7rem', md: '0.85rem' },
+                      whiteSpace: 'nowrap'
+                    }
+                  }}
+                >
                   {step.name}
                 </StepButton>
               </Step>

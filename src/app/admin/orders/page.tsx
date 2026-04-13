@@ -34,9 +34,9 @@ import {
   Avatar,
   TableSortLabel,
 } from '@mui/material';
-import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, FileDown, Trash2, Plus, X, MessageCircle, Edit2 } from 'lucide-react';
+import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, FileDown, Trash2, Plus, X, MessageCircle, Edit2, MapPin } from 'lucide-react';
 import { useState, useEffect, useMemo, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
 import { exportToCSV } from '../../../lib/export';
 
@@ -87,6 +87,14 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [orderDate, setOrderDate] = useState(() => {
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    return now.toISOString().slice(0, 16);
+  });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -96,17 +104,22 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
   }, [open]);
 
   useEffect(() => {
-    const targetId = selectedSubCategoryId || selectedParentId;
-    if (targetId) {
+    if (selectedParentId) {
+      // Si hay subcategoría seleccionada, usamos solo esa. 
+      // Si no, usamos el padre + todos sus hijos.
+      const idsToFetch = selectedSubCategoryId 
+        ? [selectedSubCategoryId] 
+        : [selectedParentId, ...categories.filter(c => c.parent_id === selectedParentId).map(c => c.id)];
+
       supabase
         .from('products')
         .select('*, category:categories(name)')
-        .eq('category_id', targetId)
+        .in('category_id', idsToFetch)
         .then(({ data }) => setProducts(data || []));
     } else {
       setProducts([]);
     }
-  }, [selectedParentId, selectedSubCategoryId]);
+  }, [selectedParentId, selectedSubCategoryId, categories]);
 
   const handleAddProduct = (product: Product) => {
     setCartItems(prev => {
@@ -131,21 +144,24 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
 
   const handleSubmit = async () => {
     setSaving(true);
-    const id = `ORD-${Date.now().toString(36).toUpperCase()}`;
-    const { error } = await supabase.from('orders').insert([{
-      id,
+    const { data, error } = await supabase.from('orders').insert([{
       customer_name: contactName.trim(),
       phone: contactPhone.trim(),
+      address: address.trim(),
+      city: city.trim(),
+      zip_code: zipCode.trim(),
       items: cartItems,
       total,
       status: 'Pendiente',
-    }]);
+      created_at: new Date(orderDate).toISOString(),
+    }]).select('id').single();
+    
     setSaving(false);
-    if (!error) {
+    if (!error && data) {
       onCreated();
       handleReset();
     } else {
-      alert('Error al crear el pedido: ' + error.message);
+      alert('Error al crear el pedido: ' + (error?.message || 'Error desconocido'));
     }
   };
 
@@ -156,6 +172,12 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
     setCartItems([]);
     setContactName('');
     setContactPhone('');
+    setAddress('');
+    setCity('');
+    setZipCode('');
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    setOrderDate(now.toISOString().slice(0, 16));
     setProducts([]);
     onClose();
   };
@@ -221,7 +243,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
                         onChange={(e) => setSelectedSubCategoryId(e.target.value)}
                         sx={{ bgcolor: 'white' }}
                       >
-                        <MenuItem value="">Todas las de {categories.find(c => c.id === selectedParentId)?.name}</MenuItem>
+                        <MenuItem value="">Sin subcategoría</MenuItem>
                         {categories.filter(c => c.parent_id === selectedParentId).map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
                       </Select>
                     </FormControl>
@@ -362,6 +384,42 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
                 startAdornment: <InputAdornment position="start"><Phone size={18} /></InputAdornment>
               }}
             />
+            <TextField
+              fullWidth
+              label="Dirección"
+              value={address}
+              onChange={e => setAddress(e.target.value)}
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><MapPin size={18} /></InputAdornment>
+              }}
+            />
+            <Grid container spacing={2}>
+              <Grid size={{ xs: 8 }}>
+                <TextField
+                  fullWidth
+                  label="Ciudad"
+                  value={city}
+                  onChange={e => setCity(e.target.value)}
+                />
+              </Grid>
+              <Grid size={{ xs: 4 }}>
+                <TextField
+                  fullWidth
+                  label="C.P."
+                  value={zipCode}
+                  onChange={e => setZipCode(e.target.value)}
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              fullWidth
+              type="datetime-local"
+              label="Fecha y hora del pedido"
+              value={orderDate}
+              onChange={e => setOrderDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              onClick={(e) => (e.target as any).showPicker?.()}
+            />
           </Stack>
         )}
 
@@ -370,16 +428,34 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
           <Stack spacing={3} sx={{ py: 2 }}>
             <Box sx={{ p: 3, borderRadius: 3, border: '1px solid rgba(0,0,0,0.08)', bgcolor: 'rgba(0,0,0,0.01)' }}>
               <Typography variant="overline" color="text.secondary" sx={{ display: 'block', mb: 2 }}>Cliente</Typography>
-              <Stack direction="row" spacing={2}>
-                <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.main', color: 'white', display: 'flex' }}><User size={18} /></Box>
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'primary.main', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <User size={18} />
+                </Box>
                 <Box>
                   <Typography variant="caption" color="text.secondary">Nombre</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 700 }}>{contactName}</Typography>
                 </Box>
-                <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#25d366', color: 'white', display: 'flex' }}><Phone size={18} /></Box>
+                <Box sx={{ ml: 2, p: 1, borderRadius: 2, bgcolor: '#25d366', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Phone size={18} />
+                </Box>
                 <Box>
                   <Typography variant="caption" color="text.secondary">Teléfono</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 700 }}>{contactPhone}</Typography>
+                </Box>
+              </Stack>
+
+              <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
+
+              <Stack direction="row" spacing={2} alignItems="center">
+                <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(0,0,0,0.05)', color: 'text.secondary', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MapPin size={18} />
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Dirección de Entrega</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                    {address || 'No especificada'}{city ? `, ${city}` : ''}{zipCode ? ` (CP: ${zipCode})` : ''}
+                  </Typography>
                 </Box>
               </Stack>
             </Box>
@@ -449,6 +525,10 @@ interface EditOrderWizardProps {
 const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardProps) => {
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [zipCode, setZipCode] = useState('');
+  const [orderDate, setOrderDate] = useState('');
   const [saving, setSaving] = useState(false);
   
   const [categories, setCategories] = useState<Category[]>([]);
@@ -461,7 +541,15 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
     if (order) {
       setContactName(order.customer_name || '');
       setContactPhone(order.phone || '');
+      setAddress(order.address || '');
+      setCity(order.city || '');
+      setZipCode(order.zip_code || '');
       setCartItems(order.items || []);
+      if (order.created_at) {
+        const d = new Date(order.created_at);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        setOrderDate(d.toISOString().slice(0, 16));
+      }
     }
   }, [order]);
 
@@ -472,17 +560,20 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
   }, [open]);
 
   useEffect(() => {
-    const targetId = selectedSubCategoryId || selectedParentId;
-    if (targetId) {
+    if (selectedParentId) {
+      const idsToFetch = selectedSubCategoryId 
+        ? [selectedSubCategoryId] 
+        : [selectedParentId, ...categories.filter(c => c.parent_id === selectedParentId).map(c => c.id)];
+
       supabase
         .from('products')
         .select('*, category:categories(name)')
-        .eq('category_id', targetId)
+        .in('category_id', idsToFetch)
         .then(({ data }) => setProducts(data || []));
     } else {
       setProducts([]);
     }
-  }, [selectedParentId, selectedSubCategoryId]);
+  }, [selectedParentId, selectedSubCategoryId, categories]);
 
   const handleAddProduct = (product: Product) => {
     setCartItems(prev => {
@@ -513,8 +604,12 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
       .update({
         customer_name: contactName.trim(),
         phone: contactPhone.trim(),
+        address: address.trim(),
+        city: city.trim(),
+        zip_code: zipCode.trim(),
         items: cartItems,
         total,
+        created_at: new Date(orderDate).toISOString(),
       })
       .eq('id', order.id);
 
@@ -567,6 +662,44 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                   }}
                 />
               </Grid>
+              <Grid size={{ xs: 12, md: 12 }}>
+                <TextField
+                  fullWidth
+                  type="datetime-local"
+                  label="Fecha y hora del pedido"
+                  value={orderDate}
+                  onChange={e => setOrderDate(e.target.value)}
+                  InputLabelProps={{ shrink: true }}
+                  onClick={(e) => (e.target as any).showPicker?.()}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <TextField
+                  fullWidth
+                  label="Dirección"
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><MapPin size={18} /></InputAdornment>
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 8 }}>
+                <TextField
+                  fullWidth
+                  label="Ciudad"
+                  value={city}
+                  onChange={e => setCity(e.target.value)}
+                />
+              </Grid>
+              <Grid size={{ xs: 4 }}>
+                <TextField
+                  fullWidth
+                  label="C.P."
+                  value={zipCode}
+                  onChange={e => setZipCode(e.target.value)}
+                />
+              </Grid>
             </Grid>
           </Box>
 
@@ -607,7 +740,7 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                           onChange={(e) => setSelectedSubCategoryId(e.target.value)}
                           sx={{ bgcolor: 'white' }}
                         >
-                          <MenuItem value="">Todas las de {categories.find(c => c.id === selectedParentId)?.name}</MenuItem>
+                          <MenuItem value="">Sin subcategoría</MenuItem>
                           {categories.filter(c => c.parent_id === selectedParentId).map(c => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
                         </Select>
                       </FormControl>
@@ -744,8 +877,10 @@ const OrdersManagement = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Ordenamiento por fecha
+  // Ordenamiento
   const [dateOrder, setDateOrder] = useState<'asc' | 'desc'>('desc');
+  const [idOrder, setIdOrder] = useState<'asc' | 'desc'>('desc');
+  const [activeSort, setActiveSort] = useState<'date' | 'id'>('date');
 
   // Delete
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -758,6 +893,8 @@ const OrdersManagement = () => {
   // Create wizard
   const [createOpen, setCreateOpen] = useState(false);
   
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const fetchOrders = async () => {
@@ -785,23 +922,47 @@ const OrdersManagement = () => {
     }
   }, [searchParams]);
 
+  // Soporte para link profundo desde el dashboard
+  useEffect(() => {
+    const orderId = searchParams.get('orderId');
+    if (orderId) {
+      const processDeepLink = async () => {
+        // Primero buscamos en la lista local
+        let order = orders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
+        
+        // Si no está (puede que aún no cargue o esté fuera del filtro inicial)
+        if (!order) {
+          const { data } = await supabase.from('orders').select('*').eq('id', orderId).single();
+          if (data) order = data;
+        }
+
+        if (order) {
+          handleViewDetail(order);
+        }
+      };
+      processDeepLink();
+    }
+  }, [orders, searchParams]);
+
   const filteredOrders = useMemo(() => {
     let result = orders.filter(order => {
       const matchesSearch = order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           order.id?.toLowerCase().includes(searchTerm.toLowerCase());
+                           String(order.id).includes(searchTerm);
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
 
-    // Ordering by date
     result = [...result].sort((a, b) => {
+      if (activeSort === 'id') {
+        return idOrder === 'asc' ? a.id - b.id : b.id - a.id;
+      }
       const ta = new Date(a.created_at).getTime();
       const tb = new Date(b.created_at).getTime();
       return dateOrder === 'asc' ? ta - tb : tb - ta;
     });
 
     return result;
-  }, [orders, searchTerm, statusFilter, dateOrder]);
+  }, [orders, searchTerm, statusFilter, dateOrder, idOrder, activeSort]);
 
   const pagedOrders = useMemo(() => {
     return filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
@@ -819,6 +980,18 @@ const OrdersManagement = () => {
   const handleViewDetail = (order: any) => {
     setSelectedOrder(order);
     setOpenDetail(true);
+  };
+
+  const handleCloseDetail = () => {
+    setOpenDetail(false);
+    
+    // Limpiar orderId de la URL para evitar que se abra solo al recargar/navegar
+    const params = new URLSearchParams(searchParams.toString());
+    if (params.has('orderId')) {
+      params.delete('orderId');
+      const queryString = params.toString();
+      router.replace(queryString ? `${pathname}?${queryString}` : pathname);
+    }
   };
 
   const handleEditClick = (order: any) => {
@@ -916,13 +1089,22 @@ const OrdersManagement = () => {
           <Table>
             <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
               <TableRow>
-                <TableCell sx={{ fontWeight: 700 }}>ID Pedido</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Cliente</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>
                   <TableSortLabel
-                    active
+                    active={activeSort === 'id'}
+                    direction={idOrder}
+                    onClick={() => { setActiveSort('id'); setIdOrder(o => o === 'asc' ? 'desc' : 'asc'); }}
+                  >
+                    ID Pedido
+                  </TableSortLabel>
+                </TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Cliente</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Dirección</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>
+                  <TableSortLabel
+                    active={activeSort === 'date'}
                     direction={dateOrder}
-                    onClick={() => setDateOrder(d => d === 'asc' ? 'desc' : 'asc')}
+                    onClick={() => { setActiveSort('date'); setDateOrder(d => d === 'asc' ? 'desc' : 'asc'); }}
                   >
                     Fecha
                   </TableSortLabel>
@@ -937,10 +1119,21 @@ const OrdersManagement = () => {
                 <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
               ) : pagedOrders.map((order) => (
                 <TableRow key={order.id} hover>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>{order.id}</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>{order.customer_name}</TableCell>
-                  <TableCell>{new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>${Number(order.total).toLocaleString('es-ES')}</TableCell>
+                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>#{order.id}</TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>{order.customer_name}</TableCell>
+                  <TableCell sx={{ fontWeight: 500, maxWidth: 180 }}>
+                    {order.address ? (
+                      <Tooltip title={`${order.address}, ${order.city || ''} ${order.zip_code ? `(CP: ${order.zip_code})` : ''}`}>
+                        <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {order.address}, {order.city || ''}
+                        </Box>
+                      </Tooltip>
+                    ) : (
+                      <Typography variant="body2" color="text.disabled">N/A</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>{new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
+                  <TableCell sx={{ fontWeight: 500 }}>${Number(order.total).toLocaleString('es-ES')}</TableCell>
                   <TableCell>
                     <Select
                       size="small"
@@ -1006,13 +1199,13 @@ const OrdersManagement = () => {
       </Paper>
 
       {/* ── Order Detail Modal ── */}
-      <Dialog open={openDetail} onClose={() => setOpenDetail(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openDetail} onClose={handleCloseDetail} maxWidth="sm" fullWidth>
         <DialogTitle sx={{ fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'space-between', pb: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <ShoppingBag size={24} color="#cc0000" />
-            Pedido {selectedOrder?.id}
+            Pedido #{selectedOrder?.id}
           </Box>
-          <IconButton size="small" onClick={() => setOpenDetail(false)}>
+          <IconButton size="small" onClick={handleCloseDetail}>
             <X size={20} />
           </IconButton>
         </DialogTitle>
@@ -1097,6 +1290,26 @@ const OrdersManagement = () => {
                     </Box>
                   </Stack>
                 </Grid>
+
+                {/* Dirección */}
+                {(selectedOrder?.address || selectedOrder?.city) && (
+                  <Grid size={{ xs: 12 }}>
+                    <Divider sx={{ my: 1, borderStyle: 'dotted' }} />
+                    <Stack direction="row" spacing={2} alignItems="flex-start">
+                      <Box sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(0,0,0,0.05)', color: 'text.secondary', display: 'flex' }}>
+                        <MapPin size={18} />
+                      </Box>
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">Dirección de Entrega</Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {selectedOrder.address}
+                          {selectedOrder.city ? `, ${selectedOrder.city}` : ''}
+                          {selectedOrder.zip_code ? ` (CP: ${selectedOrder.zip_code})` : ''}
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                )}
               </Grid>
             </Box>
 
