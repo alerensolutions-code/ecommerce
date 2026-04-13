@@ -59,7 +59,7 @@ const ProductDetailPage = () => {
 
       if (pData) {
         setProduct(pData);
-        setSelectedImage(pData.images && pData.images[0] ? pData.images[0] : (pData.image || '/placeholder.png'));
+        setSelectedImage(pData.images && pData.images[0] ? pData.images[0] : (pData.image || '/default-gaming-product.png'));
 
         // Fetch related products using category_id
         const { data: related } = await supabase
@@ -108,7 +108,7 @@ const ProductDetailPage = () => {
   const categoryName = product.category?.name || 'Varios';
   const allImages = product.images && Array.isArray(product.images) && product.images.length > 0
     ? product.images
-    : [product.image || '/placeholder.png'];
+    : [product.image || '/default-gaming-product.png'];
 
   return (
     <Box sx={{ bgcolor: '#f4f4f4', minHeight: '100vh', pb: 10 }}>
