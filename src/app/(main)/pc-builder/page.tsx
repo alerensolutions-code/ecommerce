@@ -73,6 +73,8 @@ const PCBuilderPage = () => {
   // Cargar productos para el paso actual
   useEffect(() => {
     const fetchStepProducts = async () => {
+      if (activeStep >= STEPS.length) return;
+      
       setLoading(true);
       const currentCategory = STEPS[activeStep].category;
 
