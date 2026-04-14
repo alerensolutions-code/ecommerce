@@ -21,13 +21,15 @@ import {
   ListItemButton,
   ListItemText,
   CircularProgress,
-  TextField
+  TextField,
+  Collapse
 } from '@mui/material';
 import {
   Search,
   ShoppingCart,
   Menu as MenuIcon,
   ChevronDown,
+  ChevronRight,
   LayoutDashboard,
   X,
   Zap,
@@ -38,7 +40,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { useCart } from '../../context/CartContext';
 import { alpha, styled } from '@mui/material/styles';
@@ -107,15 +109,20 @@ const Navbar = () => {
   const { state } = useCart();
   const { user } = useAuth();
   const router = useRouter();
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Categorías
-  const [dbCategories, setDbCategories] = useState<{ id: string, name: string, path: string }[]>([]);
+  type CategoryType = { id: string, name: string, path: string, subcategories: CategoryType[] };
+  const [dbCategories, setDbCategories] = useState<CategoryType[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
+  const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
+  
+  // Desktop Menu states
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [hoveredCat, setHoveredCat] = useState<string | null>(null);
 
   const fetchCategories = async () => {
     if (categoriesLoaded || loadingCategories) return;
@@ -130,14 +137,23 @@ const Navbar = () => {
       if (error) throw error;
 
       if (data) {
-        // En el Navbar mostramos solo las categorías padre (parent_id is null)
-        const parentCats = data
-          .filter(c => !c.parent_id)
-          .map(c => ({
-            id: c.id,
-            name: c.name,
-            path: `/shop?category=${encodeURIComponent(c.name)}`
-          }));
+        const catMap = new Map();
+        data.forEach((c: any) => {
+          catMap.set(c.id, {
+            ...c,
+            path: `/shop?category=${encodeURIComponent(c.name)}`,
+            subcategories: []
+          });
+        });
+
+        const parentCats: CategoryType[] = [];
+        data.forEach((c: any) => {
+          if (c.parent_id && catMap.has(c.parent_id)) {
+            catMap.get(c.parent_id).subcategories.push(catMap.get(c.id));
+          } else if (!c.parent_id) {
+            parentCats.push(catMap.get(c.id));
+          }
+        });
 
         setDbCategories(parentCats);
         setCategoriesLoaded(true);
@@ -151,14 +167,13 @@ const Navbar = () => {
 
   const cartCount = state.items.reduce((acc, item) => acc + item.quantity, 0);
 
-  const handleOpenMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-    fetchCategories();
+  const handleMobileCatToggle = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setOpenCats(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleCloseMenu = () => {
-    setAnchorEl(null);
-  };
+  const activeHoverCategory = hoveredCat ? dbCategories.find(c => c.id === hoveredCat) : undefined;
 
   const handleSearchSubmit = (e: React.FormEvent | React.KeyboardEvent) => {
     if (searchQuery.trim()) {
@@ -231,32 +246,190 @@ const Navbar = () => {
 
             {/* Desktop Categories */}
             <Box sx={{ flexGrow: { xs: 0, md: 1 }, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center' }}>
+              {/* Desktop Mega Menu Wrapper */}
               <Box
-                onClick={handleOpenMenu}
-                sx={{
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  transition: 'all 0.3s',
-                  color: 'rgba(255,255,255,0.9)',
-                  '&:hover': { color: 'primary.main' },
-                  position: 'relative',
-                  '&::after': {
-                    content: '""',
-                    position: 'absolute',
-                    width: '0%',
-                    height: '2px',
-                    bottom: -4,
-                    left: 0,
-                    backgroundColor: 'primary.main',
-                    transition: 'width 0.3s'
-                  },
-                  '&:hover::after': { width: '100%' }
-                }}
+                onMouseEnter={() => { fetchCategories(); setIsMenuOpen(true); }}
+                onMouseLeave={() => { setIsMenuOpen(false); setHoveredCat(null); }}
+                sx={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', py: 3 }}
               >
-                Categorías <ChevronDown size={14} style={{ marginLeft: 4 }} />
+                <Box
+                  sx={{
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    transition: 'all 0.3s',
+                    color: isMenuOpen ? 'primary.main' : 'rgba(255,255,255,0.9)',
+                    position: 'relative',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      width: isMenuOpen ? '100%' : '0%',
+                      height: '2px',
+                      bottom: -4,
+                      left: 0,
+                      backgroundColor: 'primary.main',
+                      transition: 'width 0.3s'
+                    },
+                    '&:hover::after': { width: '100%' }
+                  }}
+                >
+                  Categorías 
+                  <motion.div
+                    animate={{ rotate: isMenuOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ display: 'flex', alignItems: 'center', marginLeft: 4 }}
+                  >
+                    <ChevronDown size={14} />
+                  </motion.div>
+                </Box>
+
+                {/* Dropdown Container */}
+                <AnimatePresence>
+                  {isMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        zIndex: 1400,
+                        paddingTop: '10px'
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          minWidth: { md: 280, lg: activeHoverCategory?.subcategories && activeHoverCategory.subcategories.length > 0 ? 550 : 280 },
+                          minHeight: 300,
+                          backgroundColor: 'rgba(15, 15, 15, 0.95)',
+                          backdropFilter: 'blur(20px)',
+                          borderRadius: '16px',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(204,0,0,0.15)',
+                          overflow: 'hidden',
+                          transition: 'min-width 0.3s ease'
+                        }}
+                      >
+                        {loadingCategories ? (
+                          <Box sx={{ display: 'flex', width: '100%', height: 300, alignItems: 'center', justifyContent: 'center' }}>
+                            <CircularProgress size={30} thickness={4} sx={{ color: 'primary.main' }} />
+                          </Box>
+                        ) : (
+                          <>
+                            {/* Left Panel: Parent Categories */}
+                            <Box sx={{ width: 280, py: 2, display: 'flex', flexDirection: 'column' }}>
+                              {dbCategories.map((cat, idx) => (
+                                <motion.div
+                                  key={cat.id}
+                                  initial={{ opacity: 0, x: -10 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: idx * 0.03 }}
+                                >
+                                  <Box
+                                    onMouseEnter={() => setHoveredCat(cat.id)}
+                                    onClick={() => {
+                                      router.push(cat.path);
+                                      setIsMenuOpen(false);
+                                    }}
+                                    sx={{
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      py: 1.5,
+                                      px: 3,
+                                      cursor: 'pointer',
+                                      position: 'relative',
+                                      backgroundColor: hoveredCat === cat.id ? 'rgba(204,0,0,0.08)' : 'transparent',
+                                      color: hoveredCat === cat.id ? 'primary.main' : 'rgba(255,255,255,0.8)',
+                                      transition: 'all 0.2s ease',
+                                      borderLeft: hoveredCat === cat.id ? '3px solid #cc0000' : '3px solid transparent',
+                                      '&:hover': {
+                                        backgroundColor: 'rgba(204,0,0,0.12)',
+                                        color: '#fff',
+                                      }
+                                    }}
+                                  >
+                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.02em' }}>
+                                      {cat.name}
+                                    </Typography>
+                                    {cat.subcategories && cat.subcategories.length > 0 && (
+                                      <ChevronRight size={16} />
+                                    )}
+                                  </Box>
+                                </motion.div>
+                              ))}
+                            </Box>
+
+                            {/* Right Panel: Subcategories */}
+                            {activeHoverCategory && activeHoverCategory.subcategories && activeHoverCategory.subcategories.length > 0 && (
+                              <Box
+                                sx={{
+                                  width: 270,
+                                  bgcolor: 'rgba(255,255,255,0.02)',
+                                  borderLeft: '1px solid rgba(255,255,255,0.05)',
+                                  p: 3,
+                                  display: 'flex',
+                                  flexDirection: 'column'
+                                }}
+                              >
+                                <Typography
+                                  variant="overline"
+                                  sx={{
+                                    color: 'primary.main',
+                                    fontWeight: 900,
+                                    mb: 2,
+                                    fontSize: '0.75rem',
+                                    letterSpacing: '0.1em'
+                                  }}
+                                >
+                                  {activeHoverCategory.name}
+                                </Typography>
+                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                  {activeHoverCategory.subcategories.map((sub, idx) => (
+                                    <motion.div
+                                      key={sub.id}
+                                      initial={{ opacity: 0, x: 10 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      transition={{ delay: idx * 0.04 }}
+                                    >
+                                      <Typography
+                                        onClick={() => {
+                                          router.push(sub.path);
+                                          setIsMenuOpen(false);
+                                        }}
+                                        sx={{
+                                          color: 'rgba(255,255,255,0.7)',
+                                          cursor: 'pointer',
+                                          fontSize: '0.9rem',
+                                          fontWeight: 600,
+                                          p: 1,
+                                          borderRadius: 1,
+                                          transition: 'all 0.2s',
+                                          '&:hover': {
+                                            color: '#fff',
+                                            bgcolor: 'rgba(255,255,255,0.08)',
+                                            transform: 'translateX(4px)'
+                                          }
+                                        }}
+                                      >
+                                        {sub.name}
+                                      </Typography>
+                                    </motion.div>
+                                  ))}
+                                </Box>
+                              </Box>
+                            )}
+                          </>
+                        )}
+                      </Box>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </Box>
               <Button
                 component={Link}
@@ -274,64 +447,6 @@ const Navbar = () => {
               >
                 Armá tu PC
               </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleCloseMenu}
-                elevation={0}
-                sx={{ mt: '20px' }}
-                PaperProps={{
-                  sx: {
-                    borderRadius: 3,
-                    minWidth: 220,
-                    p: 1,
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(20px)',
-                    boxShadow: '0 20px 50px rgba(0,0,0,0.12)',
-                    border: '1px solid rgba(0,0,0,0.06)'
-                  }
-                }}
-              >
-                {loadingCategories ? (
-                  <MenuItem disabled sx={{ justifyContent: 'center', py: 4 }}>
-                    <CircularProgress size={24} thickness={5} />
-                  </MenuItem>
-                ) : dbCategories.map((cat, index) => (
-                  <motion.div
-                    key={cat.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <MenuItem
-                      onClick={() => {
-                        router.push(cat.path);
-                        handleCloseMenu();
-                      }}
-                      sx={{
-                        py: 1.5,
-                        px: 2,
-                        borderRadius: 2,
-                        transition: 'all 0.2s',
-                        mb: 0.5,
-                        '&:hover': {
-                          bgcolor: 'rgba(204,0,0,0.06)',
-                          color: 'primary.main',
-                          transform: 'translateX(5px)'
-                        }
-                      }}
-                    >
-                      <ListItemText
-                        primary={cat.name}
-                        primaryTypographyProps={{
-                          fontWeight: 800,
-                          fontSize: '0.85rem'
-                        }}
-                      />
-                    </MenuItem>
-                  </motion.div>
-                ))}
-              </Menu>
             </Box>
 
             {/* Spacer for Mobile */}
@@ -471,33 +586,80 @@ const Navbar = () => {
             <List>
               {loadingCategories ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                  <CircularProgress size={24} />
+                  <CircularProgress size={24} color="primary" />
                 </Box>
               ) : dbCategories.map((cat, index) => (
-                <motion.div
-                  key={cat.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <ListItem disablePadding>
-                    <ListItemButton
-                      component={Link}
-                      href={cat.path}
-                      onClick={toggleDrawer(false)}
-                      sx={{
-                        py: 2,
-                        px: 3,
-                        '&:hover': { bgcolor: 'rgba(204,0,0,0.04)', color: 'primary.main' }
-                      }}
-                    >
-                      <ListItemText
-                        primary={cat.name}
-                        primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem' }}
-                      />
-                    </ListItemButton>
-                  </ListItem>
-                </motion.div>
+                <Box key={cat.id}>
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <ListItem disablePadding>
+                      <ListItemButton
+                        component={Link}
+                        href={cat.path}
+                        onClick={toggleDrawer(false)}
+                        sx={{
+                          py: 2,
+                          px: 3,
+                          '&:hover': { bgcolor: 'rgba(204,0,0,0.04)', color: 'primary.main' }
+                        }}
+                      >
+                        <ListItemText
+                          primary={cat.name}
+                          primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem' }}
+                        />
+                      </ListItemButton>
+                      {cat.subcategories && cat.subcategories.length > 0 && (
+                        <IconButton 
+                          onClick={(e) => handleMobileCatToggle(cat.id, e)}
+                          sx={{ mr: 2, color: openCats[cat.id] ? 'primary.main' : 'inherit' }}
+                        >
+                          <motion.div
+                            animate={{ rotate: openCats[cat.id] ? 90 : 0 }}
+                            transition={{ duration: 0.2 }}
+                            style={{ display: 'flex' }}
+                          >
+                            <ChevronRight size={20} />
+                          </motion.div>
+                        </IconButton>
+                      )}
+                    </ListItem>
+                  </motion.div>
+                  
+                  {cat.subcategories && cat.subcategories.length > 0 && (
+                    <Collapse in={openCats[cat.id]} timeout="auto" unmountOnExit>
+                      <List component="div" disablePadding sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
+                        {cat.subcategories.map((sub, subIdx) => (
+                          <motion.div
+                            key={sub.id}
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: subIdx * 0.03 }}
+                          >
+                            <ListItemButton
+                              component={Link}
+                              href={sub.path}
+                              onClick={toggleDrawer(false)}
+                              sx={{
+                                py: 1.5,
+                                pl: 6,
+                                pr: 3,
+                                '&:hover': { bgcolor: 'rgba(204,0,0,0.04)', color: 'primary.main' }
+                              }}
+                            >
+                              <ListItemText
+                                primary={sub.name}
+                                primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
+                              />
+                            </ListItemButton>
+                          </motion.div>
+                        ))}
+                      </List>
+                    </Collapse>
+                  )}
+                </Box>
               ))}
             </List>
           </Box>
