@@ -414,24 +414,7 @@ const CategoriesManagement = () => {
               onChange={(e) => setNewName(e.target.value)}
               autoFocus
             />
-            {editingCategory && (
-              <TextField
-                select
-                fullWidth
-                label="Mover a Categoría Padre"
-                value={newParentId}
-                onChange={(e) => setNewParentId(e.target.value)}
-              >
-                <MenuItem value=""><em>Ninguna (Categoría Raíz)</em></MenuItem>
-                {categories
-                  .filter(c => !c.parent_id && c.id !== editingCategory?.id)
-                  .map((cat) => (
-                    <MenuItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </MenuItem>
-                  ))}
-              </TextField>
-            )}
+
 
             {/* Spec Template Editor */}
             <Box sx={{ mt: 1 }}>

@@ -343,7 +343,7 @@ const Dashboard = () => {
             </Box>
             <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
               <Box sx={{ p: 1, borderRadius: 2, bgcolor: metrics.lowStockCount > 0 ? '#f4433608' : '#f5f5f5', color: metrics.lowStockCount > 0 ? '#f44336' : 'text.disabled', display: 'flex' }}><AlertTriangle size={18} /></Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Stock Bajo</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Bajo Stock</Typography>
             </Stack>
             <Typography variant="h4" sx={{
               fontWeight: 800,

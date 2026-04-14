@@ -433,7 +433,7 @@ const ProductsManagement = () => {
                 }}
               >
                 <MenuItem value="all">Todo el Stock</MenuItem>
-                <MenuItem value="low">Stock Bajo</MenuItem>
+                <MenuItem value="low">Bajo Stock</MenuItem>
                 <MenuItem value="out">Sin Stock</MenuItem>
               </MuiSelect>
             </FormControl>
@@ -514,7 +514,7 @@ const ProductsManagement = () => {
                       <Chip
                         label={
                           product.stock === 0 ? 'Sin Stock' :
-                            product.stock < 5 ? 'Stock Bajo' :
+                            product.stock < 5 ? 'Bajo Stock' :
                               'En Stock'
                         }
                         size="small"
