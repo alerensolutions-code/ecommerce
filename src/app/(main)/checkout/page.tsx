@@ -88,7 +88,7 @@ const CheckoutPage = () => {
         state.items.map(item => `- ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-ES')})`).join('\n') +
         `\n\n*TOTAL: $${total.toLocaleString('es-ES')}*`;
 
-      const generatedLink = `https://wa.me/5491122334455?text=${encodeURIComponent(message)}`;
+      const generatedLink = `https://wa.me/5491155099149?text=${encodeURIComponent(message)}`;
       setWhatsappUrl(generatedLink);
 
       // 3. Clear Cart and go to confirmation

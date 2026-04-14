@@ -34,14 +34,13 @@ import {
   Avatar,
   TableSortLabel,
 } from '@mui/material';
-import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, FileDown, Trash2, Plus, X, MessageCircle, Edit2, MapPin } from 'lucide-react';
+import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin } from 'lucide-react';
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
-import { exportToCSV } from '../../../lib/export';
 
 // Placeholder número de WhatsApp de la tienda
-const WHATSAPP_STORE_NUMBER = '5491100000000';
+const WHATSAPP_STORE_NUMBER = '5491155099149';
 
 const statusIcons: { [key: string]: any } = {
   'Pendiente': <Clock size={16} />,
@@ -1050,6 +1049,13 @@ const OrdersManagement = () => {
                       <Search size={18} />
                     </InputAdornment>
                   ),
+                  endAdornment: searchTerm ? (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => { setSearchTerm(''); setPage(0); }}>
+                        <X size={16} />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
                 }}
               />
             </Grid>
@@ -1072,14 +1078,7 @@ const OrdersManagement = () => {
                   <MenuItem value="Cancelado">Cancelado</MenuItem>
                 </Select>
                 
-                <Tooltip title="Exportar a CSV">
-                  <IconButton 
-                    onClick={() => exportToCSV(filteredOrders, 'pedidos_devil_game')}
-                    sx={{ bgcolor: 'rgba(0,0,0,0.02)', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.05)' } }}
-                  >
-                    <FileDown size={20} />
-                  </IconButton>
-                </Tooltip>
+
               </Stack>
             </Grid>
           </Grid>
@@ -1279,13 +1278,40 @@ const OrdersManagement = () => {
                     <Box>
                       <Typography variant="caption" color="text.secondary">Estado</Typography>
                       <Box sx={{ mt: 0.5 }}>
-                        <Chip
-                          icon={statusIcons[selectedOrder?.status]}
-                          label={selectedOrder?.status}
-                          size="small"
-                          color={statusColors[selectedOrder?.status]}
-                          sx={{ fontWeight: 700 }}
-                        />
+                        {selectedOrder && (
+                          <Select
+                            size="small"
+                            value={selectedOrder.status}
+                            onChange={(e) => {
+                              handleStatusChange(selectedOrder.id, e.target.value);
+                              setSelectedOrder((prev: any) => prev ? { ...prev, status: e.target.value } : null);
+                            }}
+                            sx={{ 
+                              minWidth: 140, 
+                              fontWeight: 600,
+                              '& .MuiSelect-select': { 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 1,
+                                py: 0.5 
+                              } 
+                            }}
+                            renderValue={(value) => (
+                              <Chip 
+                                icon={statusIcons[value]}
+                                label={value} 
+                                size="small" 
+                                color={statusColors[value]}
+                                sx={{ fontWeight: 700, border: 'none' }}
+                              />
+                            )}
+                          >
+                            <MenuItem value="Pendiente"><Clock size={16} style={{marginRight: 8}}/> Pendiente</MenuItem>
+                            <MenuItem value="Enviado"><Truck size={16} style={{marginRight: 8}}/> Enviado</MenuItem>
+                            <MenuItem value="Entregado"><CheckCircle size={16} style={{marginRight: 8}}/> Entregado</MenuItem>
+                            <MenuItem value="Cancelado"><AlertCircle size={16} style={{marginRight: 8}}/> Cancelado</MenuItem>
+                          </Select>
+                        )}
                       </Box>
                     </Box>
                   </Stack>

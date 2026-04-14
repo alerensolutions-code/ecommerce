@@ -18,7 +18,8 @@ import {
   CircularProgress,
   Drawer,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Chip
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
 import { LayoutGrid, List as ListIcon, Filter, Search, X } from 'lucide-react';
@@ -40,6 +41,7 @@ const ShopPage = () => {
   const sortBy = searchParams?.get('sort') || 'newest';
   const stockFilter = searchParams?.get('stock') || '';
   const searchQuery = searchParams?.get('q') || '';
+  const featuredFilter = searchParams?.get('featured') === 'true';
 
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -126,16 +128,24 @@ const ShopPage = () => {
       result = result.filter(p => (p.stock || 0) === 0);
     }
 
+    // Featured Filter
+    if (featuredFilter) {
+      result = result.filter(p => p.featured === true);
+    }
+
     // Sorting
     switch (sortBy) {
       case 'price-low':
-        result.sort((a, b) => a.price - b.price);
+        result.sort((a, b) => (a.price - b.price) || (a.name || '').localeCompare(b.name || ''));
         break;
       case 'price-high':
-        result.sort((a, b) => b.price - a.price);
+        result.sort((a, b) => (b.price - a.price) || (a.name || '').localeCompare(b.name || ''));
         break;
       case 'newest':
-        result.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        result.sort((a, b) => (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || (a.name || '').localeCompare(b.name || ''));
+        break;
+      case 'oldest':
+        result.sort((a, b) => (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) || (a.name || '').localeCompare(b.name || ''));
         break;
       default:
         break;
@@ -160,6 +170,20 @@ const ShopPage = () => {
     router.push(`${pathname}?${newParams.toString()}`);
   };
 
+  const removeFilter = (key: string) => {
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
+    if (key === 'price') {
+      newParams.delete('minPrice');
+      newParams.delete('maxPrice');
+    } else if (key === 'q') {
+      setLocalSearch('');
+      newParams.delete('q');
+    } else {
+      newParams.delete(key);
+    }
+    router.push(`${pathname}?${newParams.toString()}`);
+  };
+
   return (
     <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', pb: 10 }}>
       {/* Header / Breadcrumbs */}
@@ -174,18 +198,6 @@ const ShopPage = () => {
           <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: -1 }}>
             {searchQuery ? `Resultados para: "${searchQuery}"` : (category || 'Todos los Productos')}
           </Typography>
-          {searchQuery && (
-            <Button
-              size="small"
-              startIcon={<X size={14} />}
-              onClick={() => updateSearch('')}
-              sx={{ mt: 1, textTransform: 'none', fontWeight: 700, borderRadius: 2 }}
-              variant="outlined"
-              color="inherit"
-            >
-              Borrar búsqueda
-            </Button>
-          )}
         </Container>
       </Box>
 
@@ -233,13 +245,13 @@ const ShopPage = () => {
                         <Search size={16} />
                       </InputAdornment>
                     ),
-                    endAdornment: localSearch && (
+                    endAdornment: localSearch ? (
                       <InputAdornment position="end">
-                        <IconButton size="small" onClick={() => updateSearch('')}>
+                        <IconButton size="small" onClick={() => { setLocalSearch(''); updateSearch(''); }}>
                           <X size={14} />
                         </IconButton>
                       </InputAdornment>
-                    )
+                    ) : null
                   }}
                 />
               </Box>
@@ -287,12 +299,61 @@ const ShopPage = () => {
                     sx={{ borderRadius: 2, fontWeight: 600 }}
                   >
                     <MenuItem value="newest">Lo más nuevo</MenuItem>
+                    <MenuItem value="oldest">Lo más viejo</MenuItem>
                     <MenuItem value="price-low">Precio: Menor a Mayor</MenuItem>
                     <MenuItem value="price-high">Precio: Mayor a Menor</MenuItem>
                   </Select>
                 </FormControl>
               </Box>
             </Paper>
+
+            {/* Active Filters */}
+            {(category || searchQuery || minPrice > 0 || maxPrice < 10000000 || stockFilter || featuredFilter) && (
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                {category && (
+                  <Chip
+                    label={`Categoría: ${category}`}
+                    onDelete={() => removeFilter('category')}
+                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
+                  />
+                )}
+                {searchQuery && (
+                  <Chip
+                    label={`Búsqueda: "${searchQuery}"`}
+                    onDelete={() => removeFilter('q')}
+                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
+                  />
+                )}
+                {(minPrice > 0 || maxPrice < 10000000) && (
+                  <Chip
+                    label={`Precio: $${minPrice.toLocaleString('es-ES')} - $${maxPrice.toLocaleString('es-ES')}`}
+                    onDelete={() => removeFilter('price')}
+                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
+                  />
+                )}
+                {stockFilter === 'in-stock' && (
+                  <Chip
+                    label="En Stock"
+                    onDelete={() => removeFilter('stock')}
+                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
+                  />
+                )}
+                {stockFilter === 'out-of-stock' && (
+                  <Chip
+                    label="Sin Stock"
+                    onDelete={() => removeFilter('stock')}
+                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
+                  />
+                )}
+                {featuredFilter && (
+                  <Chip
+                    label="Destacados"
+                    onDelete={() => removeFilter('featured')}
+                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
+                  />
+                )}
+              </Box>
+            )}
 
             {/* Grid */}
             {loading ? (

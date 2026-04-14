@@ -26,9 +26,8 @@ import {
   Chip,
   Collapse
 } from '@mui/material';
-import { Plus, Edit2, Trash2, Folder, Search, FileDown, PlusCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Plus, Edit2, Trash2, Folder, Search, PlusCircle, ChevronDown, ChevronRight, X } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { exportToCSV } from '../../../lib/export';
 
 type Category = {
   id: string;
@@ -328,18 +327,18 @@ const CategoriesManagement = () => {
                     <Search size={18} />
                   </InputAdornment>
                 ),
+                endAdornment: searchTerm ? (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => { setSearchTerm(''); setPage(0); }}>
+                      <X size={16} />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
               }}
               sx={{ maxWidth: 400 }}
             />
 
-            <Tooltip title="Exportar Categorías (CSV)">
-              <IconButton
-                onClick={() => exportToCSV(categories, 'categorias_devil_game')}
-                sx={{ bgcolor: 'rgba(0,0,0,0.02)', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.05)' } }}
-              >
-                <FileDown size={18} />
-              </IconButton>
-            </Tooltip>
+
           </Stack>
         </Box>
         <TableContainer>

@@ -270,7 +270,7 @@ const ProductDetailPage = () => {
                       variant="outlined"
                       size="large"
                       startIcon={<MessageCircle size={24} />}
-                      href={`https://wa.me/5491100000000?text=${encodeURIComponent(`Hola! Quiero consultar la disponibilidad del producto: ${product.name}`)}`}
+                      href={`https://wa.me/5491155099149?text=${encodeURIComponent(`Hola! Quiero consultar la disponibilidad del producto: ${product.name}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       sx={{

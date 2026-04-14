@@ -31,9 +31,8 @@ import {
   Tooltip,
   MenuItem
 } from '@mui/material';
-import { Plus, Search, Edit2, Trash2, FileDown, Star } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Star, X, CheckCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
-import { exportToCSV } from '../../../lib/export';
 import { FormControlLabel, Switch } from '@mui/material';
 
 type Product = {
@@ -66,7 +65,7 @@ const ProductsManagement = () => {
   const [loading, setLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const [selectedParentId, setSelectedParentId] = useState<string>('');
 
@@ -188,7 +187,7 @@ const ProductsManagement = () => {
     });
     setSelectedParentId(product?.category?.parent_id || '');
     setSelectedFiles([]);
-    setImageError(false);
+    setImageError(null);
     setOpen(true);
   };
 
@@ -201,12 +200,12 @@ const ProductsManagement = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const filesArray = Array.from(e.target.files);
-      if (formValues.images.length + selectedFiles.length + filesArray.length > 5) {
-        alert('Máximo 5 imágenes permitidas en total');
+      if (formValues.images.length + selectedFiles.length + filesArray.length > 3) {
+        setImageError('Máximo 3 imágenes permitidas en total.');
         return;
       }
       setSelectedFiles(prev => [...prev, ...filesArray]);
-      setImageError(false);
+      setImageError(null);
     }
   };
 
@@ -299,11 +298,11 @@ const ProductsManagement = () => {
 
   const handleSave = async () => {
     if (formValues.images.length === 0 && selectedFiles.length === 0) {
-      setImageError(true);
+      setImageError('Debés subir al menos una imagen para el producto.');
       return;
     }
 
-    setImageError(false);
+    setImageError(null);
     setUploadingFiles(true);
     let finalImages = [...formValues.images];
 
@@ -397,6 +396,13 @@ const ProductsManagement = () => {
                     <Search size={18} />
                   </InputAdornment>
                 ),
+                endAdornment: searchTerm ? (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => { setSearchTerm(''); setPage(0); }}>
+                      <X size={16} />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
               }}
               sx={{ maxWidth: 400 }}
             />
@@ -455,14 +461,7 @@ const ProductsManagement = () => {
               </MuiSelect>
             </FormControl>
 
-            <Tooltip title="Exportar Inventario (CSV)">
-              <IconButton
-                onClick={() => exportToCSV(allProducts, 'inventario_devil_game')}
-                sx={{ bgcolor: 'rgba(0,0,0,0.02)', '&:hover': { color: 'primary.main', bgcolor: 'rgba(0,0,0,0.05)' } }}
-              >
-                <FileDown size={20} />
-              </IconButton>
-            </Tooltip>
+
           </Stack>
         </Box>
 
@@ -706,20 +705,29 @@ const ProductsManagement = () => {
                 </Box>
 
                 <Box>
-                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>Imágenes (Max 5)</Typography>
+                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 1.5 }}>Imágenes (Max 3)</Typography>
                 </Box>
 
                 <Box
                   sx={{
                     border: '2px dashed',
-                    borderColor: imageError ? 'error.main' : '#ddd',
+                    borderColor: formValues.images.length + selectedFiles.length >= 3 ? 'success.main' : (imageError ? 'error.main' : '#ddd'),
                     borderRadius: 2,
                     p: 2,
                     textAlign: 'center',
-                    cursor: 'pointer',
-                    '&:hover': { borderColor: imageError ? 'error.main' : 'primary.main', bgcolor: imageError ? 'rgba(211,47,47,0.02)' : 'rgba(204,0,0,0.02)' }
+                    cursor: formValues.images.length + selectedFiles.length >= 3 || uploadingFiles ? 'not-allowed' : 'pointer',
+                    bgcolor: formValues.images.length + selectedFiles.length >= 3 ? 'rgba(76, 175, 80, 0.04)' : 'transparent',
+                    '&:hover': { 
+                      borderColor: formValues.images.length + selectedFiles.length >= 3 ? 'success.main' : (imageError ? 'error.main' : 'primary.main'), 
+                      bgcolor: formValues.images.length + selectedFiles.length >= 3 ? 'rgba(76, 175, 80, 0.04)' : (imageError ? 'rgba(211,47,47,0.02)' : 'rgba(204,0,0,0.02)') 
+                    }
                   }}
                   component="label"
+                  onClick={(e) => {
+                    if (formValues.images.length + selectedFiles.length >= 3 || uploadingFiles) {
+                      e.preventDefault();
+                    }
+                  }}
                 >
                   <input
                     type="file"
@@ -727,16 +735,27 @@ const ProductsManagement = () => {
                     accept="image/*"
                     hidden
                     onChange={handleFileChange}
-                    disabled={formValues.images.length + selectedFiles.length >= 5 || uploadingFiles}
+                    disabled={formValues.images.length + selectedFiles.length >= 3 || uploadingFiles}
                   />
-                  <Plus size={32} opacity={0.5} style={{ margin: '0 auto' }} />
-                  <Typography variant="caption" display="block" color="text.secondary">
-                    Subí las fotos del producto
-                  </Typography>
+                  {formValues.images.length + selectedFiles.length >= 3 ? (
+                    <Box>
+                      <CheckCircle size={32} color="#4caf50" style={{ margin: '0 auto', opacity: 0.8 }} />
+                      <Typography variant="caption" display="block" color="success.main" sx={{ fontWeight: 700, mt: 1 }}>
+                        Límite de 3 imágenes alcanzado
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <>
+                      <Plus size={32} opacity={0.5} style={{ margin: '0 auto' }} />
+                      <Typography variant="caption" display="block" color="text.secondary">
+                        Subí las fotos del producto
+                      </Typography>
+                    </>
+                  )}
                 </Box>
-                {imageError && (
+                {imageError && formValues.images.length + selectedFiles.length < 3 && (
                   <Typography variant="caption" color="error" sx={{ fontWeight: 700, mt: -2, display: 'block' }}>
-                    Debés subir al menos una imagen para el producto.
+                    {imageError}
                   </Typography>
                 )}
 

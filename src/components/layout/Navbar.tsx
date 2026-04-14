@@ -25,7 +25,8 @@ import {
   Collapse,
   Avatar,
   ListItemAvatar,
-  ClickAwayListener
+  ClickAwayListener,
+  InputAdornment
 } from '@mui/material';
 import {
   Search,
@@ -128,7 +129,7 @@ const Navbar = () => {
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
-  
+
   // Desktop Menu states
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [hoveredCat, setHoveredCat] = useState<string | null>(null);
@@ -189,7 +190,7 @@ const Navbar = () => {
       if (searchQuery.trim().length >= 3) {
         setIsSearching(true);
         setShowDropdown(true);
-        
+
         const { data, error } = await supabase
           .from('products')
           .select('id, name, images, price')
@@ -310,7 +311,7 @@ const Navbar = () => {
                     '&:hover::after': { width: '100%' }
                   }}
                 >
-                  Categorías 
+                  Categorías
                   <motion.div
                     animate={{ rotate: isMenuOpen ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
@@ -380,12 +381,13 @@ const Navbar = () => {
                                       cursor: 'pointer',
                                       position: 'relative',
                                       backgroundColor: hoveredCat === cat.id ? 'rgba(204,0,0,0.08)' : 'transparent',
-                                      color: hoveredCat === cat.id ? 'primary.main' : 'rgba(255,255,255,0.8)',
+                                      color: '#ffffff',
                                       transition: 'all 0.2s ease',
                                       borderLeft: hoveredCat === cat.id ? '3px solid #cc0000' : '3px solid transparent',
                                       '&:hover': {
                                         backgroundColor: 'rgba(204,0,0,0.12)',
-                                        color: '#fff',
+                                        color: hoveredCat === cat.id ? 'primary.main' : '#fff',
+
                                       }
                                     }}
                                   >
@@ -438,7 +440,7 @@ const Navbar = () => {
                                           setIsMenuOpen(false);
                                         }}
                                         sx={{
-                                          color: 'rgba(255,255,255,0.7)',
+                                          color: '#ffffff',
                                           cursor: 'pointer',
                                           fontSize: '0.9rem',
                                           fontWeight: 600,
@@ -508,6 +510,23 @@ const Navbar = () => {
                         setShowDropdown(false);
                       }
                     }}
+                    endAdornment={
+                      searchQuery ? (
+                        <InputAdornment position="end" sx={{ mr: 1 }}>
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              setSearchQuery('');
+                              setSearchResults([]);
+                              setShowDropdown(false);
+                            }}
+                            sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }}
+                          >
+                            <X size={16} />
+                          </IconButton>
+                        </InputAdornment>
+                      ) : null
+                    }
                   />
                   <AnimatePresence>
                     {showDropdown && searchQuery.trim().length >= 3 && (
@@ -538,8 +557,8 @@ const Navbar = () => {
                         ) : searchResults.length > 0 ? (
                           <List disablePadding>
                             {searchResults.map((product) => (
-                              <ListItem 
-                                key={product.id} 
+                              <ListItem
+                                key={product.id}
                                 disablePadding
                                 sx={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}
                               >
@@ -684,8 +703,8 @@ const Navbar = () => {
               Búsqueda
             </Typography>
             <Box sx={{ px: 3, mb: 3 }}>
-              <TextField 
-                fullWidth 
+              <TextField
+                fullWidth
                 placeholder="¿Qué estás buscando?"
                 size="small"
                 value={searchQuery}
@@ -698,7 +717,21 @@ const Navbar = () => {
                 }}
                 InputProps={{
                   sx: { borderRadius: 2, bgcolor: 'rgba(0,0,0,0.02)' },
-                  startAdornment: <Search size={16} style={{ marginRight: 8, opacity: 0.5 }} />
+                  startAdornment: <Search size={16} style={{ marginRight: 8, opacity: 0.5 }} />,
+                  endAdornment: searchQuery ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        onClick={() => {
+                          setSearchQuery('');
+                          setSearchResults([]);
+                          setShowDropdown(false);
+                        }}
+                      >
+                        <X size={16} />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null
                 }}
               />
             </Box>
@@ -735,7 +768,7 @@ const Navbar = () => {
                         />
                       </ListItemButton>
                       {cat.subcategories && cat.subcategories.length > 0 && (
-                        <IconButton 
+                        <IconButton
                           onClick={(e) => handleMobileCatToggle(cat.id, e)}
                           sx={{ mr: 2, color: openCats[cat.id] ? 'primary.main' : 'inherit' }}
                         >
@@ -750,7 +783,7 @@ const Navbar = () => {
                       )}
                     </ListItem>
                   </motion.div>
-                  
+
                   {cat.subcategories && cat.subcategories.length > 0 && (
                     <Collapse in={openCats[cat.id]} timeout="auto" unmountOnExit>
                       <List component="div" disablePadding sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>

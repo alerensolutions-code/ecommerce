@@ -17,7 +17,7 @@ import { useCart } from '../../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Placeholder de número de WhatsApp de la tienda
-const WHATSAPP_NUMBER = '5491100000000';
+const WHATSAPP_NUMBER = '5491155099149';
 
 interface ProductCardProps {
   product: any;
@@ -57,6 +57,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
+      style={{ height: '100%' }}
     >
       <Card 
         component={Link} 

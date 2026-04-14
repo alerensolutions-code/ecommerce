@@ -1,20 +1,22 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { 
-  Box, 
-  Typography, 
-  List, 
-  ListItem, 
-  ListItemButton, 
+import {
+  Box,
+  Typography,
+  List,
+  ListItem,
+  ListItemButton,
   ListItemText,
   Paper,
   Divider,
-  Slider,
   Collapse,
-  Stack
+  Stack,
+  TextField,
+  InputAdornment,
+  Button
 } from '@mui/material';
-import { 
+import {
   ChevronRight,
   ChevronDown
 } from 'lucide-react';
@@ -25,12 +27,12 @@ const CategorySidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
+
   const currentCategory = searchParams?.get('category') || '';
-  
+
   const minPrice = Number(searchParams?.get('minPrice')) || 0;
-  const maxPrice = Number(searchParams?.get('maxPrice')) || 10000;
-  
+  const maxPrice = Number(searchParams?.get('maxPrice')) || 10000000;
+
   const [priceRange, setPriceRange] = React.useState<number[]>([minPrice, maxPrice]);
   const [categories, setCategories] = React.useState<any[]>([]);
   const [activeParent, setActiveParent] = useState<string | null>(null);
@@ -45,10 +47,10 @@ const CategorySidebar = () => {
         .from('categories')
         .select('*')
         .order('name');
-      
+
       if (!error && data) {
         setCategories(data);
-        
+
         // Auto-expand parent if a subcategory is selected
         const current = data.find(c => c.name.toLowerCase() === currentCategory.toLowerCase());
         if (current?.parent_id) {
@@ -65,7 +67,7 @@ const CategorySidebar = () => {
   const hierarchy = useMemo(() => {
     const roots = categories.filter(c => !c.parent_id);
     const childrenMap: Record<string, any[]> = {};
-    
+
     categories.forEach(c => {
       if (c.parent_id) {
         if (!childrenMap[c.parent_id]) childrenMap[c.parent_id] = [];
@@ -103,6 +105,8 @@ const CategorySidebar = () => {
   };
 
   const currentStock = searchParams?.get('stock') || '';
+  const currentFeatured = searchParams?.get('featured') === 'true';
+
   const handleStockClick = (value: string) => {
     const newParams = new URLSearchParams(searchParams?.toString() || '');
     if (currentStock === value) {
@@ -113,12 +117,22 @@ const CategorySidebar = () => {
     router.push(`${pathname}?${newParams.toString()}`);
   };
 
+  const handleFeaturedClick = () => {
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
+    if (currentFeatured) {
+      newParams.delete('featured');
+    } else {
+      newParams.set('featured', 'true');
+    }
+    router.push(`${pathname}?${newParams.toString()}`);
+  };
+
   return (
     <Paper elevation={0} sx={{ p: 2, borderRadius: 3, border: '1px solid rgba(0,0,0,0.06)', bgcolor: 'white' }}>
       <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, px: 1, letterSpacing: -0.5 }}>
         CATEGORÍAS
       </Typography>
-      
+
       <List disablePadding>
         {/* All categories option */}
         <ListItem disablePadding sx={{ mb: 0.5 }}>
@@ -134,9 +148,9 @@ const CategorySidebar = () => {
               }
             }}
           >
-            <ListItemText 
-              primary="Todos los Productos" 
-              primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }} 
+            <ListItemText
+              primary="Todos los Productos"
+              primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
             />
           </ListItemButton>
         </ListItem>
@@ -164,12 +178,12 @@ const CategorySidebar = () => {
                   }}
                 >
                   <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: '100%' }}>
-                    <ListItemText 
-                      primary={root.name} 
-                      primaryTypographyProps={{ 
-                        fontWeight: isSelected ? 800 : 700, 
-                        fontSize: '0.85rem' 
-                      }} 
+                    <ListItemText
+                      primary={root.name}
+                      primaryTypographyProps={{
+                        fontWeight: isSelected ? 800 : 700,
+                        fontSize: '0.85rem'
+                      }}
                     />
                     {hasChildren && (
                       <Box sx={{ opacity: 0.5 }}>
@@ -200,13 +214,13 @@ const CategorySidebar = () => {
                               }
                             }}
                           >
-                            <ListItemText 
-                              primary={sub.name} 
-                              primaryTypographyProps={{ 
-                                fontWeight: isSubSelected ? 700 : 600, 
+                            <ListItemText
+                              primary={sub.name}
+                              primaryTypographyProps={{
+                                fontWeight: isSubSelected ? 700 : 600,
                                 fontSize: '0.8rem',
                                 color: isSubSelected ? 'primary.main' : 'text.secondary'
-                              }} 
+                              }}
                             />
                           </ListItemButton>
                         </ListItem>
@@ -222,33 +236,66 @@ const CategorySidebar = () => {
 
       <Divider sx={{ my: 3, opacity: 0.5 }} />
 
-      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 4, px: 1, letterSpacing: -0.5 }}>
+      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, px: 1, letterSpacing: -0.5 }}>
         PRECIO
       </Typography>
-      <Box sx={{ px: 2 }}>
-        <Slider
-          value={priceRange}
-          onChange={handlePriceChange}
-          onChangeCommitted={handlePriceChangeCommitted}
-          valueLabelDisplay="auto"
-          min={0}
-          max={10000}
-          step={100}
-          color="primary"
-          sx={{ 
-            mb: 2,
-            '& .MuiSlider-thumb': {
-              width: 18,
-              height: 18,
-              border: '2px solid white',
-              boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }
-          }}
-        />
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', px: 0.5 }}>
-          <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>${priceRange[0]}</Typography>
-          <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>${priceRange[1]}+</Typography>
-        </Box>
+      <Box sx={{ px: 1 }}>
+        <Stack direction="column" spacing={1.5}>
+          <TextField
+            size="small"
+            placeholder="Desde"
+            type="number"
+            value={priceRange[0] === 0 ? '' : priceRange[0]}
+            onChange={(e) => {
+              const val = e.target.value === '' ? 0 : Number(e.target.value);
+              setPriceRange([val, priceRange[1]]);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handlePriceChangeCommitted(e as any, priceRange);
+            }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start" sx={{ mr: 0.5 }}>$</InputAdornment>,
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& input': { fontSize: '0.9rem', fontWeight: 600 },
+              '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { display: 'none' },
+              '& input[type=number]': { MozAppearance: 'textfield' }
+            }}
+          />
+          <TextField
+            size="small"
+            placeholder="Hasta"
+            type="number"
+            value={priceRange[1] >= 10000000 ? '' : priceRange[1]}
+            onChange={(e) => {
+              const val = e.target.value === '' ? 10000000 : Number(e.target.value);
+              setPriceRange([priceRange[0], val]);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handlePriceChangeCommitted(e as any, priceRange);
+            }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start" sx={{ mr: 0.5 }}>$</InputAdornment>,
+              inputProps: { min: 0 }
+            }}
+            sx={{
+              '& input': { fontSize: '0.9rem', fontWeight: 600 },
+              '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { display: 'none' },
+              '& input[type=number]': { MozAppearance: 'textfield' }
+            }}
+          />
+        </Stack>
+        <Button
+          fullWidth
+          variant="outlined"
+          color="inherit"
+          size="small"
+          sx={{ mt: 1.5, mb: 1, fontWeight: 700, borderRadius: 2, borderColor: 'rgba(0,0,0,0.1)', '&:hover': { borderColor: 'primary.main', bgcolor: 'rgba(204,0,0,0.02)', color: 'primary.main' } }}
+          onClick={(e) => handlePriceChangeCommitted(e as any, priceRange)}
+        >
+          Filtrar
+        </Button>
       </Box>
 
       <Divider sx={{ my: 3, opacity: 0.5 }} />
@@ -258,10 +305,10 @@ const CategorySidebar = () => {
       </Typography>
       <List disablePadding>
         <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton 
+          <ListItemButton
             selected={currentStock === 'in-stock'}
             onClick={() => handleStockClick('in-stock')}
-            sx={{ 
+            sx={{
               borderRadius: 2,
               '&.Mui-selected': {
                 bgcolor: 'rgba(204, 0, 0, 0.08)',
@@ -270,21 +317,21 @@ const CategorySidebar = () => {
               }
             }}
           >
-            <ListItemText 
-              primary="En Stock" 
-              primaryTypographyProps={{ 
-                fontSize: '0.85rem', 
+            <ListItemText
+              primary="En Stock"
+              primaryTypographyProps={{
+                fontSize: '0.85rem',
                 fontWeight: currentStock === 'in-stock' ? 700 : 600,
                 color: currentStock === 'in-stock' ? 'primary.main' : 'inherit'
-              }} 
+              }}
             />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton 
+          <ListItemButton
             selected={currentStock === 'out-of-stock'}
             onClick={() => handleStockClick('out-of-stock')}
-            sx={{ 
+            sx={{
               borderRadius: 2,
               '&.Mui-selected': {
                 bgcolor: 'rgba(204, 0, 0, 0.08)',
@@ -293,13 +340,44 @@ const CategorySidebar = () => {
               }
             }}
           >
-            <ListItemText 
-              primary="Sin Stock" 
-              primaryTypographyProps={{ 
-                fontSize: '0.85rem', 
+            <ListItemText
+              primary="Sin Stock"
+              primaryTypographyProps={{
+                fontSize: '0.85rem',
                 fontWeight: currentStock === 'out-of-stock' ? 700 : 600,
                 color: currentStock === 'out-of-stock' ? 'primary.main' : 'inherit'
-              }} 
+              }}
+            />
+          </ListItemButton>
+        </ListItem>
+      </List>
+
+      <Divider sx={{ my: 3, opacity: 0.5 }} />
+
+      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, px: 1, letterSpacing: -0.5 }}>
+        ESPECIALES
+      </Typography>
+      <List disablePadding>
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            selected={currentFeatured}
+            onClick={handleFeaturedClick}
+            sx={{
+              borderRadius: 2,
+              '&.Mui-selected': {
+                bgcolor: 'rgba(204, 0, 0, 0.08)',
+                color: 'primary.main',
+                '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' }
+              }
+            }}
+          >
+            <ListItemText
+              primary="Destacados"
+              primaryTypographyProps={{
+                fontSize: '0.85rem',
+                fontWeight: currentFeatured ? 700 : 600,
+                color: currentFeatured ? 'primary.main' : 'inherit'
+              }}
             />
           </ListItemButton>
         </ListItem>
