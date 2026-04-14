@@ -73,6 +73,8 @@ const PCBuilderPage = () => {
   // Cargar productos para el paso actual
   useEffect(() => {
     const fetchStepProducts = async () => {
+      if (activeStep >= STEPS.length) return;
+
       setLoading(true);
       const currentCategory = STEPS[activeStep].category;
 
@@ -151,7 +153,7 @@ const PCBuilderPage = () => {
                     <CardMedia
                       component="img"
                       sx={{ width: 80, objectFit: 'contain', p: 1 }}
-                      image={product.images?.[0] || '/placeholder.png'}
+                      image={product.images?.[0] || '/default-gaming-product.png'}
                     />
                     <Box sx={{ p: 2 }}>
                       <Typography variant="caption" color="primary" fontWeight={700}>{step.name}</Typography>
@@ -186,7 +188,13 @@ const PCBuilderPage = () => {
   return (
     <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', pb: 10 }}>
       {/* Header / Stepper */}
-      <Box sx={{ bgcolor: 'white', pt: 6, pb: 4, borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+      <Box sx={{
+        bgcolor: 'white',
+        pt: 6, pb: 4,
+        borderBottom: '1px solid rgba(0,0,0,0.05)',
+        overflowX: { xs: 'auto', md: 'hidden' },
+        overflowY: 'hidden'
+      }}>
         <Container maxWidth="xl">
           <Typography variant="h4" fontWeight={800} gutterBottom align="center">
             Armá tu PC Gamer
@@ -194,11 +202,26 @@ const PCBuilderPage = () => {
           <Typography variant="body1" color="text.secondary" align="center" sx={{ mb: 6 }}>
             Seleccioná componente por componente. Validaremos la compatibilidad por vos.
           </Typography>
-
-          <Stepper activeStep={activeStep} alternativeLabel nonLinear>
+          <Stepper
+            activeStep={activeStep}
+            alternativeLabel
+            nonLinear
+            sx={{
+              width: '100%',
+              flexWrap: { xs: 'nowrap', md: 'wrap' }
+            }}
+          >
             {STEPS.map((step, index) => (
               <Step key={step.name}>
-                <StepButton color="inherit" onClick={() => setActiveStep(index)}>
+                <StepButton
+                  onClick={() => setActiveStep(index)}
+                  sx={{
+                    '& .MuiStepLabel-label': {
+                      fontSize: { xs: '0.7rem', md: '0.85rem' },
+                      whiteSpace: 'nowrap'
+                    }
+                  }}
+                >
                   {step.name}
                 </StepButton>
               </Step>
@@ -314,7 +337,7 @@ const PCBuilderPage = () => {
                           <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
                             <Box
                               component="img"
-                              src={p.images?.[0] || '/placeholder.png'}
+                              src={p.images?.[0] || '/default-gaming-product.png'}
                               sx={{
                                 width: 100,
                                 height: 100,

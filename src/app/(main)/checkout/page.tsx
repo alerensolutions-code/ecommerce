@@ -52,13 +52,13 @@ const CheckoutPage = () => {
 
   const handleNext = async () => {
     if (activeStep === 0) {
-      const orderId = `#DG-${Math.floor(Math.random() * 1000000)}`;
-
       // 1. Save to Supabase
       const newOrder = {
-        id: orderId,
         customer_name: `${formData.firstName} ${formData.lastName}`,
         phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        zip_code: formData.zipCode,
         total: total,
         status: 'Pendiente',
         items: state.items.map(item => ({
@@ -69,16 +69,18 @@ const CheckoutPage = () => {
         }))
       };
 
-      const { error } = await supabase.from('orders').insert([newOrder]);
+      const { data, error } = await supabase.from('orders').insert([newOrder]).select('id').single();
 
-      if (error) {
+      if (error || !data) {
         console.error('Error saving order:', error);
         alert('Hubo un error al registrar el pedido. Intenta nuevamente.');
         return;
       }
 
+      const orderId = data.id;
+
       // 2. Format WhatsApp Message
-      const message = `*NUEVO PEDIDO: ${orderId}*\n\n` +
+      const message = `*NUEVO PEDIDO: #${orderId}*\n\n` +
         `*Cliente:* ${formData.firstName} ${formData.lastName}\n` +
         `*Teléfono:* ${formData.phone}\n` +
         `*Dirección:* ${formData.address}, ${formData.city}\n\n` +

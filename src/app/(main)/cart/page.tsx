@@ -201,7 +201,7 @@ const CartPage = () => {
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <Truck size={20} style={{ color: '#1976d2', marginRight: '12px' }} />
-                    <Typography variant="body2">Envío en 24/48h laborales</Typography>
+                    <Typography variant="body2">Envío en 24/48 horas</Typography>
                   </Box>
                 </Stack>
               </Stack>

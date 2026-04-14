@@ -232,7 +232,7 @@ const Dashboard = () => {
               <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#4caf5008', color: '#4caf50', display: 'flex' }}><DollarSign size={18} /></Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Ganancia</Typography>
             </Stack>
-            <Typography variant="h4" sx={{ fontWeight: 800, mb: 0.5 }}>
+            <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1.1rem, 2.5vw, 1.75rem)', lineHeight: 1.2, wordBreak: 'break-word' }}>
               ${metrics.revenueInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
             </Typography>
             <Typography variant="caption" color="text.secondary">Ventas entregadas</Typography>
@@ -319,7 +319,7 @@ const Dashboard = () => {
         <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             component={Link}
-            href="/admin/products?filter=low_stock"
+            href="/admin/products?filter=critical"
             sx={{
               p: 3, borderRadius: 3, bgcolor: 'white',
               border: '1px solid rgba(0,0,0,0.08)',
@@ -366,7 +366,6 @@ const Dashboard = () => {
                 <History size={20} color="#666" />
                 <Typography variant="h6" sx={{ fontWeight: 800 }}>Últimos Pendientes</Typography>
               </Stack>
-              <Button size="small" component={Link} href="/admin/orders?status=Pendiente" sx={{ fontWeight: 600 }}>Ver todos</Button>
             </Box>
             <Box sx={{ p: 0 }}>
               {metrics.lastPendingOrders.length > 0 ? (
@@ -386,7 +385,7 @@ const Dashboard = () => {
                         <td style={{ padding: '16px 24px', fontSize: '0.85rem', fontWeight: 600 }}>{order.customer_name}</td>
                         <td style={{ padding: '16px 24px', fontSize: '0.85rem', fontWeight: 700 }}>${order.total}</td>
                         <td style={{ padding: '16px 24px' }}>
-                          <IconButton size="small" component={Link} href="/admin/orders" color="primary"><ArrowRight size={18} /></IconButton>
+                          <IconButton size="small" component={Link} href={`/admin/orders?orderId=${encodeURIComponent(order.id)}`} color="primary"><ArrowRight size={18} /></IconButton>
                         </td>
                       </tr>
                     ))}
@@ -426,12 +425,13 @@ const Dashboard = () => {
                     >
                       {prod.name}
                     </Typography>
-                    <Chip
-                      label={prod.category}
-                      size="small"
-                      variant="outlined"
-                      sx={{ height: 18, fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', bgcolor: 'rgba(0,0,0,0.02)', borderColor: 'transparent', flexShrink: 0 }}
-                    />
+                    {prod.category && (
+                      <Chip
+                        label={prod.category}
+                        size="small"
+                        sx={{ height: 18, fontSize: '0.62rem', fontWeight: 800, textTransform: 'uppercase', bgcolor: 'rgba(204,0,0,0.08)', color: '#cc0000', border: 'none', flexShrink: 0 }}
+                      />
+                    )}
                   </Stack>
                   <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 0.5 }}>
                     <Box sx={{ width: '100%', height: 6, bgcolor: 'rgba(0,0,0,0.03)', borderRadius: 1, overflow: 'hidden', mr: 2 }}>
@@ -442,7 +442,7 @@ const Dashboard = () => {
                         borderRadius: 1
                       }} />
                     </Box>
-                    <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.secondary' }}>{prod.quantity} ud.</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 800, color: 'text.secondary', flexShrink: 0 }}>{prod.quantity} ud.</Typography>
                   </Stack>
                 </Box>
               ))}
