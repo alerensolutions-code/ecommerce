@@ -152,7 +152,7 @@ const ShopPage = () => {
     }
 
     return result;
-  }, [products, category, minPrice, maxPrice, sortBy, stockFilter, categories, searchQuery]);
+  }, [products, category, minPrice, maxPrice, sortBy, stockFilter, categories, searchQuery, featuredFilter]);
 
   const handleSortChange = (event: SelectChangeEvent) => {
     const newParams = new URLSearchParams(searchParams?.toString() || '');
@@ -349,9 +349,9 @@ const ShopPage = () => {
                   <Chip
                     label={
                       searchParams.get('sort') === 'price-low' ? 'Menor precio' :
-                      searchParams.get('sort') === 'price-high' ? 'Mayor precio' :
-                      searchParams.get('sort') === 'newest' ? 'Lo más nuevo' :
-                      searchParams.get('sort') === 'oldest' ? 'Lo más antiguo' : 'Ordenamiento'
+                        searchParams.get('sort') === 'price-high' ? 'Mayor precio' :
+                          searchParams.get('sort') === 'newest' ? 'Lo más nuevo' :
+                            searchParams.get('sort') === 'oldest' ? 'Lo más antiguo' : 'Ordenamiento'
                     }
                     onDelete={() => removeFilter('sort')}
                     sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}

@@ -232,17 +232,17 @@ const HomePage = () => {
       {/* Build PC Highlight Section */}
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <motion.div
-          animate={{ 
+          animate={{
             y: [0, -15, 0],
           }}
-          transition={{ 
-            duration: 6, 
-            repeat: Infinity, 
-            ease: "easeInOut" 
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut"
           }}
         >
-          <Box sx={{ 
-            position: 'relative', 
+          <Box sx={{
+            position: 'relative',
             overflow: 'hidden',
             bgcolor: '#050505',
             borderRadius: { xs: 6, md: 8 },
@@ -250,108 +250,108 @@ const HomePage = () => {
             boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 40px rgba(204,0,0,0.1)',
             p: { xs: 4, md: 6 }
           }}>
-          <Grid container spacing={6} alignItems="center">
-            <Grid size={{ xs: 12, md: 6 }}>
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-              >
-                <Typography variant="overline" color="primary" sx={{ fontWeight: 900, letterSpacing: 4 }}>
-                  POTENCIA SIN LÍMITES
-                </Typography>
-                <Typography variant="h2" color="white" sx={{ fontWeight: 900, mt: 1, mb: 3, lineHeight: 1 }}>
-                  ARMÁ EL SETUP <br />
-                  <span style={{ color: '#cc0000' }}>DE TUS SUEÑOS</span>
-                </Typography>
-                <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 5, maxWidth: 500, fontSize: '1.1rem' }}>
-                  Usá nuestra herramienta inteligente. Seleccioná componente por componente y nosotros nos encargamos de validar que todo sea 100% compatible.
-                </Typography>
+            <Grid container spacing={6} alignItems="center">
+              <Grid size={{ xs: 12, md: 6 }}>
+                <motion.div
+                  initial={{ opacity: 0, x: -50 }}
+                  whileInView={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.8 }}
+                  viewport={{ once: true }}
+                >
+                  <Typography variant="overline" color="primary" sx={{ fontWeight: 900, letterSpacing: 4 }}>
+                    POTENCIA SIN LÍMITES
+                  </Typography>
+                  <Typography variant="h2" color="white" sx={{ fontWeight: 900, mt: 1, mb: 3, lineHeight: 1 }}>
+                    ARMÁ EL SETUP <br />
+                    <span style={{ color: '#cc0000' }}>DE TUS SUEÑOS</span>
+                  </Typography>
+                  <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 5, maxWidth: 500, fontSize: '1.1rem' }}>
+                    Usá nuestra herramienta inteligente. Seleccioná componente por componente y nosotros nos encargamos de validar que todo sea 100% compatible.
+                  </Typography>
 
-                <Stack direction="row" spacing={3}>
-                  <Button
-                    component={Link}
-                    href="/pc-builder"
-                    variant="contained"
-                    size="large"
-                    startIcon={<Zap />}
+                  <Stack direction="row" spacing={3}>
+                    <Button
+                      component={Link}
+                      href="/pc-builder"
+                      variant="contained"
+                      size="large"
+                      startIcon={<Zap />}
+                      sx={{
+                        px: 5,
+                        py: 2,
+                        borderRadius: 3,
+                        fontWeight: 800,
+                        boxShadow: '0 0 30px rgba(204,0,0,0.4)',
+                        '&:hover': { boxShadow: '0 0 50px rgba(204,0,0,0.6)' }
+                      }}
+                    >
+                      EMPEZAR AHORA
+                    </Button>
+                  </Stack>
+                </motion.div>
+              </Grid>
+              <Grid size={{ xs: 12, md: 6 }}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8 }}
+                  viewport={{ once: true }}
+                  style={{ position: 'relative' }}
+                >
+                  <Box
                     sx={{
-                      px: 5,
-                      py: 2,
-                      borderRadius: 3,
-                      fontWeight: 800,
-                      boxShadow: '0 0 30px rgba(204,0,0,0.4)',
-                      '&:hover': { boxShadow: '0 0 50px rgba(204,0,0,0.6)' }
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: '80%',
+                      height: '80%',
+                      bgcolor: 'primary.main',
+                      filter: 'blur(100px)',
+                      opacity: 0.2,
+                      zIndex: 0
+                    }}
+                  />
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 4,
+                      bgcolor: 'rgba(255,255,255,0.03)',
+                      backdropFilter: 'blur(20px)',
+                      border: '1px solid rgba(255,255,255,0.1)',
+                      borderRadius: 6,
+                      position: 'relative',
+                      zIndex: 1,
+                      overflow: 'hidden'
                     }}
                   >
-                    EMPEZAR AHORA
-                  </Button>
-                </Stack>
-              </motion.div>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-                style={{ position: 'relative' }}
-              >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '80%',
-                    height: '80%',
-                    bgcolor: 'primary.main',
-                    filter: 'blur(100px)',
-                    opacity: 0.2,
-                    zIndex: 0
-                  }}
-                />
-                <Paper
-                  elevation={0}
-                  sx={{
-                    p: 4,
-                    bgcolor: 'rgba(255,255,255,0.03)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: 6,
-                    position: 'relative',
-                    zIndex: 1,
-                    overflow: 'hidden'
-                  }}
-                >
-                  <Stack spacing={3}>
-                    {[
-                      { icon: <Cpu color="#cc0000" />, step: "1. Procesador", label: "Intel Core i9-14900K" },
-                      { icon: <Monitor color="#cc0000" />, step: "2. Motherboard", label: "Z790 Premium Elite" },
-                      { icon: <Zap color="#cc0000" />, step: "3. GPU", label: "NVIDIA RTX 4090 24GB" }
-                    ].map((item, i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.2 + (i * 0.1) }}
-                      >
-                        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                          <Box sx={{ p: 1.5, bgcolor: 'rgba(204,0,0,0.1)', borderRadius: 2 }}>{item.icon}</Box>
-                          <Box>
-                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>{item.step}</Typography>
-                            <Typography variant="body1" sx={{ color: 'white', fontWeight: 800 }}>{item.label}</Typography>
+                    <Stack spacing={3}>
+                      {[
+                        { icon: <Cpu color="#cc0000" />, step: "1. Procesador", label: "Intel Core i9-14900K" },
+                        { icon: <Monitor color="#cc0000" />, step: "2. Motherboard", label: "Z790 Premium Elite" },
+                        { icon: <Zap color="#cc0000" />, step: "3. GPU", label: "NVIDIA RTX 4090 24GB" }
+                      ].map((item, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.2 + (i * 0.1) }}
+                        >
+                          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                            <Box sx={{ p: 1.5, bgcolor: 'rgba(204,0,0,0.1)', borderRadius: 2 }}>{item.icon}</Box>
+                            <Box>
+                              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>{item.step}</Typography>
+                              <Typography variant="body1" sx={{ color: 'white', fontWeight: 800 }}>{item.label}</Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                      </motion.div>
-                    ))}
-                  </Stack>
-                </Paper>
-              </motion.div>
+                        </motion.div>
+                      ))}
+                    </Stack>
+                  </Paper>
+                </motion.div>
+              </Grid>
             </Grid>
-          </Grid>
-        </Box>
+          </Box>
         </motion.div>
       </Container>
 
@@ -371,7 +371,7 @@ const HomePage = () => {
                 Productos Destacados
               </Typography>
             </Box>
-            <Button component={Link} href="/shop" endIcon={<ArrowRight size={20} />} sx={{ fontWeight: 700 }}>
+            <Button component={Link} href="/shop?featured=true" endIcon={<ArrowRight size={20} />} sx={{ fontWeight: 700 }}>
               Ver Todos
             </Button>
           </Box>
