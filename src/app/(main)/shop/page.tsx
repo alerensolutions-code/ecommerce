@@ -308,15 +308,8 @@ const ShopPage = () => {
             </Paper>
 
             {/* Active Filters */}
-            {(category || searchQuery || minPrice > 0 || maxPrice < 10000000 || stockFilter || featuredFilter) && (
+            {(searchQuery || minPrice > 0 || maxPrice < 10000000 || stockFilter || featuredFilter || searchParams?.get('sort')) && (
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                {category && (
-                  <Chip
-                    label={`Categoría: ${category}`}
-                    onDelete={() => removeFilter('category')}
-                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
-                  />
-                )}
                 {searchQuery && (
                   <Chip
                     label={`Búsqueda: "${searchQuery}"`}
@@ -349,6 +342,18 @@ const ShopPage = () => {
                   <Chip
                     label="Destacados"
                     onDelete={() => removeFilter('featured')}
+                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
+                  />
+                )}
+                {searchParams?.get('sort') && (
+                  <Chip
+                    label={
+                      searchParams.get('sort') === 'price-low' ? 'Menor precio' :
+                      searchParams.get('sort') === 'price-high' ? 'Mayor precio' :
+                      searchParams.get('sort') === 'newest' ? 'Lo más nuevo' :
+                      searchParams.get('sort') === 'oldest' ? 'Lo más antiguo' : 'Ordenamiento'
+                    }
+                    onDelete={() => removeFilter('sort')}
                     sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
                   />
                 )}

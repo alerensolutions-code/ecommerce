@@ -50,7 +50,7 @@ const Footer = () => {
             </Box>
             <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255,255,255,0.1)', display: { xs: 'none', sm: 'block' } }} />
             <Box sx={{ display: 'flex', gap: 0.5 }}>
-              <IconButton color="inherit" size="small" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>
+              <IconButton color="inherit" size="small" component="a" href="https://www.instagram.com/devilgaming.oficial/" target="_blank" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: 'primary.main' } }}>
                 <Instagram size={18} />
               </IconButton>
               <IconButton color="inherit" size="small" component="a" href="https://wa.me/5491155099149" target="_blank" sx={{ opacity: 0.7, '&:hover': { opacity: 1, color: '#25d366' } }}>
