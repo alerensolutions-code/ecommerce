@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, Suspense } from 'react';
 import {
   Box,
   Container,
@@ -30,7 +30,7 @@ import { supabase } from '../../../lib/supabase';
 import CategorySidebar from '../../../components/layout/CategorySidebar';
 import ProductCard from '../../../components/product/ProductCard';
 
-const ShopPage = () => {
+const ShopContent = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -412,4 +412,16 @@ const ShopPage = () => {
   );
 };
 
-export default ShopPage;
+export default function ShopPage() {
+  return (
+    <Suspense fallback={
+      <Box sx={{ py: 20, textAlign: 'center' }}>
+        <CircularProgress color="primary" thickness={5} />
+        <Typography sx={{ mt: 2, fontWeight: 500 }} color="text.secondary">Cargando tienda...</Typography>
+      </Box>
+    }>
+      <ShopContent />
+    </Suspense>
+  );
+}
+
