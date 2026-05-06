@@ -3,7 +3,6 @@
 import React from 'react';
 import { 
   Card, 
-  CardMedia, 
   CardContent, 
   Typography, 
   Button, 
@@ -13,6 +12,7 @@ import {
 import { ShoppingCart, Check } from 'lucide-react';
 import Link from 'next/link';
 
+import Image from 'next/image';
 import { useCart } from '../../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -81,24 +81,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
           position: 'relative', 
           width: layout === 'list' ? { xs: '100%', sm: '30%' } : '100%',
           minWidth: layout === 'list' ? { sm: '200px' } : 'auto',
-          pt: layout === 'list' ? { xs: '100%', sm: '0' } : '100%',
+          aspectRatio: '1/1',
           overflow: 'hidden' 
         }}>
-          <CardMedia
-            component="img"
-            image={imageToShow}
+          <Image
+            src={imageToShow}
             alt={product.name}
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
+            fill
+            sizes={layout === 'list' ? "(max-width: 600px) 100vw, 30vw" : "(max-width: 600px) 100vw, (max-width: 1200px) 50vw, 33vw"}
+            style={{
               objectFit: 'cover',
               transition: 'transform 0.5s ease',
-              '&:hover': { transform: 'scale(1.1)' },
               filter: isOutOfStock ? 'grayscale(40%)' : 'none',
             }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           />
           {/* Sin Stock badge */}
           {isOutOfStock && (

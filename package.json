@@ -16,12 +16,14 @@
     "@mui/material": "^7.3.8",
     "@supabase/ssr": "^0.10.0",
     "@supabase/supabase-js": "^2.101.1",
+    "browser-image-compression": "^2.0.2",
     "framer-motion": "^12.34.3",
     "lucide-react": "^0.576.0",
     "next": "^16.2.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "recharts": "^3.8.1",
+    "sharp": "^0.34.5",
     "swiper": "^12.1.2"
   },
   "devDependencies": {

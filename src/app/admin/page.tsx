@@ -51,6 +51,7 @@ const Dashboard = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lowStockCount, setLowStockCount] = useState(0);
   const [metricType, setMetricType] = useState<'revenue' | 'units'>('revenue');
 
   // Filtros de fecha (Default: Últimos 30 días)
@@ -65,19 +66,40 @@ const Dashboard = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Traemos más histórico para el gráfico pero el filtrado será en cliente para mayor rapidez visual al cambiar fechas
         const historicalDate = new Date(startDate);
-        historicalDate.setDate(historicalDate.getDate() - 30); // Un poco más de margen
+        historicalDate.setDate(historicalDate.getDate() - 30);
 
-        const [ordRes, catRes, prodRes] = await Promise.all([
+        // Optimizamos: No traemos TODOS los productos, solo los necesarios para las métricas
+        // y un count aparte para el stock bajo.
+        const [ordRes, catRes, lowStockRes] = await Promise.all([
           supabase.from('orders').select('*').gte('created_at', historicalDate.toISOString()).order('created_at', { ascending: true }),
           supabase.from('categories').select('*'),
-          supabase.from('products').select('id, name, category_id, stock')
+          supabase.from('products').select('*', { count: 'exact', head: true }).lt('stock', 5)
         ]);
 
-        setOrders(ordRes.data || []);
+        const ordersData = ordRes.data || [];
+        setOrders(ordersData);
         setCategories(catRes.data || []);
-        setProducts(prodRes.data || []);
+        setLowStockCount(lowStockRes.count || 0);
+
+        // Traer solo productos que aparecen en las órdenes para el Top 5
+        const productNamesInOrders = new Set<string>();
+        ordersData.forEach(o => {
+          if (o.items) {
+            o.items.forEach((item: any) => productNamesInOrders.add(item.name));
+          }
+        });
+
+        if (productNamesInOrders.size > 0) {
+          const { data: neededProducts } = await supabase
+            .from('products')
+            .select('id, name, category_id, stock')
+            .in('name', Array.from(productNamesInOrders));
+          setProducts(neededProducts || []);
+        } else {
+          setProducts([]);
+        }
+
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -146,8 +168,8 @@ const Dashboard = () => {
       .sort((a, b) => b.quantity - a.quantity)
       .slice(0, 5);
 
-    // Stock Crítico (Global, actual)
-    const lowStockCount = products.filter(p => (p.stock || 0) < 5).length;
+    // Stock Crítico (Usamos el count traído de la DB)
+    const lowStock = lowStockCount;
 
     // Pedidos Pendientes (Últimos 5 creados en el rango)
     const lastPendingOrders = rangeOrders
@@ -162,7 +184,7 @@ const Dashboard = () => {
       lastPendingOrders,
       chartData,
       top5Products,
-      lowStockCount
+      lowStockCount: lowStock
     };
   }, [orders, products, metricType, startDate, endDate]);
 

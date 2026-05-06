@@ -869,6 +869,7 @@ const OrdersManagement = () => {
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [openDetail, setOpenDetail] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
   
   // Filtros y Paginación
   const [searchTerm, setSearchTerm] = useState('');
@@ -899,13 +900,34 @@ const OrdersManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false });
+        .select('*', { count: 'exact' });
+
+      // Apply filters
+      if (searchTerm) {
+        // En orders no hay un campo name directo pero podemos buscar en customer_name
+        query = query.or(`customer_name.ilike.%${searchTerm}%,id.ilike.%${searchTerm}%`);
+      }
+
+      if (statusFilter !== 'all') {
+        query = query.eq('status', statusFilter);
+      }
+
+      // Sorting
+      if (activeSort === 'id') {
+        query = query.order('id', { ascending: idOrder === 'asc' });
+      } else {
+        query = query.order('created_at', { ascending: dateOrder === 'asc' });
+      }
+
+      // Pagination
+      const { data, count, error } = await query
+        .range(page * rowsPerPage, (page + 1) * rowsPerPage - 1);
       
       if (error) throw error;
       setOrders(data || []);
+      setTotalCount(count || 0);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {
@@ -915,6 +937,10 @@ const OrdersManagement = () => {
 
   useEffect(() => {
     fetchOrders();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, rowsPerPage, searchTerm, statusFilter, dateOrder, idOrder, activeSort]);
+
+  useEffect(() => {
     const statusParam = searchParams.get('status');
     if (statusParam) {
       setStatusFilter(statusParam);
@@ -943,29 +969,7 @@ const OrdersManagement = () => {
     }
   }, [orders, searchParams]);
 
-  const filteredOrders = useMemo(() => {
-    let result = orders.filter(order => {
-      const matchesSearch = order.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                           String(order.id).includes(searchTerm);
-      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-
-    result = [...result].sort((a, b) => {
-      if (activeSort === 'id') {
-        return idOrder === 'asc' ? a.id - b.id : b.id - a.id;
-      }
-      const ta = new Date(a.created_at).getTime();
-      const tb = new Date(b.created_at).getTime();
-      return dateOrder === 'asc' ? ta - tb : tb - ta;
-    });
-
-    return result;
-  }, [orders, searchTerm, statusFilter, dateOrder, idOrder, activeSort]);
-
-  const pagedOrders = useMemo(() => {
-    return filteredOrders.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  }, [filteredOrders, page, rowsPerPage]);
+  // Removed client-side filteredOrders and pagedOrders memos
 
   const handleStatusChange = async (id: string, newStatus: string) => {
     const { error } = await supabase
@@ -1116,7 +1120,7 @@ const OrdersManagement = () => {
             <TableBody>
               {loading ? (
                 <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
-              ) : pagedOrders.map((order) => (
+              ) : orders.map((order) => (
                 <TableRow key={order.id} hover>
                   <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>#{order.id}</TableCell>
                   <TableCell sx={{ fontWeight: 500 }}>{order.customer_name}</TableCell>
@@ -1185,7 +1189,7 @@ const OrdersManagement = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={filteredOrders.length}
+          count={totalCount}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={(_, newPage) => setPage(newPage)}

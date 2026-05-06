@@ -34,6 +34,7 @@ import {
 import { Plus, Search, Edit2, Trash2, Star, X, CheckCircle } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { FormControlLabel, Switch } from '@mui/material';
+import { compressAndConvertToWebP } from '../../../lib/imageUtils';
 
 type Product = {
   id: string;
@@ -63,6 +64,7 @@ const ProductsManagement = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState(0);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [imageError, setImageError] = useState<string | null>(null);
@@ -95,12 +97,44 @@ const ProductsManagement = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // Fetch products with their category names using a join
-      const { data: productsData, error: pError } = await supabase
+      // Build query for products
+      let query = supabase
         .from('products')
-        .select('*, category:categories(name, parent_id, parent:parent_id(name))')
-        .order('created_at', { ascending: false });
+        .select('*, category:categories(name, parent_id, parent:parent_id(name))', { count: 'exact' });
 
+      // Apply Filters
+      if (searchTerm) {
+        query = query.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      }
+
+      if (selectedCategory !== 'all') {
+        // Para categorías jerárquicas en server-side, necesitamos saber si es padre
+        const cat = dbCategories.find(c => c.id === selectedCategory);
+        if (cat && !cat.parent_id) {
+          // Es padre, buscar hijos
+          const childrenIds = dbCategories.filter(c => c.parent_id === selectedCategory).map(c => c.id);
+          query = query.in('category_id', [selectedCategory, ...childrenIds]);
+        } else {
+          query = query.eq('category_id', selectedCategory);
+        }
+      }
+
+      if (filterStock !== 'all') {
+        if (filterStock === 'low') query = query.gt('stock', 0).lt('stock', 5);
+        if (filterStock === 'out') query = query.eq('stock', 0);
+        if (filterStock === 'critical') query = query.lt('stock', 5);
+      }
+
+      if (filterFeatured !== 'all') {
+        query = query.eq('featured', filterFeatured === 'yes');
+      }
+
+      // Pagination & Order
+      const { data: productsData, count, error: pError } = await query
+        .order('created_at', { ascending: false })
+        .range(page * rowsPerPage, (page + 1) * rowsPerPage - 1);
+
+      // Categories (stays as is or we could optimize too, but usually less rows)
       const { data: catsData, error: cError } = await supabase
         .from('categories')
         .select('*, parent:parent_id(name)')
@@ -110,7 +144,8 @@ const ProductsManagement = () => {
       if (cError) throw cError;
 
       setAllProducts(productsData || []);
-      setDbCategories(catsData || []);
+      setTotalCount(count || 0);
+      if (catsData) setDbCategories(catsData);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -119,57 +154,19 @@ const ProductsManagement = () => {
   };
 
   useEffect(() => {
-    fetchData();
     const stockParam = searchParams.get('filter');
     if (stockParam === 'low_stock') {
       setFilterStock('low');
     } else if (stockParam === 'critical') {
       setFilterStock('critical');
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo al montar para parsear la URL inicial
 
-  const filteredProducts = useMemo(() => {
-    let result = [...allProducts];
-
-    // Filtro por término de búsqueda
-    if (searchTerm) {
-      result = result.filter((p: Product) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.description?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filtro por categoría (padre o hijo)
-    if (selectedCategory !== 'all') {
-      result = result.filter((p: Product) =>
-        p.category_id === selectedCategory ||
-        p.category?.parent_id === selectedCategory
-      );
-    }
-
-    // Filtro por stock
-    if (filterStock !== 'all') {
-      result = result.filter((p: Product) => {
-        if (filterStock === 'low') return p.stock > 0 && p.stock < 5;
-        if (filterStock === 'out') return p.stock === 0;
-        if (filterStock === 'critical') return p.stock < 5; // stock bajo + sin stock
-        return true;
-      });
-    }
-
-    // Filtro por destacados
-    if (filterFeatured !== 'all') {
-      result = result.filter((p: Product) =>
-        filterFeatured === 'yes' ? p.featured : !p.featured
-      );
-    }
-
-    return result;
-  }, [allProducts, searchTerm, selectedCategory, filterStock, filterFeatured]);
-
-  const pagedProducts = useMemo(() => {
-    return filteredProducts.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
-  }, [filteredProducts, page, rowsPerPage]);
+  useEffect(() => {
+    fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, rowsPerPage, searchTerm, selectedCategory, filterStock, filterFeatured]);
 
   const handleOpen = (product: Product | null = null) => {
     setSelectedProduct(product);
@@ -274,13 +271,25 @@ const ProductsManagement = () => {
   const uploadImagesToSupabase = async (files: File[]) => {
     const uploadedUrls: string[] = [];
     for (const file of files) {
-      const fileExt = file.name.split('.').pop();
+      // Convertir a WebP y comprimir antes de subir
+      const optimizedFile = await compressAndConvertToWebP(file);
+      
+      const originalKB = (file.size / 1024).toFixed(2);
+      const optimizedKB = (optimizedFile.size / 1024).toFixed(2);
+      const saving = (100 - (optimizedFile.size / file.size) * 100).toFixed(1);
+      console.log(`[Optimización] ${file.name}: ${originalKB}KB -> ${optimizedKB}KB (Ahorro: ${saving}%)`);
+      
+      const fileExt = 'webp';
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `productImages/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('products')
-        .upload(filePath, file);
+        .upload(filePath, optimizedFile, {
+          contentType: 'image/webp',
+          cacheControl: '3600',
+          upsert: false
+        });
 
       if (uploadError) {
         console.error('Error uploading image:', uploadError);
@@ -480,7 +489,7 @@ const ProductsManagement = () => {
             <TableBody>
               {loading ? (
                 <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
-              ) : pagedProducts.map((product: Product) => (
+              ) : allProducts.map((product: Product) => (
                 <TableRow key={product.id} hover>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center">
@@ -544,7 +553,7 @@ const ProductsManagement = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={filteredProducts.length}
+          count={totalCount}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={(_, newPage) => setPage(newPage)}

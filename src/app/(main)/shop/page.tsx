@@ -46,38 +46,103 @@ const ShopContent = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
+
+  const ITEMS_PER_PAGE = 12;
 
   // Sincronizar local con búsqueda externa (navbar)
   useEffect(() => {
     setLocalSearch(searchQuery);
   }, [searchQuery]);
 
-  const fetchInitialData = async () => {
-    setLoading(true);
+  const fetchProducts = async (isNewSearch = true) => {
+    if (isNewSearch) {
+      setLoading(true);
+      setPage(0);
+    } else {
+      setLoadingMore(true);
+    }
+
     try {
-      const { data: allProducts, error: pError } = await supabase
+      let query = supabase
         .from('products')
-        .select('*, category:categories(name)');
+        .select('*, category:categories(name)', { count: 'exact' });
 
-      const { data: allCategories, error: cError } = await supabase
-        .from('categories')
-        .select('*');
+      // Apply Filters
+      if (searchQuery) {
+        query = query.or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+      }
 
-      if (allProducts) setProducts(allProducts);
-      if (allCategories) setCategories(allCategories);
+      if (category && categories.length > 0) {
+        const selectedCat = categories.find(c => c.name.toLowerCase() === category.toLowerCase());
+        if (selectedCat) {
+          const allowedIds = getRecursiveIds(selectedCat.id, categories);
+          query = query.in('category_id', allowedIds);
+        }
+      }
+
+      if (minPrice > 0) query = query.gte('price', minPrice);
+      if (maxPrice < 10000000) query = query.lte('price', maxPrice);
+
+      if (stockFilter === 'in-stock') query = query.gt('stock', 0);
+      else if (stockFilter === 'out-of-stock') query = query.eq('stock', 0);
+
+      if (featuredFilter) query = query.eq('featured', true);
+
+      // Sorting
+      switch (sortBy) {
+        case 'price-low': query = query.order('price', { ascending: true }); break;
+        case 'price-high': query = query.order('price', { ascending: false }); break;
+        case 'newest': query = query.order('created_at', { ascending: false }); break;
+        case 'oldest': query = query.order('created_at', { ascending: true }); break;
+      }
+
+      // Pagination
+      const start = isNewSearch ? 0 : (page + 1) * ITEMS_PER_PAGE;
+      const end = start + ITEMS_PER_PAGE - 1;
+      
+      const { data, count, error } = await query.range(start, end);
+
+      if (error) throw error;
+
+      if (isNewSearch) {
+        setProducts(data || []);
+      } else {
+        setProducts(prev => [...prev, ...(data || [])]);
+        setPage(prev => prev + 1);
+      }
+
+      setHasMore(count ? (isNewSearch ? data.length : products.length + data.length) < count : false);
+
     } catch (error) {
       console.error("Error fetching shop data:", error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
+  // Fetch categories only once
   useEffect(() => {
-    fetchInitialData();
+    const fetchCats = async () => {
+      const { data } = await supabase.from('categories').select('*');
+      if (data) setCategories(data);
+    };
+    fetchCats();
   }, []);
+
+  // Fetch products when filters change
+  useEffect(() => {
+    if (categories.length > 0 || !category) {
+      fetchProducts(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, category, minPrice, maxPrice, sortBy, stockFilter, featuredFilter, categories.length]);
 
   // Función para obtener IDs de categorías de forma recursiva (hijos, nietos, etc)
   const getRecursiveIds = (parentId: string, allCats: any[]): string[] => {
@@ -89,70 +154,7 @@ const ShopContent = () => {
     return ids;
   };
 
-  const filteredProducts = useMemo(() => {
-    let result = [...products];
-
-    // Search Filter
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(p =>
-        p.name.toLowerCase().includes(q) ||
-        (p.description && p.description.toLowerCase().includes(q))
-      );
-    }
-
-    // Category Filter (Soporte Jerárquico Completo)
-    if (category) {
-      const selectedCat = categories.find(c =>
-        c.name.toLowerCase() === category.toLowerCase()
-      );
-
-      if (selectedCat) {
-        const allowedIds = getRecursiveIds(selectedCat.id, categories);
-        result = result.filter(p => allowedIds.includes(p.category_id));
-      } else {
-        // Fallback por si el nombre no coincide exactamente (case sensitive o tildes)
-        result = result.filter(p =>
-          p.category?.name?.toLowerCase().includes(category.toLowerCase())
-        );
-      }
-    }
-
-    // Price Filter
-    result = result.filter(p => p.price >= minPrice && p.price <= maxPrice);
-
-    // Stock Filter
-    if (stockFilter === 'in-stock') {
-      result = result.filter(p => (p.stock || 0) > 0);
-    } else if (stockFilter === 'out-of-stock') {
-      result = result.filter(p => (p.stock || 0) === 0);
-    }
-
-    // Featured Filter
-    if (featuredFilter) {
-      result = result.filter(p => p.featured === true);
-    }
-
-    // Sorting
-    switch (sortBy) {
-      case 'price-low':
-        result.sort((a, b) => (a.price - b.price) || (a.name || '').localeCompare(b.name || ''));
-        break;
-      case 'price-high':
-        result.sort((a, b) => (b.price - a.price) || (a.name || '').localeCompare(b.name || ''));
-        break;
-      case 'newest':
-        result.sort((a, b) => (new Date(b.created_at).getTime() - new Date(a.created_at).getTime()) || (a.name || '').localeCompare(b.name || ''));
-        break;
-      case 'oldest':
-        result.sort((a, b) => (new Date(a.created_at).getTime() - new Date(b.created_at).getTime()) || (a.name || '').localeCompare(b.name || ''));
-        break;
-      default:
-        break;
-    }
-
-    return result;
-  }, [products, category, minPrice, maxPrice, sortBy, stockFilter, categories, searchQuery, featuredFilter]);
+  // We removed client-side filteredProducts since it's now server-side
 
   const handleSortChange = (event: SelectChangeEvent) => {
     const newParams = new URLSearchParams(searchParams?.toString() || '');
@@ -229,7 +231,7 @@ const ShopContent = () => {
             >
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                 <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 500, mr: 3 }}>
-                  Mostrando <strong style={{ color: '#000' }}>{filteredProducts.length}</strong> productos
+                  Mostrando <strong style={{ color: '#000' }}>{products.length}</strong> productos
                 </Typography>
 
                 <TextField
@@ -366,14 +368,29 @@ const ShopContent = () => {
                 <CircularProgress color="primary" thickness={5} />
                 <Typography sx={{ mt: 2, fontWeight: 500 }} color="text.secondary">Cargando productos...</Typography>
               </Box>
-            ) : filteredProducts.length > 0 ? (
-              <Grid container spacing={3}>
-                {filteredProducts.map((product) => (
-                  <Grid key={product.id} size={viewMode === 'grid' ? { xs: 12, sm: 6, lg: 4 } : { xs: 12 }}>
-                    <ProductCard product={product} layout={viewMode} />
-                  </Grid>
-                ))}
-              </Grid>
+            ) : products.length > 0 ? (
+              <>
+                <Grid container spacing={3}>
+                  {products.map((product) => (
+                    <Grid key={product.id} size={viewMode === 'grid' ? { xs: 12, sm: 6, lg: 4 } : { xs: 12 }}>
+                      <ProductCard product={product} layout={viewMode} />
+                    </Grid>
+                  ))}
+                </Grid>
+                
+                {hasMore && (
+                  <Box sx={{ mt: 6, textAlign: 'center' }}>
+                    <Button 
+                      variant="outlined" 
+                      onClick={() => fetchProducts(false)} 
+                      disabled={loadingMore}
+                      sx={{ borderRadius: 2, px: 6, py: 1.5, fontWeight: 800 }}
+                    >
+                      {loadingMore ? <CircularProgress size={24} /> : 'Cargar más productos'}
+                    </Button>
+                  </Box>
+                )}
+              </>
             ) : (
               <Paper elevation={0} sx={{ py: 10, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)' }}>
                 <Typography variant="h5" color="text.secondary" sx={{ fontWeight: 700 }}>
