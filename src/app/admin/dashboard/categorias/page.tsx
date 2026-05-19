@@ -170,7 +170,7 @@ const CategoriasDetail = () => {
                 </Stack>
             </Stack>
             <Box sx={{ height: 300, width: '100%' }}>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                     <BarChart data={rankings}>
                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#888' }} />
                         <YAxis hide />

@@ -57,27 +57,62 @@ export async function updateSession(request: NextRequest) {
   // This will refresh session if expired - essential for SSR
   const { data: { user } } = await supabase.auth.getUser()
 
+  const pathname = request.nextUrl.pathname;
+
+  // Evitar bucles en maintenance y permitir acceso al login
+  if (pathname === '/maintenance' || pathname === '/login') {
+    return response;
+  }
+
+  let isAdmin = false;
+
   // Proteger rutas /admin
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  if (pathname.startsWith('/admin')) {
     if (!user) {
-      // Redireccionar al login si no hay usuario
       const url = request.nextUrl.clone()
       url.pathname = '/login'
       return NextResponse.redirect(url)
     }
 
-    // Verificar si es administrador
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_admin')
       .eq('id', user.id)
       .single()
 
-    if (!profile || !profile.is_admin) {
+    isAdmin = profile?.is_admin || false;
+
+    if (!isAdmin) {
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)
     }
+  } else if (user) {
+    // Si no es admin pero está logueado, obtenemos is_admin para el mantenimiento
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_admin')
+      .eq('id', user.id)
+      .single()
+    isAdmin = profile?.is_admin || false;
+  }
+
+  // Check Maintenance Mode
+  try {
+    const { data: settings } = await supabase
+      .from('settings')
+      .select('maintenance_mode')
+      .eq('id', 1)
+      .single()
+
+    if (settings?.maintenance_mode && !isAdmin) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/maintenance'
+      return NextResponse.redirect(url)
+    }
+  } catch (error) {
+    // Graceful fallback si la tabla settings no existe
+    console.error('Proxy Supabase Error:', error);
   }
 
   return response

@@ -259,20 +259,20 @@ const HomePage = () => {
                   viewport={{ once: true }}
                 >
                   <Typography variant="overline" color="primary" sx={{ fontWeight: 900, letterSpacing: 4 }}>
-                    POTENCIA SIN LÍMITES
+                    MÁXIMO RENDIMIENTO GARANTIZADO
                   </Typography>
                   <Typography variant="h2" color="white" sx={{ fontWeight: 900, mt: 1, mb: 3, lineHeight: 1 }}>
-                    ARMÁ EL SETUP <br />
-                    <span style={{ color: '#cc0000' }}>DE TUS SUEÑOS</span>
+                    PCs PRE-ARMADAS <br />
+                    <span style={{ color: '#cc0000' }}>LISTAS PARA EL COMBATE</span>
                   </Typography>
                   <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 5, maxWidth: 500, fontSize: '1.1rem' }}>
-                    Usá nuestra herramienta inteligente. Seleccioná componente por componente y nosotros nos encargamos de validar que todo sea 100% compatible.
+                    Equipos ensamblados, testeados y optimizados por nuestros ingenieros expertos. Elegí la configuración que mejor se adapte a tu nivel y empezá a jugar de inmediato.
                   </Typography>
 
                   <Stack direction="row" spacing={3}>
                     <Button
                       component={Link}
-                      href="/pc-builder"
+                      href="/pcs-armadas"
                       variant="contained"
                       size="large"
                       startIcon={<Zap />}
@@ -285,7 +285,7 @@ const HomePage = () => {
                         '&:hover': { boxShadow: '0 0 50px rgba(204,0,0,0.6)' }
                       }}
                     >
-                      EMPEZAR AHORA
+                      EXPLORAR EQUIPOS
                     </Button>
                   </Stack>
                 </motion.div>
@@ -327,9 +327,9 @@ const HomePage = () => {
                   >
                     <Stack spacing={3}>
                       {[
-                        { icon: <Cpu color="#cc0000" />, step: "1. Procesador", label: "Intel Core i9-14900K" },
-                        { icon: <Monitor color="#cc0000" />, step: "2. Motherboard", label: "Z790 Premium Elite" },
-                        { icon: <Zap color="#cc0000" />, step: "3. GPU", label: "NVIDIA RTX 4090 24GB" }
+                        { icon: <Cpu color="#cc0000" />, step: "PCs Gaming Pro", label: "Dominá los eSports competitivos" },
+                        { icon: <Monitor color="#cc0000" />, step: "Streaming & Diseño", label: "Rendimiento óptimo multitarea" },
+                        { icon: <ShieldCheck color="#cc0000" />, step: "Garantía Devil", label: "3 años de protección absoluta" }
                       ].map((item, i) => (
                         <motion.div
                           key={i}

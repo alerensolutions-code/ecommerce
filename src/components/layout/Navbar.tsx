@@ -149,9 +149,12 @@ const Navbar = () => {
       if (data) {
         const catMap = new Map();
         data.forEach((c: any) => {
+          const path = c.name.toLowerCase().includes('armada') 
+            ? '/pcs-armadas' 
+            : `/shop?category=${encodeURIComponent(c.name)}`;
           catMap.set(c.id, {
             ...c,
-            path: `/shop?category=${encodeURIComponent(c.name)}`,
+            path,
             subcategories: []
           });
         });
@@ -470,7 +473,7 @@ const Navbar = () => {
               </Box>
               <Button
                 component={Link}
-                href="/pc-builder"
+                href="/pcs-armadas"
                 color="inherit"
                 startIcon={<Zap size={16} color="#cc0000" />}
                 sx={{
@@ -482,7 +485,7 @@ const Navbar = () => {
                   '&:hover': { color: 'primary.main', bgcolor: 'transparent' }
                 }}
               >
-                Armá tu PC
+                PCs Armadas
               </Button>
             </Box>
 
@@ -649,8 +652,8 @@ const Navbar = () => {
                 <Badge badgeContent={cartCount} color="primary">
                   <motion.div
                     key={cartCount}
-                    initial={{ scale: 1.5, color: '#cc0000' }}
-                    animate={{ scale: 1, color: 'inherit' }}
+                    initial={{ scale: 1.5 }}
+                    animate={{ scale: 1 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 10 }}
                   >
                     <ShoppingCart size={22} />
@@ -825,7 +828,7 @@ const Navbar = () => {
             <Box sx={{ mb: 2 }}>
               <Button
                 component={Link}
-                href="/pc-builder"
+                href="/pcs-armadas"
                 variant="contained"
                 fullWidth
                 onClick={toggleDrawer(false)}
@@ -839,7 +842,7 @@ const Navbar = () => {
                   boxShadow: '0 4px 12px rgba(204,0,0,0.3)'
                 }}
               >
-                Armá tu PC
+                PCs Armadas
               </Button>
             </Box>
 

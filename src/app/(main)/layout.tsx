@@ -8,12 +8,12 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <Box component="main" sx={{ flexGrow: 1 }}>
+      <main style={{ flexGrow: 1 }}>
         {children}
-      </Box>
+      </main>
       <Footer />
-    </Box>
+    </div>
   );
 }

@@ -2,13 +2,12 @@ import { type NextRequest } from 'next/server'
 import { updateSession } from './lib/supabase/proxy'
 
 export async function proxy(request: NextRequest) {
-  // Solo interceptamos rutas críticas para performance
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    return await updateSession(request)
-  }
-  return
+  // Ahora interceptamos todo para poder chequear el modo mantenimiento
+  return await updateSession(request)
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
 }
