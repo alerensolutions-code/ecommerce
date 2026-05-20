@@ -34,7 +34,7 @@ import {
   Avatar,
   TableSortLabel,
 } from '@mui/material';
-import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin } from 'lucide-react';
+import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign } from 'lucide-react';
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
@@ -45,6 +45,7 @@ const WHATSAPP_STORE_NUMBER = '5491155099149';
 const statusIcons: { [key: string]: any } = {
   'Pendiente': <Clock size={16} />,
   'Enviado': <Truck size={16} />,
+  'Pagado': <DollarSign size={16} />,
   'Entregado': <CheckCircle size={16} />,
   'Cancelado': <AlertCircle size={16} />,
 };
@@ -52,6 +53,7 @@ const statusIcons: { [key: string]: any } = {
 const statusColors: { [key: string]: any } = {
   'Pendiente': 'warning',
   'Enviado': 'info',
+  'Pagado': 'secondary',
   'Entregado': 'success',
   'Cancelado': 'error',
 };
@@ -972,12 +974,92 @@ const OrdersManagement = () => {
   // Removed client-side filteredOrders and pagedOrders memos
 
   const handleStatusChange = async (id: string, newStatus: string) => {
-    const { error } = await supabase
-      .from('orders')
-      .update({ status: newStatus })
-      .eq('id', id);
-    
-    if (!error) fetchOrders();
+    try {
+      // 1. Obtener los datos actuales del pedido
+      const { data: order, error: fetchErr } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('id', id)
+        .single();
+      
+      if (fetchErr || !order) {
+        console.error("Error al obtener pedido para cambiar estado:", fetchErr);
+        return;
+      }
+
+      const oldStatus = order.status;
+      const items = order.items || [];
+
+      // Si pasa a 'Entregado' desde cualquier otro estado
+      if (oldStatus !== 'Entregado' && newStatus === 'Entregado') {
+        // Reducir stock
+        for (const item of items) {
+          const { data: product } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('id', item.id)
+            .single();
+          
+          if (product) {
+            const currentStock = product.stock || 0;
+            const newStock = Math.max(0, currentStock - item.quantity);
+            await supabase
+              .from('products')
+              .update({ stock: newStock })
+              .eq('id', item.id);
+          }
+        }
+        
+        // También actualizamos la fecha del pedido a la fecha actual para que las estadísticas reflejen el día de finalización
+        const nowStr = new Date().toISOString();
+        const { error: updateErr } = await supabase
+          .from('orders')
+          .update({ status: newStatus, created_at: nowStr })
+          .eq('id', id);
+        
+        if (updateErr) throw updateErr;
+      } 
+      // Si sale de 'Entregado' hacia cualquier otro estado
+      else if (oldStatus === 'Entregado' && newStatus !== 'Entregado') {
+        // Devolver stock
+        for (const item of items) {
+          const { data: product } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('id', item.id)
+            .single();
+          
+          if (product) {
+            const currentStock = product.stock || 0;
+            const newStock = currentStock + item.quantity;
+            await supabase
+              .from('products')
+              .update({ stock: newStock })
+              .eq('id', item.id);
+          }
+        }
+
+        const { error: updateErr } = await supabase
+          .from('orders')
+          .update({ status: newStatus })
+          .eq('id', id);
+        
+        if (updateErr) throw updateErr;
+      } 
+      // Cualquier otra transición de estado intermedia (ej. Pendiente -> Enviado, Pagado, etc.)
+      else {
+        const { error: updateErr } = await supabase
+          .from('orders')
+          .update({ status: newStatus })
+          .eq('id', id);
+        
+        if (updateErr) throw updateErr;
+      }
+
+      fetchOrders();
+    } catch (err) {
+      console.error("Error al procesar el cambio de estado:", err);
+    }
   };
 
   const handleViewDetail = (order: any) => {
@@ -1078,6 +1160,7 @@ const OrdersManagement = () => {
                   <MenuItem value="all">Todos</MenuItem>
                   <MenuItem value="Pendiente">Pendiente</MenuItem>
                   <MenuItem value="Enviado">Enviado</MenuItem>
+                  <MenuItem value="Pagado">Pagado</MenuItem>
                   <MenuItem value="Entregado">Entregado</MenuItem>
                   <MenuItem value="Cancelado">Cancelado</MenuItem>
                 </Select>
@@ -1164,6 +1247,7 @@ const OrdersManagement = () => {
                     >
                       <MenuItem value="Pendiente"><Clock size={16} style={{marginRight: 8}}/> Pendiente</MenuItem>
                       <MenuItem value="Enviado"><Truck size={16} style={{marginRight: 8}}/> Enviado</MenuItem>
+                      <MenuItem value="Pagado"><DollarSign size={16} style={{marginRight: 8}}/> Pagado</MenuItem>
                       <MenuItem value="Entregado"><CheckCircle size={16} style={{marginRight: 8}}/> Entregado</MenuItem>
                       <MenuItem value="Cancelado"><AlertCircle size={16} style={{marginRight: 8}}/> Cancelado</MenuItem>
                     </Select>
@@ -1312,6 +1396,7 @@ const OrdersManagement = () => {
                           >
                             <MenuItem value="Pendiente"><Clock size={16} style={{marginRight: 8}}/> Pendiente</MenuItem>
                             <MenuItem value="Enviado"><Truck size={16} style={{marginRight: 8}}/> Enviado</MenuItem>
+                            <MenuItem value="Pagado"><DollarSign size={16} style={{marginRight: 8}}/> Pagado</MenuItem>
                             <MenuItem value="Entregado"><CheckCircle size={16} style={{marginRight: 8}}/> Entregado</MenuItem>
                             <MenuItem value="Cancelado"><AlertCircle size={16} style={{marginRight: 8}}/> Cancelado</MenuItem>
                           </Select>

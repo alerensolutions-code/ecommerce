@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { Box, Typography, Paper, Stack, IconButton, CircularProgress, Grid } from '@mui/material';
-import { ArrowLeft, Clock, Truck, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Clock, Truck, CheckCircle, AlertCircle, CreditCard } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '../../../../lib/supabase';
 
@@ -23,6 +23,7 @@ const PedidosDetail = () => {
     const list = {
       Pendiente: { count: 0, sum: 0 },
       Enviado: { count: 0, sum: 0 },
+      Pagado: { count: 0, sum: 0 },
       Entregado: { count: 0, sum: 0 },
       Cancelado: { count: 0, sum: 0 }
     };
@@ -44,6 +45,7 @@ const PedidosDetail = () => {
   const cards = [
     { key: 'Pendiente', label: 'Pendientes de Procesamiento', color: '#ff9800', icon: <Clock /> },
     { key: 'Enviado', label: 'En Ruta / Enviados', color: '#2196f3', icon: <Truck /> },
+    { key: 'Pagado', label: 'Pagados', color: '#9c27b0', icon: <CreditCard /> },
     { key: 'Entregado', label: 'Finalizados (Éxito)', color: '#4caf50', icon: <CheckCircle /> },
     { key: 'Cancelado', label: 'Cancelados', color: '#f44336', icon: <AlertCircle /> },
   ];

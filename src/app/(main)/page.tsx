@@ -10,6 +10,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { supabase } from '../../lib/supabase';
 import ProductCard from '../../components/product/ProductCard';
+import GoogleReviews from '../../components/layout/GoogleReviews';
+import LocationCard from '../../components/layout/LocationCard';
 import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Cpu, Monitor } from 'lucide-react';
 import Link from 'next/link';
 
@@ -203,7 +205,7 @@ const HomePage = () => {
     <Box>
       <Hero />
 
-      {/* Features Section */}
+      {/* Features Section - Commented out as requested
       <Container maxWidth="xl" sx={{ py: 10 }}>
         <Grid container spacing={4} alignItems="stretch">
           <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
@@ -228,6 +230,7 @@ const HomePage = () => {
           </Grid>
         </Grid>
       </Container>
+      */}
 
       {/* Build PC Highlight Section */}
       <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -403,6 +406,9 @@ const HomePage = () => {
           )}
         </Container>
       </Box>
+
+      <GoogleReviews />
+      <LocationCard />
 
     </Box>
   );

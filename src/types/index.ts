@@ -51,5 +51,5 @@ export interface Order {
   date?: string;
   items: CartItem[];
   total: number;
-  status: 'Pendiente' | 'Enviado' | 'Entregado' | 'Cancelado';
+  status: 'Pendiente' | 'Enviado' | 'Pagado' | 'Entregado' | 'Cancelado';
 }
