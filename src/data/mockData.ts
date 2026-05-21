@@ -14,12 +14,7 @@ export const products: Product[] = [
       'https://images.unsplash.com/photo-1547119957-637f8679db1e?q=80&w=1000&auto=format&fit=crop'
     ],
     stock: 15,
-    featured: true,
-    specs: [
-      { label: 'Resolución', value: '3440 x 1440' },
-      { label: 'Tasa de Refresco', value: '144Hz' },
-      { label: 'Panel', value: 'IPS' }
-    ]
+    featured: true
   },
   {
     id: '2',
@@ -32,11 +27,7 @@ export const products: Product[] = [
       'https://images.unsplash.com/photo-1591488320449-011701bb6704?q=80&w=1000&auto=format&fit=crop'
     ],
     stock: 5,
-    featured: true,
-    specs: [
-      { label: 'VRAM', value: '24GB GDDR6X' },
-      { label: 'Consumo', value: '450W' }
-    ]
+    featured: true
   },
   {
     id: '3',
@@ -49,11 +40,7 @@ export const products: Product[] = [
       'https://images.unsplash.com/photo-1591405351990-4726e331f141?q=80&w=1000&auto=format&fit=crop'
     ],
     stock: 20,
-    featured: false,
-    specs: [
-      { label: 'Núcleos', value: '24' },
-      { label: 'Hilos', value: '32' }
-    ]
+    featured: false
   },
   {
     id: '4',
@@ -67,11 +54,7 @@ export const products: Product[] = [
       'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?q=80&w=1000&auto=format&fit=crop'
     ],
     stock: 50,
-    featured: true,
-    specs: [
-      { label: 'Switches', value: 'Ópticos Rojos' },
-      { label: 'Conexión', value: 'USB-C' }
-    ]
+    featured: true
   },
   {
     id: '5',
@@ -84,11 +67,7 @@ export const products: Product[] = [
       '/ps5pro.png'
     ],
     stock: 10,
-    featured: true,
-    specs: [
-      { label: 'Almacenamiento', value: '2TB SSD' },
-      { label: 'Gráficos', value: '8K Ready' }
-    ]
+    featured: true
   }
 ];
 

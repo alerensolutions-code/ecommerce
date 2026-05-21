@@ -34,7 +34,6 @@ type Category = {
   name: string;
   parent_id?: string | null;
   parent?: { name: string };
-  spec_template?: string[];
 };
 
 interface CategoryRowProps {
@@ -187,8 +186,6 @@ const CategoriesManagement = () => {
   const [newName, setNewName] = useState('');
   const [newParentId, setNewParentId] = useState<string>('');
   const [parentName, setParentName] = useState<string | null>(null);
-  const [specTemplate, setSpecTemplate] = useState<string[]>([]);
-  const [newSpecKey, setNewSpecKey] = useState('');
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
@@ -201,8 +198,6 @@ const CategoriesManagement = () => {
     setNewName(category?.name || '');
     setNewParentId(parentId || category?.parent_id || '');
     setParentName(pName || category?.parent?.name || null);
-    setSpecTemplate(category?.spec_template || []);
-    setNewSpecKey('');
     setOpen(true);
   };
 
@@ -212,8 +207,6 @@ const CategoriesManagement = () => {
     setNewName('');
     setNewParentId('');
     setParentName(null);
-    setSpecTemplate([]);
-    setNewSpecKey('');
   };
 
   const handleSave = async () => {
@@ -221,8 +214,7 @@ const CategoriesManagement = () => {
 
     const dataToSave = {
       name: newName,
-      parent_id: newParentId || null,
-      spec_template: specTemplate
+      parent_id: newParentId || null
     };
 
     if (editingCategory) {
@@ -415,57 +407,7 @@ const CategoriesManagement = () => {
             />
 
 
-            {/* Spec Template Editor */}
-            <Box sx={{ mt: 1 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1.5, color: 'primary.main' }}>
-                Plantilla de Especificaciones (Campos Obligatorios)
-              </Typography>
-              <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Nueva Propiedad (ej: socket)"
-                  value={newSpecKey}
-                  onChange={(e) => setNewSpecKey(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter' && newSpecKey.trim()) {
-                      e.preventDefault();
-                      if (!specTemplate.includes(newSpecKey.trim())) {
-                        setSpecTemplate([...specTemplate, newSpecKey.trim()]);
-                      }
-                      setNewSpecKey('');
-                    }
-                  }}
-                />
-                <Button 
-                  variant="outlined" 
-                  onClick={() => {
-                    if (newSpecKey.trim() && !specTemplate.includes(newSpecKey.trim())) {
-                      setSpecTemplate([...specTemplate, newSpecKey.trim()]);
-                      setNewSpecKey('');
-                    }
-                  }}
-                >
-                  Ok
-                </Button>
-              </Stack>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {specTemplate.map((spec) => (
-                  <Chip
-                    key={spec}
-                    label={spec}
-                    onDelete={() => setSpecTemplate(specTemplate.filter(s => s !== spec))}
-                    size="small"
-                    sx={{ fontWeight: 600 }}
-                  />
-                ))}
-                {specTemplate.length === 0 && (
-                  <Typography variant="caption" color="text.secondary">
-                    Sin propiedades predefinidas. Añadí las llaves que este tipo de hardware requiere para filtrar compatibilidad.
-                  </Typography>
-                )}
-              </Box>
-            </Box>
+
           </Stack>
         </DialogContent>
         <DialogActions sx={{ p: 3 }}>
