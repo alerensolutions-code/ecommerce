@@ -26,6 +26,7 @@ import {
   ShoppingBag,
   ArrowRight,
   ArrowUpRight,
+  Banknote,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -93,7 +94,7 @@ const Dashboard = () => {
         if (productNamesInOrders.size > 0) {
           const { data: neededProducts } = await supabase
             .from('products')
-            .select('id, name, category_id, stock')
+            .select('id, name, category_id, stock, cost_price')
             .in('name', Array.from(productNamesInOrders));
           setProducts(neededProducts || []);
         } else {
@@ -124,6 +125,18 @@ const Dashboard = () => {
     const completedOrdersInRange = rangeOrders.filter(o => o.status === 'Entregado');
     const revenueInRange = completedOrdersInRange.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
     const totalOrdersInRange = rangeOrders.length;
+
+    // Ganancia Neta: (precio_venta - cost_price) * cantidad por cada item entregado
+    let netProfitInRange = 0;
+    completedOrdersInRange.forEach(o => {
+      if (o.items && Array.isArray(o.items)) {
+        o.items.forEach((item: any) => {
+          const product = products.find(p => p.name === item.name);
+          const costPrice = product?.cost_price ?? 0;
+          netProfitInRange += (Number(item.price) - costPrice) * (item.quantity || 1);
+        });
+      }
+    });
     const pendingOrdersInRange = rangeOrders.filter(o => o.status === 'Pendiente');
 
     // Chart Data logic (dinámico según el rango)
@@ -179,6 +192,7 @@ const Dashboard = () => {
 
     return {
       revenueInRange,
+      netProfitInRange,
       totalOrdersInRange,
       pendingTotalCount: rangeOrders.filter(o => o.status === 'Pendiente').length,
       lastPendingOrders,
@@ -236,9 +250,9 @@ const Dashboard = () => {
         </Paper>
       </Stack>
 
-      <Grid container spacing={4} sx={{ mb: 6 }}>
-        {/* Ventas Finalizadas */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+      <Grid container spacing={3} sx={{ mb: 6 }}>
+        {/* Facturación */}
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             sx={{
               p: 3,
@@ -249,20 +263,46 @@ const Dashboard = () => {
               width: '100%',
               position: 'relative'
             }}>
-
             <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
               <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#4caf5008', color: '#4caf50', display: 'flex' }}><DollarSign size={18} /></Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Ganancia</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Facturación</Typography>
             </Stack>
-            <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1.1rem, 2.5vw, 1.75rem)', lineHeight: 1.2, wordBreak: 'break-word' }}>
+            <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1rem, 2vw, 1.6rem)', lineHeight: 1.2, wordBreak: 'break-word' }}>
               ${metrics.revenueInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
             </Typography>
             <Typography variant="caption" color="text.secondary">Ventas entregadas</Typography>
           </Paper>
         </Grid>
 
+        {/* Ganancia Neta */}
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
+          <Paper elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: 'white',
+              border: '1px solid rgba(0,0,0,0.08)',
+              height: '100%',
+              width: '100%',
+              position: 'relative',
+              background: metrics.netProfitInRange > 0
+                ? 'linear-gradient(135deg, #fff 60%, rgba(0,191,165,0.04) 100%)'
+                : 'white',
+              borderColor: metrics.netProfitInRange > 0 ? 'rgba(0,191,165,0.25)' : 'rgba(0,0,0,0.08)'
+            }}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+              <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#00bfa508', color: '#00bfa5', display: 'flex' }}><Banknote size={18} /></Box>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Ganancia Neta</Typography>
+            </Stack>
+            <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1rem, 2vw, 1.6rem)', lineHeight: 1.2, wordBreak: 'break-word', color: metrics.netProfitInRange >= 0 ? '#00796b' : '#f44336' }}>
+              ${metrics.netProfitInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">Utilidad real del periodo</Typography>
+          </Paper>
+        </Grid>
+
         {/* Pedidos del Periodo */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             component={Link}
             href="/admin/orders"
@@ -297,7 +337,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Pedidos Pendientes */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             component={Link}
             href="/admin/orders?status=Pendiente"
@@ -338,7 +378,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Stock Bajo */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             component={Link}
             href="/admin/products?filter=critical"

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./Providers";
+import { AppRouterCacheProvider } from '@mui/material-nextjs/v15-appRouter';
 
 export const metadata: Metadata = {
   title: "Devil Gaming | Elite Hardware & Gaming Setup",
@@ -15,9 +16,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body suppressHydrationWarning={true}>
-        <Providers>
-          {children}
-        </Providers>
+        <AppRouterCacheProvider>
+          <Providers>
+            {children}
+          </Providers>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );

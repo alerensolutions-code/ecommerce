@@ -40,6 +40,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
+  cost_price?: number;
   images?: string[];
   description: string;
   category_id: string;
@@ -76,6 +77,7 @@ const ProductsManagement = () => {
     description: '',
     category_id: '',
     price: '' as number | string,
+    cost_price: '' as number | string,
     stock: '' as number | string,
     featured: false,
     images: [] as string[],
@@ -175,6 +177,7 @@ const ProductsManagement = () => {
       description: product?.description || '',
       category_id: product?.category_id || '',
       price: product ? product.price : '',
+      cost_price: product?.cost_price != null ? product.cost_price : '',
       stock: product ? product.stock : '',
       featured: product?.featured || false,
       images: product?.images || [],
@@ -320,11 +323,18 @@ const ProductsManagement = () => {
       finalImages = [...finalImages, ...urls];
     }
 
+    if (formValues.cost_price === '' || formValues.cost_price === null || formValues.cost_price === undefined) {
+      alert('El campo Costo base es obligatorio.');
+      setUploadingFiles(false);
+      return;
+    }
+
     const dataToSave = {
       name: formValues.name,
       description: formValues.description,
       category_id: formValues.category_id,
       price: Number(formValues.price) || 0,
+      cost_price: Number(formValues.cost_price),
       stock: Number(formValues.stock) || 0,
       featured: formValues.featured,
       images: finalImages,
@@ -629,10 +639,22 @@ const ProductsManagement = () => {
                   <Grid size={6}>
                     <TextField
                       fullWidth
-                      label="Precio ($)"
+                      label="Precio de venta ($)"
                       type="number"
                       value={formValues.price}
                       onChange={(e) => setFormValues({ ...formValues, price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                    />
+                  </Grid>
+                  <Grid size={6}>
+                    <TextField
+                      fullWidth
+                      required
+                      label="Costo base ($)"
+                      type="number"
+                      inputProps={{ min: 0, step: 'any' }}
+                      value={formValues.cost_price}
+                      onChange={(e) => setFormValues({ ...formValues, cost_price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                      helperText="Lo que pagaste por el producto"
                     />
                   </Grid>
                   <Grid size={6}>

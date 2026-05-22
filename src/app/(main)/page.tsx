@@ -11,7 +11,6 @@ import 'swiper/css/pagination';
 import { supabase } from '../../lib/supabase';
 import ProductCard from '../../components/product/ProductCard';
 import GoogleReviews from '../../components/layout/GoogleReviews';
-import LocationCard from '../../components/layout/LocationCard';
 import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Cpu, Monitor } from 'lucide-react';
 import Link from 'next/link';
 
@@ -408,7 +407,6 @@ const HomePage = () => {
       </Box>
 
       <GoogleReviews />
-      <LocationCard />
 
     </Box>
   );
