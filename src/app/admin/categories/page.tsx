@@ -1,18 +1,18 @@
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
-import { 
-  Box, 
-  Typography, 
-  Button, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  IconButton, 
+import {
+  Box,
+  Typography,
+  Button,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
   Stack,
   TextField,
   Dialog,
@@ -72,7 +72,7 @@ const CategoryRow = ({ category, childrenCategories, onEdit, onDelete, onAddSub 
             )}
           </Stack>
         </TableCell>
-        <TableCell>
+        <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600 }}>Categoría Principal</Typography>
         </TableCell>
         <TableCell align="right">
@@ -107,7 +107,7 @@ const CategoryRow = ({ category, childrenCategories, onEdit, onDelete, onAddSub 
                           <Typography sx={{ fontSize: '0.9rem', fontWeight: 500 }}>{sub.name}</Typography>
                         </Stack>
                       </TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                         <Chip label="Subcategoría" size="small" variant="outlined" sx={{ height: 20, fontSize: '0.7rem', opacity: 0.7 }} />
                       </TableCell>
                       <TableCell align="right">
@@ -297,15 +297,21 @@ const CategoriesManagement = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800 }}>Gestión de Categorías</Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        gap={{ xs: 2, sm: 0 }}
+        sx={{ mb: 4 }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>Categorías</Typography>
         <Button
           variant="contained"
           startIcon={<Plus size={20} />}
           onClick={() => handleOpen()}
-          sx={{ py: 1.5, px: 3, fontWeight: 700 }}
+          sx={{ py: 1.5, px: 3, fontWeight: 700, width: { xs: '100%', sm: 'auto' } }}
         >
-          Nueva Categoría Principal
+          Nueva Categoría
         </Button>
       </Stack>
 
@@ -346,7 +352,7 @@ const CategoriesManagement = () => {
             <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>Categoría</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Tipo</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Tipo</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -437,8 +443,8 @@ const CategoriesManagement = () => {
                     }
                   }}
                 />
-                <Button 
-                  variant="outlined" 
+                <Button
+                  variant="outlined"
                   onClick={() => {
                     if (newSpecKey.trim() && !specTemplate.includes(newSpecKey.trim())) {
                       setSpecTemplate([...specTemplate, newSpecKey.trim()]);

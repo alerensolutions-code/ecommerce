@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from 'react';
-import { 
-  Box, Drawer, List, ListItem, ListItemButton, ListItemIcon, 
+import {
+  Box, Drawer, List, ListItem, ListItemButton, ListItemIcon,
   ListItemText, Typography, Divider, AppBar, Toolbar, Avatar, IconButton, useTheme, useMediaQuery
 } from '@mui/material';
-import { 
+import {
   LayoutDashboard, Package, ShoppingBag, LogOut, Store, Menu, Settings
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -53,11 +53,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           const isActive = pathname === item.path;
           return (
             <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-              <ListItemButton 
-                component={Link} 
+              <ListItemButton
+                component={Link}
                 href={item.path}
                 onClick={isMobile ? handleDrawerToggle : undefined}
-                sx={{ 
+                sx={{
                   borderRadius: 2,
                   bgcolor: isActive ? 'primary.main' : 'transparent',
                   '&:hover': {
@@ -68,9 +68,9 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
                   {item.icon}
                 </ListItemIcon>
-                <ListItemText 
-                  primary={item.text} 
-                  primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }} 
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
                 />
               </ListItemButton>
             </ListItem>
@@ -116,8 +116,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             }}
             sx={{
               display: { xs: 'block', md: 'none' },
-              '& .MuiDrawer-paper': { 
-                boxSizing: 'border-box', 
+              '& .MuiDrawer-paper': {
+                boxSizing: 'border-box',
                 width: drawerWidth,
                 bgcolor: 'secondary.main',
                 color: 'white',
@@ -130,8 +130,8 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             variant="permanent"
             sx={{
               display: { xs: 'none', md: 'block' },
-              '& .MuiDrawer-paper': { 
-                boxSizing: 'border-box', 
+              '& .MuiDrawer-paper': {
+                boxSizing: 'border-box',
                 width: drawerWidth,
                 borderRight: '1px solid rgba(0,0,0,0.05)',
                 bgcolor: 'secondary.main',
@@ -144,20 +144,20 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
           </Drawer>
         </Box>
 
-        <Box 
-          component="main" 
-          sx={{ 
-            flexGrow: 1, 
+        <Box
+          component="main"
+          sx={{
+            flexGrow: 1,
             width: { md: `calc(100% - ${drawerWidth}px)` },
             maxWidth: '100vw'
           }}
         >
-          <AppBar 
-            position="sticky" 
-            color="inherit" 
-            elevation={0} 
-            sx={{ 
-              bgcolor: 'white', 
+          <AppBar
+            position="sticky"
+            color="inherit"
+            elevation={0}
+            sx={{
+              bgcolor: 'white',
               borderBottom: '1px solid rgba(0,0,0,0.05)',
               zIndex: (theme) => theme.zIndex.drawer - 1
             }}
@@ -177,7 +177,6 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Box sx={{ textAlign: 'right' }}>
                   <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>{user?.name || 'Admin'}</Typography>
-                  <Typography variant="caption" color="text.secondary">Admin Power</Typography>
                 </Box>
                 <Avatar sx={{ bgcolor: 'primary.main', fontWeight: 700 }}>{user?.name?.charAt(0) || 'A'}</Avatar>
               </Box>
