@@ -60,6 +60,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [metricType, setMetricType] = useState<'revenue' | 'units'>('revenue');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filtros de fecha (Default: Últimos 30 días)
   const [startDate, setStartDate] = useState(() => {
@@ -128,7 +133,11 @@ const Dashboard = () => {
       return d >= start && d <= end;
     });
 
-    const completedOrdersInRange = rangeOrders.filter(o => o.status === 'Entregado');
+    const completedOrdersInRange = orders.filter(o => {
+      if (o.status !== 'Entregado') return false;
+      const d = new Date(o.delivered_at || o.created_at);
+      return d >= start && d <= end;
+    });
     const revenueInRange = completedOrdersInRange.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
     const totalOrdersInRange = rangeOrders.length;
 
@@ -154,7 +163,7 @@ const Dashboard = () => {
     }
 
     completedOrdersInRange.forEach(o => {
-      const dateStr = new Date(o.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+      const dateStr = new Date(o.delivered_at || o.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
       if (chartDataMap.has(dateStr)) {
         if (metricType === 'revenue') {
           chartDataMap.set(dateStr, chartDataMap.get(dateStr) + (parseFloat(o.total) || 0));
@@ -244,6 +253,7 @@ const Dashboard = () => {
             value={startDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
             onClick={(e) => (e.target as any).showPicker?.()}
+            inputProps={{ lang: 'es-ES' }}
             sx={{
               '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5, cursor: 'pointer' },
               width: { xs: '100%', sm: 150 }
@@ -257,6 +267,7 @@ const Dashboard = () => {
             value={endDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
             onClick={(e) => (e.target as any).showPicker?.()}
+            inputProps={{ lang: 'es-ES' }}
             sx={{
               '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5, cursor: 'pointer' },
               width: { xs: '100%', sm: 150 }
@@ -293,13 +304,11 @@ const Dashboard = () => {
           <AccordionDetails sx={{ p: 0 }}>
             <Stack divider={<Divider sx={{ borderColor: 'rgba(0,0,0,0.08)' }} />}>
               {/* Facturación */}
-              <Box sx={{ px: 3, py: 2 }}>
+              <Box sx={{ px: 2, py: 2 }}>
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
-                  <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#4caf5008', color: '#4caf50', display: 'flex' }}><DollarSign size={16} /></Box>
                   <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.68rem' }}>Facturación</Typography>
                 </Stack>
                 <Typography sx={{ fontWeight: 800, fontSize: '1.4rem' }}>${metrics.revenueInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Typography>
-                <Typography variant="caption" color="text.secondary">Ventas entregadas</Typography>
               </Box>
               {/* Ganancia Neta */}
               <Box sx={{ px: 3, py: 2 }}>
@@ -642,10 +651,10 @@ const Dashboard = () => {
             </ToggleButtonGroup>
           </Stack>
 
-          <Box sx={{ height: { xs: 240, sm: 260 }, width: '100%' }}>
-            {metrics.chartData.length > 0 ? (
+          <Box sx={{ height: { xs: 240, sm: 260 }, width: '100%', overflow: 'hidden' }}>
+            {mounted && metrics.chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <AreaChart data={metrics.chartData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
+                <AreaChart data={metrics.chartData} margin={{ top: 10, right: 10, left: 40, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#cc0000" stopOpacity={0.3} />

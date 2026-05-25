@@ -36,7 +36,7 @@ import {
   Collapse,
 } from '@mui/material';
 import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense, Fragment } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
 
@@ -421,6 +421,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
               onChange={e => setOrderDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
               onClick={(e) => (e.target as any).showPicker?.()}
+              inputProps={{ lang: 'es-ES' }}
             />
           </Stack>
         )}
@@ -673,6 +674,7 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                   onChange={e => setOrderDate(e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   onClick={(e) => (e.target as any).showPicker?.()}
+                  inputProps={{ lang: 'es-ES' }}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
@@ -1021,11 +1023,11 @@ const OrdersManagement = () => {
           }
         }
 
-        // También actualizamos la fecha del pedido a la fecha actual para que las estadísticas reflejen el día de finalización
+        // También actualizamos la fecha de entrega (delivered_at) a la fecha actual
         const nowStr = new Date().toISOString();
         const { error: updateErr } = await supabase
           .from('orders')
-          .update({ status: newStatus, created_at: nowStr })
+          .update({ status: newStatus, delivered_at: nowStr })
           .eq('id', id);
 
         if (updateErr) throw updateErr;
@@ -1052,7 +1054,7 @@ const OrdersManagement = () => {
 
         const { error: updateErr } = await supabase
           .from('orders')
-          .update({ status: newStatus })
+          .update({ status: newStatus, delivered_at: null })
           .eq('id', id);
 
         if (updateErr) throw updateErr;
@@ -1209,9 +1211,10 @@ const OrdersManagement = () => {
                     direction={dateOrder}
                     onClick={() => { setActiveSort('date'); setDateOrder(d => d === 'asc' ? 'desc' : 'asc'); }}
                   >
-                    Fecha
+                    Creado
                   </TableSortLabel>
                 </TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Entregado</TableCell>
                 <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Total</TableCell>
                 <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Estado</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Acciones</TableCell>
@@ -1219,10 +1222,10 @@ const OrdersManagement = () => {
             </TableHead>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={7} align="center">Cargando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} align="center">Cargando...</TableCell></TableRow>
               ) : orders.map((order) => (
-                <>
-                  <TableRow key={order.id} hover>
+                <Fragment key={order.id}>
+                  <TableRow hover>
                     <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>#{order.id}</TableCell>
                     <TableCell sx={{ fontWeight: 500 }}>
                       <Box>
@@ -1261,7 +1264,12 @@ const OrdersManagement = () => {
                         <Typography variant="body2" color="text.disabled">N/A</Typography>
                       )}
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>{new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
+                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>
+                      {new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>
+                      {order.delivered_at ? new Date(order.delivered_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '−'}
+                    </TableCell>
                     <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>${Number(order.total).toLocaleString('es-ES')}</TableCell>
                     <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Select
@@ -1322,9 +1330,15 @@ const OrdersManagement = () => {
                               </Typography>
                             </Stack>
                             <Stack direction="row" justifyContent="space-between" alignItems="center">
-                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Fecha</Typography>
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Creado</Typography>
                               <Typography variant="body2" sx={{ fontWeight: 500 }}>
                                 {new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Entregado</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {order.delivered_at ? new Date(order.delivered_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '−'}
                               </Typography>
                             </Stack>
                             <Stack direction="row" justifyContent="space-between" alignItems="center">
@@ -1371,7 +1385,7 @@ const OrdersManagement = () => {
                       </Collapse>
                     </TableCell>
                   </TableRow>
-                </>
+                </Fragment>
               ))}
             </TableBody>
           </Table>
@@ -1449,16 +1463,33 @@ const OrdersManagement = () => {
                   </Stack>
                 </Grid>
 
-                {/* Estado y Fecha */}
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#ff9800', color: 'white', display: 'flex' }}>
                       <Clock size={18} />
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">Fecha</Typography>
+                      <Typography variant="caption" color="text.secondary">Creado</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                        {selectedOrder?.created_at ? new Date(selectedOrder.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        {selectedOrder?.created_at
+                          ? new Date(selectedOrder.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box sx={{ p: 1, borderRadius: 2, bgcolor: selectedOrder?.delivered_at ? '#4caf50' : 'rgba(0,0,0,0.08)', color: selectedOrder?.delivered_at ? 'white' : 'text.disabled', display: 'flex' }}>
+                      <CheckCircle size={18} />
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Entregado</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 700, color: selectedOrder?.delivered_at ? 'success.main' : 'text.disabled' }}>
+                        {selectedOrder?.delivered_at
+                          ? new Date(selectedOrder.delivered_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : '—'}
                       </Typography>
                     </Box>
                   </Stack>
@@ -1477,8 +1508,19 @@ const OrdersManagement = () => {
                             size="small"
                             value={selectedOrder.status}
                             onChange={(e) => {
-                              handleStatusChange(selectedOrder.id, e.target.value);
-                              setSelectedOrder((prev: any) => prev ? { ...prev, status: e.target.value } : null);
+                              const newStatus = e.target.value;
+                              handleStatusChange(selectedOrder.id, newStatus);
+                              setSelectedOrder((prev: any) => {
+                                if (!prev) return null;
+                                const nowISO = new Date().toISOString();
+                                return {
+                                  ...prev,
+                                  status: newStatus,
+                                  delivered_at: newStatus === 'Entregado'
+                                    ? nowISO
+                                    : (prev.status === 'Entregado' ? null : prev.delivered_at)
+                                };
+                              });
                             }}
                             sx={{
                               minWidth: 140,
