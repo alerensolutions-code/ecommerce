@@ -16,7 +16,8 @@ import {
   Chip,
   Accordion,
   AccordionSummary,
-  AccordionDetails
+  AccordionDetails,
+  Divider
 } from '@mui/material';
 
 import {
@@ -290,7 +291,7 @@ const Dashboard = () => {
             </Stack>
           </AccordionSummary>
           <AccordionDetails sx={{ p: 0 }}>
-            <Stack divider={<Box sx={{ height: 1, bgcolor: 'rgba(0,0,0,0.04)' }} />}>
+            <Stack divider={<Divider sx={{ borderColor: 'rgba(0,0,0,0.08)' }} />}>
               {/* Facturación */}
               <Box sx={{ px: 3, py: 2 }}>
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
@@ -607,7 +608,8 @@ const Dashboard = () => {
 
       <Box sx={{ mt: 4 }}>
         <Paper elevation={0} sx={{
-          p: { xs: 2, sm: 4 },
+          px: { xs: 1.5, sm: 4 },
+          py: { xs: 2.5, sm: 4 },
           borderRadius: 4,
           border: '1px solid rgba(0,0,0,0.05)',
           height: { xs: 'auto', sm: 380 }
@@ -643,7 +645,7 @@ const Dashboard = () => {
           <Box sx={{ height: { xs: 240, sm: 260 }, width: '100%' }}>
             {metrics.chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <AreaChart data={metrics.chartData}>
+                <AreaChart data={metrics.chartData} margin={{ top: 10, right: 0, left: -25, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#cc0000" stopOpacity={0.3} />
@@ -664,6 +666,7 @@ const Dashboard = () => {
                     tickLine={false}
                     tick={{ fill: '#888', fontSize: 12 }}
                     tickFormatter={(val) => metricType === 'revenue' ? `$${val}` : `${val}`}
+                    width={35}
                   />
                   <RechartsTooltip
                     formatter={(value: any) => [

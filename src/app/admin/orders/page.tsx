@@ -33,8 +33,9 @@ import {
   InputLabel,
   Avatar,
   TableSortLabel,
+  Collapse,
 } from '@mui/material';
-import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign } from 'lucide-react';
+import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
@@ -894,6 +895,16 @@ const OrdersManagement = () => {
 
   // Create wizard
   const [createOpen, setCreateOpen] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const router = useRouter();
   const pathname = usePathname();
@@ -1104,13 +1115,19 @@ const OrdersManagement = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        gap={{ xs: 2, sm: 0 }}
+        sx={{ mb: 4 }}
+      >
         <Typography variant="h4" sx={{ fontWeight: 800 }}>Pedidos</Typography>
         <Button
           variant="contained"
           startIcon={<Plus size={20} />}
           onClick={() => setCreateOpen(true)}
-          sx={{ py: 1.5, px: 3, fontWeight: 700 }}
+          sx={{ py: 1.5, px: 3, fontWeight: 700, width: { xs: '100%', sm: 'auto' } }}
         >
           Nuevo Pedido
         </Button>
@@ -1185,8 +1202,8 @@ const OrdersManagement = () => {
                   </TableSortLabel>
                 </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Cliente</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Dirección</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Dirección</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>
                   <TableSortLabel
                     active={activeSort === 'date'}
                     direction={dateOrder}
@@ -1195,77 +1212,166 @@ const OrdersManagement = () => {
                     Fecha
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Estado</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Total</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Estado</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} align="center">Cargando...</TableCell></TableRow>
               ) : orders.map((order) => (
-                <TableRow key={order.id} hover>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>#{order.id}</TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>{order.customer_name}</TableCell>
-                  <TableCell sx={{ fontWeight: 500, maxWidth: 180 }}>
-                    {order.address ? (
-                      <Tooltip title={`${order.address}, ${order.city || ''} ${order.zip_code ? `(CP: ${order.zip_code})` : ''}`}>
-                        <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {order.address}, {order.city || ''}
+                <>
+                  <TableRow key={order.id} hover>
+                    <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>#{order.id}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{order.customer_name}</Typography>
+                        {/* Mobile: botón para expandir detalles */}
+                        <Box
+                          component="button"
+                          onClick={() => toggleRow(order.id)}
+                          sx={{
+                            display: { xs: 'flex', md: 'none' },
+                            alignItems: 'center',
+                            gap: 0.5,
+                            mt: 0.5,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            p: 0,
+                            color: 'text.secondary',
+                            fontSize: '0.72rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          {expandedRows.has(order.id) ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          {expandedRows.has(order.id) ? 'Ocultar detalles' : 'Ver detalles'}
                         </Box>
-                      </Tooltip>
-                    ) : (
-                      <Typography variant="body2" color="text.disabled">N/A</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>{new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>${Number(order.total).toLocaleString('es-ES')}</TableCell>
-                  <TableCell>
-                    <Select
-                      size="small"
-                      value={order.status}
-                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                      sx={{
-                        minWidth: 140,
-                        fontWeight: 600,
-                        '& .MuiSelect-select': {
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 1,
-                          py: 0.5
-                        }
-                      }}
-                      renderValue={(value) => (
-                        <Chip
-                          icon={statusIcons[value]}
-                          label={value}
-                          size="small"
-                          color={statusColors[value]}
-                          sx={{ fontWeight: 700, border: 'none' }}
-                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500, maxWidth: 180, display: { xs: 'none', md: 'table-cell' } }}>
+                      {order.address ? (
+                        <Tooltip title={`${order.address}, ${order.city || ''} ${order.zip_code ? `(CP: ${order.zip_code})` : ''}`}>
+                          <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {order.address}, {order.city || ''}
+                          </Box>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="body2" color="text.disabled">N/A</Typography>
                       )}
-                    >
-                      <MenuItem value="Pendiente"><Clock size={16} style={{ marginRight: 8 }} /> Pendiente</MenuItem>
-                      <MenuItem value="Enviado"><Truck size={16} style={{ marginRight: 8 }} /> Enviado</MenuItem>
-                      <MenuItem value="Pagado"><DollarSign size={16} style={{ marginRight: 8 }} /> Pagado</MenuItem>
-                      <MenuItem value="Entregado"><CheckCircle size={16} style={{ marginRight: 8 }} /> Entregado</MenuItem>
-                      <MenuItem value="Cancelado"><AlertCircle size={16} style={{ marginRight: 8 }} /> Cancelado</MenuItem>
-                    </Select>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                      <IconButton size="small" onClick={() => handleViewDetail(order)} aria-label="Ver detalles">
-                        <Eye size={18} />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleEditClick(order)} color="primary" aria-label="Editar">
-                        <Edit2 size={18} />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(order)} aria-label="Eliminar">
-                        <Trash2 size={18} />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>{new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
+                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>${Number(order.total).toLocaleString('es-ES')}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      <Select
+                        size="small"
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        sx={{
+                          minWidth: 140,
+                          fontWeight: 600,
+                          '& .MuiSelect-select': {
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            py: 0.5
+                          }
+                        }}
+                        renderValue={(value) => (
+                          <Chip
+                            icon={statusIcons[value]}
+                            label={value}
+                            size="small"
+                            color={statusColors[value]}
+                            sx={{ fontWeight: 700, border: 'none' }}
+                          />
+                        )}
+                      >
+                        <MenuItem value="Pendiente"><Clock size={16} style={{ marginRight: 8 }} /> Pendiente</MenuItem>
+                        <MenuItem value="Enviado"><Truck size={16} style={{ marginRight: 8 }} /> Enviado</MenuItem>
+                        <MenuItem value="Pagado"><DollarSign size={16} style={{ marginRight: 8 }} /> Pagado</MenuItem>
+                        <MenuItem value="Entregado"><CheckCircle size={16} style={{ marginRight: 8 }} /> Entregado</MenuItem>
+                        <MenuItem value="Cancelado"><AlertCircle size={16} style={{ marginRight: 8 }} /> Cancelado</MenuItem>
+                      </Select>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                        <IconButton size="small" onClick={() => handleViewDetail(order)} aria-label="Ver detalles">
+                          <Eye size={18} />
+                        </IconButton>
+                        <IconButton size="small" onClick={() => handleEditClick(order)} color="primary" aria-label="Editar">
+                          <Edit2 size={18} />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDeleteClick(order)} aria-label="Eliminar">
+                          <Trash2 size={18} />
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                  {/* Mobile expandable details row */}
+                  <TableRow sx={{ display: { xs: 'table-row', md: 'none' } }}>
+                    <TableCell colSpan={3} sx={{ p: 0, border: 0 }}>
+                      <Collapse in={expandedRows.has(order.id)} timeout="auto" unmountOnExit>
+                        <Box sx={{ px: 2, pb: 2, pt: 1, bgcolor: 'rgba(0,0,0,0.015)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                          <Stack spacing={1.5}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem', mt: 0.5 }}>Dirección</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500, textAlign: 'right', maxWidth: '70%' }}>
+                                {order.address ? `${order.address}, ${order.city || ''} ${order.zip_code ? `(CP: ${order.zip_code})` : ''}` : 'N/A'}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Fecha</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Total</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                ${Number(order.total).toLocaleString('es-ES')}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Estado</Typography>
+                              <Select
+                                size="small"
+                                value={order.status}
+                                onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                sx={{
+                                  minWidth: 140,
+                                  fontWeight: 600,
+                                  '& .MuiSelect-select': {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    py: 0.5
+                                  }
+                                }}
+                                renderValue={(value) => (
+                                  <Chip
+                                    icon={statusIcons[value]}
+                                    label={value}
+                                    size="small"
+                                    color={statusColors[value]}
+                                    sx={{ fontWeight: 700, border: 'none' }}
+                                  />
+                                )}
+                              >
+                                <MenuItem value="Pendiente"><Clock size={16} style={{ marginRight: 8 }} /> Pendiente</MenuItem>
+                                <MenuItem value="Enviado"><Truck size={16} style={{ marginRight: 8 }} /> Enviado</MenuItem>
+                                <MenuItem value="Pagado"><DollarSign size={16} style={{ marginRight: 8 }} /> Pagado</MenuItem>
+                                <MenuItem value="Entregado"><CheckCircle size={16} style={{ marginRight: 8 }} /> Entregado</MenuItem>
+                                <MenuItem value="Cancelado"><AlertCircle size={16} style={{ marginRight: 8 }} /> Cancelado</MenuItem>
+                              </Select>
+                            </Stack>
+                          </Stack>
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </>
               ))}
             </TableBody>
           </Table>
