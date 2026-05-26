@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Button, Container, Grid, Paper, Stack, CircularProgress } from '@mui/material';
+import { Box, Typography, Button, Container, Grid, Paper, Stack, CircularProgress, IconButton } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
@@ -11,122 +11,364 @@ import 'swiper/css/pagination';
 import { supabase } from '../../lib/supabase';
 import ProductCard from '../../components/product/ProductCard';
 import GoogleReviews from '../../components/layout/GoogleReviews';
-import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Cpu, Monitor } from 'lucide-react';
+import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Cpu, Monitor, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 
-const Hero = () => (
-  <Box sx={{
-    width: '100%',
-    height: { xs: 'auto', md: '70vh' }, // Altura más compacta para notebooks
-    minHeight: { xs: '500px', md: '550px' },
-    position: 'relative',
-    overflow: 'hidden',
-    bgcolor: '#000000ff',
-    display: 'flex',
-    alignItems: 'center',
-    py: { xs: 6, md: 0 }
-  }}>
-    {/* Video Background */}
-    <video
-      autoPlay
-      loop
-      muted
-      playsInline
-      style={{
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',
-        zIndex: 0,
-      }}
-    >
-      <source src="/hero-bg.mp4" type="video/mp4" />
-    </video>
+interface HeroProps {
+  banners: any[];
+  loading: boolean;
+}
 
-    {/* Video Overlay / Darkening Gradient */}
+const Hero = ({ banners, loading }: HeroProps) => {
+  if (loading) {
+    return (
+      <Box sx={{
+        width: '100%',
+        height: { xs: 'auto', md: '70vh' },
+        minHeight: { xs: '500px', md: '550px' },
+        bgcolor: 'black',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <CircularProgress color="primary" />
+      </Box>
+    );
+  }
+
+  if (banners.length === 0) {
+    return (
+      <Box sx={{
+        width: '100%',
+        height: { xs: 'auto', md: '70vh' }, // Altura más compacta para notebooks
+        minHeight: { xs: '500px', md: '550px' },
+        position: 'relative',
+        overflow: 'hidden',
+        bgcolor: '#000000ff',
+        display: 'flex',
+        alignItems: 'center',
+        py: { xs: 6, md: 0 }
+      }}>
+        {/* Video Background */}
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            zIndex: 0,
+          }}
+        >
+          <source src="/hero-bg.mp4" type="video/mp4" />
+        </video>
+
+        {/* Video Overlay / Darkening Gradient */}
+        <Box sx={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: `
+            linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)),
+            radial-gradient(at 0% 0%, rgba(204, 0, 0, 0.2) 0px, transparent 50%),
+            radial-gradient(at 100% 100%, rgba(204, 0, 0, 0.2) 0px, transparent 50%)
+          `,
+          zIndex: 0,
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            width: '100%',
+            height: '100%',
+            backgroundImage: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")',
+            opacity: 0.1,
+          }
+        }} />
+
+        <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
+          <Grid container spacing={4} alignItems="center">
+            <Grid size={{ xs: 12, md: 7 }}>
+              <Typography variant="overline" color="primary.main" sx={{ fontWeight: 900, fontSize: '0.9rem', letterSpacing: 5, display: 'block', mb: 1 }}>
+                ESTÁNDAR DE ÉLITE
+              </Typography>
+              <Typography variant="h1" color="white" sx={{
+                mb: 1.5,
+                fontSize: { xs: '2.2rem', md: '3.4rem' },
+                lineHeight: 1.1,
+                fontWeight: 900,
+                textShadow: '0 10px 30px rgba(0,0,0,0.5)'
+              }}>
+                DOMINA TU MUNDO <br />
+                CON{' '}
+                <motion.span
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.7, ease: "easeOut" }}
+                  style={{
+                    background: 'linear-gradient(90deg, #ff0000, #cc0000)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    display: 'inline-block',
+                    textShadow: '0 0 40px rgba(255,0,0,0.6)'
+                  }}
+                >
+                  DEVIL GAMING
+                </motion.span>
+              </Typography>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
+                <Button
+                  component={Link}
+                  href="/shop"
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowRight />}
+                  sx={{
+                    py: 1.5,
+                    px: 4,
+                    fontSize: '0.95rem',
+                    fontWeight: 700,
+                    borderRadius: 3,
+                    boxShadow: '0 10px 20px rgba(204, 0, 0, 0.3)',
+                    '&:hover': {
+                      transform: 'translateY(-3px)',
+                      boxShadow: '0 15px 30px rgba(204, 0, 0, 0.4)',
+                    },
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  Explorar Arsenal
+                </Button>
+              </Stack>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box >
+    );
+  }
+
+  return (
     <Box sx={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
       width: '100%',
-      height: '100%',
-      background: `
-        linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.8)),
-        radial-gradient(at 0% 0%, rgba(204, 0, 0, 0.2) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(204, 0, 0, 0.2) 0px, transparent 50%)
-      `,
-      zIndex: 0,
-      '&::before': {
-        content: '""',
-        position: 'absolute',
-        width: '100%',
-        height: '100%',
-        backgroundImage: 'url("https://www.transparenttextures.com/patterns/carbon-fibre.png")',
-        opacity: 0.1,
-      }
-    }} />
+      height: { xs: 'auto', md: '70vh' },
+      minHeight: { xs: '500px', md: '550px' },
+      position: 'relative',
+      overflow: 'hidden',
+      bgcolor: 'black',
+    }}>
+      <style>{`
+        .hero-swiper .swiper-pagination {
+          bottom: 20px !important;
+        }
+        .hero-swiper .swiper-pagination-bullet {
+          width: 10px !important;
+          height: 10px !important;
+          background: rgba(255,255,255,0.45) !important;
+          opacity: 1 !important;
+          transition: all 0.3s ease !important;
+        }
+        .hero-swiper .swiper-pagination-bullet-active {
+          background: white !important;
+          transform: scale(1.3) !important;
+          box-shadow: 0 0 8px rgba(255,255,255,0.9) !important;
+        }
+      `}</style>
+      <Swiper
+        className="hero-swiper"
+        modules={[Navigation, Pagination, Autoplay]}
+        navigation={{
+          prevEl: '#hero-prev',
+          nextEl: '#hero-next',
+        }}
+        pagination={{ clickable: true }}
+        autoplay={{ delay: 6000, disableOnInteraction: false }}
+        loop={banners.length > 1}
+        style={{ width: '100%', height: '100%' }}
+      >
+        {banners.map((banner) => (
+          <SwiperSlide key={banner.id}>
+            <Box sx={{
+              width: '100%',
+              height: '100%',
+              minHeight: { xs: '500px', md: '550px' },
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              overflow: 'hidden',
+            }}>
+              {/* Background image using img tag for reliability */}
+              <Box
+                component="img"
+                src={banner.image_url}
+                alt={banner.title || 'Banner'}
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  objectPosition: 'center',
+                  zIndex: 0,
+                }}
+              />
 
-    <Container maxWidth="xl" sx={{ position: 'relative', zIndex: 1 }}>
-      <Grid container spacing={4} alignItems="center">
-        <Grid size={{ xs: 12, md: 7 }}>
-          <Typography variant="overline" color="primary.main" sx={{ fontWeight: 900, fontSize: '0.9rem', letterSpacing: 5, display: 'block', mb: 1 }}>
-            ESTÁNDAR DE ÉLITE
-          </Typography>
-          <Typography variant="h1" color="white" sx={{
-            mb: 1.5,
-            fontSize: { xs: '2.2rem', md: '3.4rem' },
-            lineHeight: 1.1,
-            fontWeight: 900,
-            textShadow: '0 10px 30px rgba(0,0,0,0.5)'
-          }}>
-            DOMINA TU MUNDO <br />
-            CON{' '}
-            <motion.span
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.7, ease: "easeOut" }}
-              style={{
-                background: 'linear-gradient(90deg, #ff0000, #cc0000)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                display: 'inline-block',
-                textShadow: '0 0 40px rgba(255,0,0,0.6)'
-              }}
-            >
-              DEVIL GAMING
-            </motion.span>
-          </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
-            <Button
-              component={Link}
-              href="/shop"
-              variant="contained"
-              size="large"
-              endIcon={<ArrowRight />}
-              sx={{
-                py: 1.5,
-                px: 4,
-                fontSize: '0.95rem',
-                fontWeight: 700,
-                borderRadius: 3,
-                boxShadow: '0 10px 20px rgba(204, 0, 0, 0.3)',
-                '&:hover': {
-                  transform: 'translateY(-3px)',
-                  boxShadow: '0 15px 30px rgba(204, 0, 0, 0.4)',
-                },
-                transition: 'all 0.3s'
-              }}
-            >
-              Explorar Arsenal
-            </Button>
-          </Stack>
-        </Grid>
-      </Grid>
-    </Container>
-  </Box >
-);
+              {/* Overlay / Darkening Gradient */}
+              <Box sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                background: `
+                  linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.75)),
+                  radial-gradient(at 0% 0%, rgba(204, 0, 0, 0.15) 0px, transparent 50%),
+                  radial-gradient(at 100% 100%, rgba(204, 0, 0, 0.15) 0px, transparent 50%)
+                `,
+                zIndex: 1,
+              }} />
+
+              {/* Text content overlay */}
+              {(banner.title || banner.subtitle || banner.button_text) && (
+                <Container
+                  maxWidth="xl"
+                  sx={{
+                    position: 'relative',
+                    zIndex: 2,
+                    py: { xs: 6, md: 0 },
+                    // Padding horizontal para que el texto no quede debajo de las flechas
+                    px: { xs: '60px', md: '90px' },
+                  }}
+                >
+                  <Grid container spacing={4} alignItems="center">
+                    <Grid size={{ xs: 12, md: 7 }}>
+                      {banner.subtitle && (
+                        <Typography
+                          variant="overline"
+                          color="primary.main"
+                          sx={{
+                            fontWeight: 900,
+                            fontSize: '0.9rem',
+                            letterSpacing: 5,
+                            display: 'block',
+                            mb: 1,
+                            textTransform: 'uppercase',
+                            textShadow: '0 2px 4px rgba(0,0,0,0.8)'
+                          }}
+                        >
+                          {banner.subtitle}
+                        </Typography>
+                      )}
+
+                      {banner.title && (
+                        <Typography
+                          variant="h1"
+                          color="white"
+                          sx={{
+                            mb: 3,
+                            fontSize: { xs: '2.2rem', md: '3.4rem' },
+                            lineHeight: 1.1,
+                            fontWeight: 900,
+                            textShadow: '0 4px 10px rgba(0,0,0,0.8)'
+                          }}
+                        >
+                          {banner.title}
+                        </Typography>
+                      )}
+
+                      {banner.button_text && (
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
+                          <Button
+                            component={Link}
+                            href={banner.button_link || '/shop'}
+                            variant="contained"
+                            size="large"
+                            endIcon={<ArrowRight />}
+                            sx={{
+                              py: 1.5,
+                              px: 4,
+                              fontSize: '0.95rem',
+                              fontWeight: 700,
+                              borderRadius: 3,
+                              boxShadow: '0 10px 20px rgba(204, 0, 0, 0.3)',
+                              '&:hover': {
+                                transform: 'translateY(-3px)',
+                                boxShadow: '0 15px 30px rgba(204, 0, 0, 0.4)',
+                              },
+                              transition: 'all 0.3s'
+                            }}
+                          >
+                            {banner.button_text}
+                          </Button>
+                        </Stack>
+                      )}
+                    </Grid>
+                  </Grid>
+                </Container>
+              )}
+            </Box>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      {/* Custom Navigation Arrows */}
+      {banners.length > 1 && (
+        <>
+          <IconButton
+            id="hero-prev"
+            sx={{
+              position: 'absolute',
+              left: { xs: 8, md: 20 },
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              bgcolor: 'white',
+              color: 'black',
+              width: { xs: 36, md: 48 },
+              height: { xs: 36, md: 48 },
+              boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.92)',
+                transform: 'translateY(-50%) scale(1.08)',
+              },
+              transition: 'all 0.2s',
+            }}
+          >
+            <ChevronLeft size={24} strokeWidth={2.5} />
+          </IconButton>
+
+          <IconButton
+            id="hero-next"
+            sx={{
+              position: 'absolute',
+              right: { xs: 8, md: 20 },
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              bgcolor: 'white',
+              color: 'black',
+              width: { xs: 36, md: 48 },
+              height: { xs: 36, md: 48 },
+              boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+              '&:hover': {
+                bgcolor: 'rgba(255,255,255,0.92)',
+                transform: 'translateY(-50%) scale(1.08)',
+              },
+              transition: 'all 0.2s',
+            }}
+          >
+            <ChevronRight size={24} strokeWidth={2.5} />
+          </IconButton>
+        </>
+      )}
+    </Box>
+  );
+};
 
 const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
   <motion.div
@@ -181,6 +423,8 @@ const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, 
 const HomePage = () => {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [bannersLoading, setBannersLoading] = useState(true);
 
   useEffect(() => {
     const fetchFeatured = async () => {
@@ -197,12 +441,32 @@ const HomePage = () => {
       setLoading(false);
     };
 
+    const fetchBanners = async () => {
+      setBannersLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('hero_banners')
+          .select('*')
+          .eq('is_active', true)
+          .order('sort_order', { ascending: true });
+
+        if (!error) {
+          setBanners(data || []);
+        }
+      } catch (err) {
+        console.error("Error fetching banners:", err);
+      } finally {
+        setBannersLoading(false);
+      }
+    };
+
     fetchFeatured();
+    fetchBanners();
   }, []);
 
   return (
     <Box>
-      <Hero />
+      <Hero banners={banners} loading={bannersLoading} />
 
       {/* Features Section - Commented out as requested
       <Container maxWidth="xl" sx={{ py: 10 }}>

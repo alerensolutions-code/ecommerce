@@ -5,7 +5,7 @@ import {
   ListItemText, Typography, Divider, AppBar, Toolbar, Avatar, IconButton, useTheme, useMediaQuery
 } from '@mui/material';
 import {
-  LayoutDashboard, Package, ShoppingBag, LogOut, Store, Menu, Settings
+  LayoutDashboard, Package, ShoppingBag, LogOut, Store, Menu, Settings, Image
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -30,6 +30,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     { text: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin' },
     { text: 'Productos', icon: <Package size={20} />, path: '/admin/products' },
     { text: 'Categorías', icon: <Package size={20} />, path: '/admin/categories' },
+    { text: 'Banners', icon: <Image size={20} />, path: '/admin/banners' },
     { text: 'Pedidos', icon: <ShoppingBag size={20} />, path: '/admin/orders' },
     { text: 'Ajustes', icon: <Settings size={20} />, path: '/admin/settings' },
   ];

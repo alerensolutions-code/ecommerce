@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense, Fragment } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   Box,
@@ -48,6 +48,7 @@ type Product = {
   category?: { name: string; parent_id?: string | null; parent?: { name: string } };
   stock: number;
   featured?: boolean;
+  discount?: number;
 };
 
 type Category = {
@@ -79,7 +80,8 @@ const ProductsManagement = () => {
     cost_price: '' as number | string,
     stock: '' as number | string,
     featured: false,
-    images: [] as string[]
+    images: [] as string[],
+    discount: '' as number | string
   });
 
   // Filtros y Paginación
@@ -179,7 +181,8 @@ const ProductsManagement = () => {
       cost_price: product?.cost_price != null ? product.cost_price : '',
       stock: product ? product.stock : '',
       featured: product?.featured || false,
-      images: product?.images || []
+      images: product?.images || [],
+      discount: product?.discount != null ? product.discount : ''
     });
     setSelectedParentId(product?.category?.parent_id || '');
     setSelectedFiles([]);
@@ -291,7 +294,8 @@ const ProductsManagement = () => {
       cost_price: Number(formValues.cost_price),
       stock: Number(formValues.stock) || 0,
       featured: formValues.featured,
-      images: finalImages
+      images: finalImages,
+      discount: formValues.discount !== '' ? Number(formValues.discount) : null
     };
 
     try {
@@ -463,8 +467,8 @@ const ProductsManagement = () => {
               {loading ? (
                 <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
               ) : allProducts.map((product: Product) => (
-                <>
-                  <TableRow key={product.id} hover>
+                <Fragment key={product.id}>
+                  <TableRow hover>
                     <TableCell>
                       <Stack direction="row" spacing={2} alignItems="center">
                         <Avatar
@@ -584,7 +588,7 @@ const ProductsManagement = () => {
                       </Collapse>
                     </TableCell>
                   </TableRow>
-                </>
+                </Fragment>
               ))}
             </TableBody>
           </Table>
