@@ -18,6 +18,7 @@ export interface Product {
   }; // For joins
   price: number;
   discountPrice?: number;
+  discount?: number; // Numeric field for discount percentage
   description: string;
   images?: string[];
   stock: number;

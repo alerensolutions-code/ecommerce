@@ -54,7 +54,7 @@ export async function GET() {
         name: r.user?.name || "Usuario de Google"
       },
       rating: r.rating || 5,
-      snippet: r.snippet || ""
+      snippet: r.snippet || "",
     }));
 
     if (formattedReviews.length === 0) {
@@ -63,7 +63,8 @@ export async function GET() {
 
     return NextResponse.json({
       rating,
-      reviews: formattedReviews
+      reviews: formattedReviews,
+      reviewsCount: data.place_info.reviews || 0,
     });
   } catch (error) {
     console.error("Error fetching reviews from SerpApi, returning fallback reviews:", error);

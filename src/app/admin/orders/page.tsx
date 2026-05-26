@@ -67,7 +67,7 @@ const WhatsAppIcon = () => (
 );
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type OrderItem = { id: string; name: string; price: number; quantity: number; images?: string[] };
+type OrderItem = { id: string; name: string; price: number; quantity: number; images?: string[]; stock?: number };
 type Product = { id: string; name: string; price: number; stock: number; category_id: string; images?: string[]; category?: { name: string } };
 type Category = { id: string; name: string; parent_id?: string | null };
 
@@ -127,9 +127,17 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
     setCartItems(prev => {
       const existing = prev.find(i => i.id === product.id);
       if (existing) {
+        if (existing.quantity + 1 > product.stock) {
+          alert(`No se puede agregar más unidades. El stock disponible de "${product.name}" es ${product.stock}.`);
+          return prev;
+        }
         return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images }];
+      if (product.stock < 1) {
+        alert(`"${product.name}" no tiene stock disponible.`);
+        return prev;
+      }
+      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images, stock: product.stock }];
     });
   };
 
@@ -139,7 +147,14 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
 
   const handleQtyChange = (id: string, qty: number) => {
     if (qty < 1) { handleRemoveProduct(id); return; }
-    setCartItems(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
+    setCartItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item && item.stock !== undefined && qty > item.stock) {
+        alert(`No se puede agregar más unidades. El stock disponible es ${item.stock}.`);
+        return prev;
+      }
+      return prev.map(i => i.id === id ? { ...i, quantity: qty } : i);
+    });
   };
 
   const total = cartItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
@@ -547,7 +562,29 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
       setAddress(order.address || '');
       setCity(order.city || '');
       setZipCode(order.zip_code || '');
-      setCartItems(order.items || []);
+      
+      const fetchStocksAndSetItems = async () => {
+        const items = order.items || [];
+        if (items.length > 0) {
+          const itemIds = items.map((i: any) => i.id);
+          const { data: productsData } = await supabase
+            .from('products')
+            .select('id, stock')
+            .in('id', itemIds);
+            
+          const stockMap = new Map(productsData?.map(p => [p.id, p.stock]) || []);
+          
+          setCartItems(items.map((i: any) => ({
+            ...i,
+            stock: stockMap.get(i.id) ?? 9999
+          })));
+        } else {
+          setCartItems([]);
+        }
+      };
+
+      fetchStocksAndSetItems();
+
       if (order.created_at) {
         const d = new Date(order.created_at);
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -582,9 +619,17 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
     setCartItems(prev => {
       const existing = prev.find(i => i.id === product.id);
       if (existing) {
+        if (existing.quantity + 1 > product.stock) {
+          alert(`No se puede agregar más unidades. El stock disponible de "${product.name}" es ${product.stock}.`);
+          return prev;
+        }
         return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images }];
+      if (product.stock < 1) {
+        alert(`"${product.name}" no tiene stock disponible.`);
+        return prev;
+      }
+      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images, stock: product.stock }];
     });
   };
 
@@ -594,7 +639,14 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
 
   const handleQtyChange = (id: string, qty: number) => {
     if (qty < 1) { handleRemoveProduct(id); return; }
-    setCartItems(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
+    setCartItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item && item.stock !== undefined && qty > item.stock) {
+        alert(`No se puede agregar más unidades. El stock disponible es ${item.stock}.`);
+        return prev;
+      }
+      return prev.map(i => i.id === id ? { ...i, quantity: qty } : i);
+    });
   };
 
   const total = cartItems.reduce((acc, i) => acc + i.price * i.quantity, 0);

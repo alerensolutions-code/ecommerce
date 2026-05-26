@@ -27,7 +27,9 @@ interface CartDrawerProps {
 const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
   const { state, dispatch } = useCart();
 
-  const total = state.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const originalTotal = state.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const discountTotal = state.items.reduce((acc, item) => acc + (item.price * (item.discount || 0) / 100) * item.quantity, 0);
+  const total = originalTotal - discountTotal;
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     if (quantity < 1) return;
@@ -89,9 +91,20 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
                     </ListItemAvatar>
                     <Box sx={{ flexGrow: 1 }}>
                       <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 0.5, pr: 3 }}>{item.name}</Typography>
-                      <Typography variant="body2" color="primary.main" sx={{ fontWeight: 800, mb: 1 }}>
-                        ${item.price.toLocaleString('es-ES')}
-                      </Typography>
+                      {item.discount && item.discount > 0 ? (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                          <Typography variant="body2" sx={{ textDecoration: 'line-through', color: 'text.secondary', fontWeight: 500 }}>
+                            ${item.price.toLocaleString('es-ES')}
+                          </Typography>
+                          <Typography variant="body2" color="error.main" sx={{ fontWeight: 800 }}>
+                            ${(item.price * (1 - item.discount / 100)).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                          </Typography>
+                        </Box>
+                      ) : (
+                        <Typography variant="body2" color="primary.main" sx={{ fontWeight: 800, mb: 1 }}>
+                          ${item.price.toLocaleString('es-ES')}
+                        </Typography>
+                      )}
 
                       <Stack direction="row" justifyContent="space-between" alignItems="center">
                         <Stack direction="row" alignItems="center" sx={{ border: '1px solid rgba(0,0,0,0.1)', borderRadius: 1 }}>
@@ -122,10 +135,23 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
         {state.items.length > 0 && (
           <Box sx={{ p: 3, borderTop: '1px solid rgba(0,0,0,0.05)', bgcolor: 'rgba(0,0,0,0.01)' }}>
             <Stack spacing={2}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>Subtotal</Typography>
-                <Typography variant="h5" sx={{ fontWeight: 800 }}>${total.toLocaleString('es-ES')}</Typography>
-              </Box>
+              <Stack spacing={1}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>Precio</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 600 }}>${originalTotal.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</Typography>
+                </Box>
+                {discountTotal > 0 && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2" color="error.main" sx={{ fontWeight: 500 }}>Descuento</Typography>
+                    <Typography variant="body2" color="error.main" sx={{ fontWeight: 700 }}>-${discountTotal.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</Typography>
+                  </Box>
+                )}
+                <Divider />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pt: 1 }}>
+                  <Typography variant="body1" sx={{ fontWeight: 700 }}>Subtotal</Typography>
+                  <Typography variant="h5" color="primary.main" sx={{ fontWeight: 800 }}>${total.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</Typography>
+                </Box>
+              </Stack>
               <Typography variant="caption" color="text.secondary">
                 Envío e impuestos se calcularán en el pago.
               </Typography>

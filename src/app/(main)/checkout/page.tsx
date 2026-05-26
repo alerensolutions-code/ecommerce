@@ -15,7 +15,11 @@ import {
   Step,
   StepLabel,
   Alert,
-  AlertTitle
+  AlertTitle,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import { CheckCircle2, Truck, ListChecks, ArrowLeft, MessageCircle, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -31,6 +35,8 @@ const CheckoutPage = () => {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [whatsappUrl, setWhatsappUrl] = useState('');
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalMsg, setErrorModalMsg] = useState('');
 
   // Form State
   const [formData, setFormData] = useState({
@@ -46,7 +52,12 @@ const CheckoutPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const subtotal = state.items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
+  const originalSubtotal = state.items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
+  const subtotal = state.items.reduce((acc: number, item: any) => {
+    const effectivePrice = item.price * (1 - (item.discount || 0) / 100);
+    return acc + effectivePrice * item.quantity;
+  }, 0);
+  const discountTotal = originalSubtotal - subtotal;
   const shipping = subtotal > 500 ? 0 : 15;
   const total = subtotal + shipping;
 
@@ -65,7 +76,7 @@ const CheckoutPage = () => {
           id: item.id,
           name: item.name,
           quantity: item.quantity,
-          price: item.price
+          price: item.price * (1 - (item.discount || 0) / 100)
         }))
       };
 
@@ -73,7 +84,8 @@ const CheckoutPage = () => {
 
       if (error || !data) {
         console.error('Error saving order:', error);
-        alert('Hubo un error al registrar el pedido. Intenta nuevamente.');
+        setErrorModalMsg('Hubo un error al registrar el pedido. Intenta nuevamente.');
+        setErrorModalOpen(true);
         return;
       }
 
@@ -85,7 +97,10 @@ const CheckoutPage = () => {
         `*Teléfono:* ${formData.phone}\n` +
         `*Dirección:* ${formData.address}, ${formData.city}\n\n` +
         `*Productos:*\n` +
-        state.items.map(item => `- ${item.quantity}x ${item.name} ($${(item.price * item.quantity).toLocaleString('es-ES')})`).join('\n') +
+        state.items.map(item => {
+          const effPrice = item.price * (1 - (item.discount || 0) / 100);
+          return `- ${item.quantity}x ${item.name} ($${(effPrice * item.quantity).toLocaleString('es-ES')})`;
+        }).join('\n') +
         `\n\n*TOTAL: $${total.toLocaleString('es-ES')}*`;
 
       const generatedLink = `https://wa.me/5491155099149?text=${encodeURIComponent(message)}`;
@@ -223,21 +238,38 @@ const CheckoutPage = () => {
                 <Paper elevation={0} sx={{ p: 3, borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)' }}>
                   <Typography variant="h6" sx={{ mb: 3, fontWeight: 800 }}>Resumen de Compra</Typography>
                   <Stack spacing={2}>
-                    {state.items.map((item: any) => (
-                      <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                          {item.quantity}x {item.name}
-                        </Typography>
-                        <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-                          ${(item.price * item.quantity).toLocaleString('es-ES')}
-                        </Typography>
-                      </Box>
-                    ))}
+                    {state.items.map((item: any) => {
+                      const itemDiscount = item.discount && item.discount > 0 ? (item.price * item.discount / 100) * item.quantity : 0;
+                      return (
+                        <Box key={item.id}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                              {item.quantity}x {item.name}
+                            </Typography>
+                            <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
+                              ${(item.price * item.quantity).toLocaleString('es-ES')}
+                            </Typography>
+                          </Box>
+                          {itemDiscount > 0 && (
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', pl: 2 }}>
+                              <Typography variant="caption" color="error.main" sx={{ fontWeight: 600 }}>Descuento ({item.discount}%)</Typography>
+                              <Typography variant="caption" color="error.main" sx={{ fontWeight: 700 }}>-${itemDiscount.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</Typography>
+                            </Box>
+                          )}
+                        </Box>
+                      );
+                    })}
                     <Divider sx={{ my: 1 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2">Subtotal</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>${subtotal.toLocaleString('es-ES')}</Typography>
+                      <Typography variant="body2">Precio</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>${originalSubtotal.toLocaleString('es-ES')}</Typography>
                     </Box>
+                    {discountTotal > 0 && (
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2" color="error.main">Descuento</Typography>
+                        <Typography variant="body2" color="error.main" sx={{ fontWeight: 700 }}>-${discountTotal.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</Typography>
+                      </Box>
+                    )}
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2">Envío</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{shipping === 0 ? 'Gratis' : `$${shipping}`}</Typography>
@@ -246,7 +278,7 @@ const CheckoutPage = () => {
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="h6" sx={{ fontWeight: 800 }}>Total</Typography>
                       <Typography variant="h6" color="primary" sx={{ fontWeight: 800 }}>
-                        ${total.toLocaleString('es-ES')}
+                        ${total.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
                       </Typography>
                     </Box>
                   </Stack>
@@ -269,6 +301,19 @@ const CheckoutPage = () => {
           renderConfirmation()
         )}
       </Container>
+
+      {/* Error Modal */}
+      <Dialog open={errorModalOpen} onClose={() => setErrorModalOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle sx={{ fontWeight: 800, pb: 1, color: 'error.main' }}>Error</DialogTitle>
+        <DialogContent>
+          <Typography>{errorModalMsg}</Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 2.5 }}>
+          <Button onClick={() => setErrorModalOpen(false)} variant="contained" color="primary" sx={{ fontWeight: 700 }}>
+            Entendido
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

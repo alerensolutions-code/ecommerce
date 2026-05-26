@@ -48,6 +48,7 @@ type Product = {
   category?: { name: string; parent_id?: string | null; parent?: { name: string } };
   stock: number;
   featured?: boolean;
+  discount?: number;
   technical_specs?: Record<string, any>;
 };
 
@@ -81,6 +82,7 @@ const ProductsManagement = () => {
     cost_price: '' as number | string,
     stock: '' as number | string,
     featured: false,
+    discount: '' as number | string,
     images: [] as string[],
     technical_specs: [] as { key: string, value: string }[]
   });
@@ -182,6 +184,7 @@ const ProductsManagement = () => {
       cost_price: product?.cost_price != null ? product.cost_price : '',
       stock: product ? product.stock : '',
       featured: product?.featured || false,
+      discount: product && product.discount !== undefined && product.discount !== null ? product.discount : '',
       images: product?.images || [],
       technical_specs: product?.technical_specs
         ? Object.entries(product.technical_specs).map(([key, value]) => ({ key, value: String(value) }))
@@ -339,6 +342,7 @@ const ProductsManagement = () => {
       cost_price: Number(formValues.cost_price),
       stock: Number(formValues.stock) || 0,
       featured: formValues.featured,
+      discount: Number(formValues.discount) || 0,
       images: finalImages,
       technical_specs: formValues.technical_specs.reduce((acc, curr) => {
         if (curr.key.trim()) {
@@ -621,6 +625,12 @@ const ProductsManagement = () => {
                                 />
                               </Stack>
                             </Stack>
+                            {product.discount !== undefined && product.discount > 0 && (
+                              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Descuento</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: 'error.main' }}>{product.discount}% OFF</Typography>
+                              </Stack>
+                            )}
                             {product.featured && (
                               <Stack direction="row" justifyContent="space-between" alignItems="center">
                                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Destacado</Typography>
@@ -741,6 +751,22 @@ const ProductsManagement = () => {
                       type="number"
                       value={formValues.stock}
                       onChange={(e) => setFormValues({ ...formValues, stock: e.target.value === '' ? '' : parseInt(e.target.value) })}
+                    />
+                  </Grid>
+                  <Grid size={6}>
+                    <TextField
+                      fullWidth
+                      label="Descuento (%)"
+                      type="number"
+                      value={formValues.discount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.length <= 3) {
+                          setFormValues({ ...formValues, discount: val === '' ? '' : Math.max(0, parseInt(val)) });
+                        }
+                      }}
+                      helperText="Opcional. Máximo 3 dígitos."
+                      inputProps={{ min: 0, max: 999 }}
                     />
                   </Grid>
                 </Grid>
