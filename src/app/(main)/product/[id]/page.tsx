@@ -184,10 +184,33 @@ const ProductDetailPage = () => {
               <Chip label={categoryName} sx={{ mb: 2, fontWeight: 700, borderRadius: 1 }} size="small" color="primary" variant="outlined" />
               <Typography variant="h2" sx={{ mb: 2, fontWeight: 800 }}>{product.name}</Typography>
 
-              <Box sx={{ mb: 4 }}>
-                <Typography variant="h3" color="primary.main" sx={{ fontWeight: 800 }}>
-                  ${product.price.toLocaleString('es-ES')}
-                </Typography>
+              <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+                {product.discount > 0 ? (
+                  <>
+                    <Typography variant="h3" color="error.main" sx={{ fontWeight: 800 }}>
+                      ${(product.price * (1 - product.discount / 100)).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                    </Typography>
+                    <Typography variant="h5" sx={{ textDecoration: 'line-through', color: 'text.secondary', fontWeight: 600 }}>
+                      ${product.price.toLocaleString('es-ES')}
+                    </Typography>
+                    <Chip
+                      label={`${product.discount}% OFF`}
+                      color="error"
+                      sx={{
+                        fontWeight: 900,
+                        background: 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)',
+                        border: 'none',
+                        color: 'white',
+                        fontSize: '0.85rem',
+                        boxShadow: '0 4px 10px rgba(255, 0, 85, 0.2)'
+                      }}
+                    />
+                  </>
+                ) : (
+                  <Typography variant="h3" color="primary.main" sx={{ fontWeight: 800 }}>
+                    ${product.price.toLocaleString('es-ES')}
+                  </Typography>
+                )}
               </Box>
 
               <Typography variant="body1" sx={{ mb: 4, color: 'text.secondary', lineHeight: 1.8 }}>

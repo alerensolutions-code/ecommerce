@@ -31,7 +31,8 @@ import {
   Tooltip,
   MenuItem
 } from '@mui/material';
-import { Plus, Search, Edit2, Trash2, Star, X, CheckCircle } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Star, X, CheckCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Collapse } from '@mui/material';
 import { supabase } from '../../../lib/supabase';
 import { FormControlLabel, Switch } from '@mui/material';
 import { compressAndConvertToWebP } from '../../../lib/imageUtils';
@@ -40,6 +41,7 @@ type Product = {
   id: string;
   name: string;
   price: number;
+  cost_price?: number;
   images?: string[];
   description: string;
   category_id: string;
@@ -74,6 +76,7 @@ const ProductsManagement = () => {
     description: '',
     category_id: '',
     price: '' as number | string,
+    cost_price: '' as number | string,
     stock: '' as number | string,
     featured: false,
     images: [] as string[]
@@ -90,6 +93,7 @@ const ProductsManagement = () => {
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const fetchData = async () => {
     setLoading(true);
@@ -172,6 +176,7 @@ const ProductsManagement = () => {
       description: product?.description || '',
       category_id: product?.category_id || '',
       price: product ? product.price : '',
+      cost_price: product?.cost_price != null ? product.cost_price : '',
       stock: product ? product.stock : '',
       featured: product?.featured || false,
       images: product?.images || []
@@ -225,12 +230,12 @@ const ProductsManagement = () => {
     for (const file of files) {
       // Convertir a WebP y comprimir antes de subir
       const optimizedFile = await compressAndConvertToWebP(file);
-      
+
       const originalKB = (file.size / 1024).toFixed(2);
       const optimizedKB = (optimizedFile.size / 1024).toFixed(2);
       const saving = (100 - (optimizedFile.size / file.size) * 100).toFixed(1);
       console.log(`[Optimización] ${file.name}: ${originalKB}KB -> ${optimizedKB}KB (Ahorro: ${saving}%)`);
-      
+
       const fileExt = 'webp';
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `productImages/${fileName}`;
@@ -272,11 +277,18 @@ const ProductsManagement = () => {
       finalImages = [...finalImages, ...urls];
     }
 
+    if (formValues.cost_price === '' || formValues.cost_price === null || formValues.cost_price === undefined) {
+      alert('El campo Costo base es obligatorio.');
+      setUploadingFiles(false);
+      return;
+    }
+
     const dataToSave = {
       name: formValues.name,
       description: formValues.description,
       category_id: formValues.category_id,
       price: Number(formValues.price) || 0,
+      cost_price: Number(formValues.cost_price),
       stock: Number(formValues.stock) || 0,
       featured: formValues.featured,
       images: finalImages
@@ -318,15 +330,30 @@ const ProductsManagement = () => {
     setProductToDelete(null);
   };
 
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800 }}>Gestión de Productos</Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        gap={{ xs: 2, sm: 0 }}
+        sx={{ mb: 4 }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>Productos</Typography>
         <Button
           variant="contained"
           startIcon={<Plus size={20} />}
           onClick={() => handleOpen()}
-          sx={{ py: 1.5, px: 3, fontWeight: 700 }}
+          sx={{ py: 1.5, px: 3, fontWeight: 700, width: { xs: '100%', sm: 'auto' } }}
         >
           Nuevo Producto
         </Button>
@@ -334,7 +361,7 @@ const ProductsManagement = () => {
 
       <Paper elevation={0} sx={{ p: 0, borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)', overflow: 'hidden' }}>
         <Box sx={{ p: 3, borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'stretch', sm: 'center' }}>
             <TextField
               fullWidth
               placeholder="Buscar por nombre o marca..."
@@ -359,10 +386,10 @@ const ProductsManagement = () => {
                   </InputAdornment>
                 ) : null,
               }}
-              sx={{ maxWidth: 400 }}
+              sx={{ maxWidth: { xs: '100%', sm: 400 } }}
             />
 
-            <FormControl size="small" sx={{ minWidth: 200 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 200 } }}>
               <InputLabel id="category-filter-label">Categoría</InputLabel>
               <MuiSelect
                 labelId="category-filter-label"
@@ -382,7 +409,7 @@ const ProductsManagement = () => {
               </MuiSelect>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
               <InputLabel id="stock-filter-label">Stock</InputLabel>
               <MuiSelect
                 labelId="stock-filter-label"
@@ -399,7 +426,7 @@ const ProductsManagement = () => {
               </MuiSelect>
             </FormControl>
 
-            <FormControl size="small" sx={{ minWidth: 150 }}>
+            <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 150 } }}>
               <InputLabel id="featured-filter-label">Destacados</InputLabel>
               <MuiSelect
                 labelId="featured-filter-label"
@@ -425,10 +452,10 @@ const ProductsManagement = () => {
             <TableHead sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>Producto</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Categoría</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Dest.</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Precio</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Stock / Estado</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Categoría</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Dest.</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Precio</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Stock / Estado</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
@@ -436,62 +463,128 @@ const ProductsManagement = () => {
               {loading ? (
                 <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
               ) : allProducts.map((product: Product) => (
-                <TableRow key={product.id} hover>
-                  <TableCell>
-                    <Stack direction="row" spacing={2} alignItems="center">
-                      <Avatar
-                        src={product.images?.[0] || ''}
-                        variant="rounded"
-                        sx={{ width: 40, height: 40, border: '1px solid #eee' }}
-                      />
+                <>
+                  <TableRow key={product.id} hover>
+                    <TableCell>
+                      <Stack direction="row" spacing={2} alignItems="center">
+                        <Avatar
+                          src={product.images?.[0] || ''}
+                          variant="rounded"
+                          sx={{ width: 40, height: 40, border: '1px solid #eee' }}
+                        />
+                        <Box>
+                          <Typography variant="body2" sx={{ fontWeight: 700 }}>{product.name}</Typography>
+                          {/* Mobile: botón para expandir detalles */}
+                          <Box
+                            component="button"
+                            onClick={() => toggleRow(product.id)}
+                            sx={{
+                              display: { xs: 'flex', md: 'none' },
+                              alignItems: 'center',
+                              gap: 0.5,
+                              mt: 0.5,
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              p: 0,
+                              color: 'text.secondary',
+                              fontSize: '0.72rem',
+                              fontWeight: 600
+                            }}
+                          >
+                            {expandedRows.has(product.id) ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                            {expandedRows.has(product.id) ? 'Ocultar detalles' : 'Ver detalles'}
+                          </Box>
+                        </Box>
+                      </Stack>
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      <Chip label={product.category?.name || 'Sin categoría'} size="small" variant="outlined" />
+                    </TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      {product.featured && (
+                        <Tooltip title="Producto Destacado">
+                          <Star size={20} fill="#FFD700" color="#FFD700" />
+                        </Tooltip>
+                      )}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 600, display: { xs: 'none', md: 'table-cell' } }}>${product.price.toLocaleString('es-ES')}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                       <Box>
-                        <Typography variant="body2" sx={{ fontWeight: 700 }}>{product.name}</Typography>
+                        <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
+                          {product.stock} unid.
+                        </Typography>
+                        <Chip
+                          label={
+                            product.stock === 0 ? 'Sin Stock' :
+                              product.stock < 5 ? 'Bajo Stock' :
+                                'En Stock'
+                          }
+                          size="small"
+                          color={
+                            product.stock === 0 ? 'error' :
+                              product.stock < 5 ? 'warning' :
+                                'success'
+                          }
+                          sx={{ fontWeight: 600 }}
+                        />
                       </Box>
-                    </Stack>
-                  </TableCell>
-                  <TableCell>
-                    <Chip label={product.category?.name || 'Sin categoría'} size="small" variant="outlined" />
-                  </TableCell>
-                  <TableCell>
-                    {product.featured && (
-                      <Tooltip title="Producto Destacado">
-                        <Star size={20} fill="#FFD700" color="#FFD700" />
-                      </Tooltip>
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>${product.price.toLocaleString('es-ES')}</TableCell>
-                  <TableCell>
-                    <Box>
-                      <Typography variant="body2" sx={{ fontWeight: 700, mb: 0.5 }}>
-                        {product.stock} unid.
-                      </Typography>
-                      <Chip
-                        label={
-                          product.stock === 0 ? 'Sin Stock' :
-                            product.stock < 5 ? 'Bajo Stock' :
-                              'En Stock'
-                        }
-                        size="small"
-                        color={
-                          product.stock === 0 ? 'error' :
-                            product.stock < 5 ? 'warning' :
-                              'success'
-                        }
-                        sx={{ fontWeight: 600 }}
-                      />
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Stack direction="row" spacing={1} justifyContent="flex-end">
-                      <IconButton size="small" onClick={() => handleOpen(product)}>
-                        <Edit2 size={18} />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(product)}>
-                        <Trash2 size={18} />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        <IconButton size="small" onClick={() => handleOpen(product)}>
+                          <Edit2 size={18} />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDeleteClick(product)}>
+                          <Trash2 size={18} />
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                  {/* Mobile expandable details row */}
+                  <TableRow sx={{ display: { xs: 'table-row', md: 'none' } }}>
+                    <TableCell colSpan={2} sx={{ p: 0, border: 0 }}>
+                      <Collapse in={expandedRows.has(product.id)} timeout="auto" unmountOnExit>
+                        <Box sx={{ px: 2, pb: 2, pt: 1, bgcolor: 'rgba(0,0,0,0.015)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                          <Stack spacing={1}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Categoría</Typography>
+                              <Chip label={product.category?.name || 'Sin categoría'} size="small" variant="outlined" sx={{ height: 20, fontSize: '0.72rem' }} />
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Precio</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700 }}>${product.price.toLocaleString('es-ES')}</Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Stock</Typography>
+                              <Stack direction="row" spacing={1} alignItems="center">
+                                <Typography variant="body2" sx={{ fontWeight: 700 }}>{product.stock} unid.</Typography>
+                                <Chip
+                                  label={product.stock === 0 ? 'Sin Stock' : product.stock < 5 ? 'Bajo Stock' : 'En Stock'}
+                                  size="small"
+                                  color={product.stock === 0 ? 'error' : product.stock < 5 ? 'warning' : 'success'}
+                                  sx={{ fontWeight: 600, height: 20, fontSize: '0.7rem' }}
+                                />
+                              </Stack>
+                            </Stack>
+                            {product.discount !== undefined && product.discount > 0 && (
+                              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Descuento</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, color: 'error.main' }}>{product.discount}% OFF</Typography>
+                              </Stack>
+                            )}
+                            {product.featured && (
+                              <Stack direction="row" justifyContent="space-between" alignItems="center">
+                                <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Destacado</Typography>
+                                <Star size={16} fill="#FFD700" color="#FFD700" />
+                              </Stack>
+                            )}
+                          </Stack>
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </>
               ))}
             </TableBody>
           </Table>
@@ -575,10 +668,22 @@ const ProductsManagement = () => {
                   <Grid size={6}>
                     <TextField
                       fullWidth
-                      label="Precio ($)"
+                      label="Precio de venta ($)"
                       type="number"
                       value={formValues.price}
                       onChange={(e) => setFormValues({ ...formValues, price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                    />
+                  </Grid>
+                  <Grid size={6}>
+                    <TextField
+                      fullWidth
+                      required
+                      label="Costo base ($)"
+                      type="number"
+                      inputProps={{ min: 0, step: 'any' }}
+                      value={formValues.cost_price}
+                      onChange={(e) => setFormValues({ ...formValues, cost_price: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                      helperText="Lo que pagaste por el producto"
                     />
                   </Grid>
                   <Grid size={6}>
@@ -590,8 +695,24 @@ const ProductsManagement = () => {
                       onChange={(e) => setFormValues({ ...formValues, stock: e.target.value === '' ? '' : parseInt(e.target.value) })}
                     />
                   </Grid>
+                  <Grid size={6}>
+                    <TextField
+                      fullWidth
+                      label="Descuento (%)"
+                      type="number"
+                      value={formValues.discount}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val.length <= 3) {
+                          setFormValues({ ...formValues, discount: val === '' ? '' : Math.max(0, parseInt(val)) });
+                        }
+                      }}
+                      helperText="Opcional. Máximo 3 dígitos."
+                      inputProps={{ min: 0, max: 999 }}
+                    />
                 </Grid>
 
+                  </Grid>
 
 
 
@@ -633,9 +754,9 @@ const ProductsManagement = () => {
                     textAlign: 'center',
                     cursor: formValues.images.length + selectedFiles.length >= 3 || uploadingFiles ? 'not-allowed' : 'pointer',
                     bgcolor: formValues.images.length + selectedFiles.length >= 3 ? 'rgba(76, 175, 80, 0.04)' : 'transparent',
-                    '&:hover': { 
-                      borderColor: formValues.images.length + selectedFiles.length >= 3 ? 'success.main' : (imageError ? 'error.main' : 'primary.main'), 
-                      bgcolor: formValues.images.length + selectedFiles.length >= 3 ? 'rgba(76, 175, 80, 0.04)' : (imageError ? 'rgba(211,47,47,0.02)' : 'rgba(204,0,0,0.02)') 
+                    '&:hover': {
+                      borderColor: formValues.images.length + selectedFiles.length >= 3 ? 'success.main' : (imageError ? 'error.main' : 'primary.main'),
+                      bgcolor: formValues.images.length + selectedFiles.length >= 3 ? 'rgba(76, 175, 80, 0.04)' : (imageError ? 'rgba(211,47,47,0.02)' : 'rgba(204,0,0,0.02)')
                     }
                   }}
                   component="label"

@@ -29,7 +29,10 @@ import { useCart } from '../../../context/CartContext';
 const CartPage = () => {
   const { state, dispatch } = useCart();
 
-  const subtotal = state.items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
+  const subtotal = state.items.reduce((acc: number, item: any) => {
+    const effectivePrice = item.price * (1 - (item.discount || 0) / 100);
+    return acc + effectivePrice * item.quantity;
+  }, 0);
   const shipping = subtotal > 500 ? 0 : 15;
   const total = subtotal + shipping;
 
@@ -118,8 +121,28 @@ const CartPage = () => {
                       </Stack>
                     </Grid>
                     <Grid size={{ xs: 4, sm: 2 }} sx={{ textAlign: 'right' }}>
-                      <Typography variant="h6" sx={{ fontWeight: 800 }}>${(item.price * item.quantity).toLocaleString('es-ES')}</Typography>
-                      <Typography variant="caption" color="text.secondary">${item.price.toLocaleString('es-ES')} / ud.</Typography>
+                      {item.discount > 0 ? (
+                        <>
+                          <Typography variant="h6" sx={{ fontWeight: 800, color: 'error.main' }}>
+                            ${(item.price * (1 - item.discount / 100) * item.quantity).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" sx={{ textDecoration: 'line-through', mr: 1, display: 'block' }}>
+                            ${item.price.toLocaleString('es-ES')}
+                          </Typography>
+                          <Typography variant="caption" color="error.main" sx={{ fontWeight: 700 }}>
+                            ${(item.price * (1 - item.discount / 100)).toLocaleString('es-ES', { maximumFractionDigits: 0 })} / ud.
+                          </Typography>
+                        </>
+                      ) : (
+                        <>
+                          <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                            ${(item.price * item.quantity).toLocaleString('es-ES')}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            ${item.price.toLocaleString('es-ES')} / ud.
+                          </Typography>
+                        </>
+                      )}
                     </Grid>
                     <Grid size={{ xs: 2, sm: 1 }} sx={{ textAlign: 'right' }}>
                       <IconButton color="error" onClick={() => handleRemove(item.id)}>

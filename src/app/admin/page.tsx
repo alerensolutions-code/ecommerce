@@ -13,7 +13,11 @@ import {
   ToggleButtonGroup,
   Button,
   TextField,
-  Chip
+  Chip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Divider
 } from '@mui/material';
 
 import {
@@ -26,6 +30,8 @@ import {
   ShoppingBag,
   ArrowRight,
   ArrowUpRight,
+  Banknote,
+  ChevronDown
 } from 'lucide-react';
 import {
   AreaChart,
@@ -38,6 +44,7 @@ import {
 } from 'recharts';
 import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
+import { GraphicEq } from '@mui/icons-material';
 
 const getDaysAgo = (days: number) => {
   const d = new Date();
@@ -53,6 +60,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [metricType, setMetricType] = useState<'revenue' | 'units'>('revenue');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filtros de fecha (Default: Últimos 30 días)
   const [startDate, setStartDate] = useState(() => {
@@ -93,7 +105,7 @@ const Dashboard = () => {
         if (productNamesInOrders.size > 0) {
           const { data: neededProducts } = await supabase
             .from('products')
-            .select('id, name, category_id, stock')
+            .select('id, name, category_id, stock, cost_price')
             .in('name', Array.from(productNamesInOrders));
           setProducts(neededProducts || []);
         } else {
@@ -121,9 +133,25 @@ const Dashboard = () => {
       return d >= start && d <= end;
     });
 
-    const completedOrdersInRange = rangeOrders.filter(o => o.status === 'Entregado');
+    const completedOrdersInRange = orders.filter(o => {
+      if (o.status !== 'Entregado') return false;
+      const d = new Date(o.delivered_at || o.created_at);
+      return d >= start && d <= end;
+    });
     const revenueInRange = completedOrdersInRange.reduce((sum, o) => sum + (parseFloat(o.total) || 0), 0);
     const totalOrdersInRange = rangeOrders.length;
+
+    // Ganancia Neta: (precio_venta - cost_price) * cantidad por cada item entregado
+    let netProfitInRange = 0;
+    completedOrdersInRange.forEach(o => {
+      if (o.items && Array.isArray(o.items)) {
+        o.items.forEach((item: any) => {
+          const product = products.find(p => p.name === item.name);
+          const costPrice = product?.cost_price ?? 0;
+          netProfitInRange += (Number(item.price) - costPrice) * (item.quantity || 1);
+        });
+      }
+    });
     const pendingOrdersInRange = rangeOrders.filter(o => o.status === 'Pendiente');
 
     // Chart Data logic (dinámico según el rango)
@@ -135,7 +163,7 @@ const Dashboard = () => {
     }
 
     completedOrdersInRange.forEach(o => {
-      const dateStr = new Date(o.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
+      const dateStr = new Date(o.delivered_at || o.created_at).toLocaleDateString('es-ES', { month: 'short', day: 'numeric' });
       if (chartDataMap.has(dateStr)) {
         if (metricType === 'revenue') {
           chartDataMap.set(dateStr, chartDataMap.get(dateStr) + (parseFloat(o.total) || 0));
@@ -179,6 +207,7 @@ const Dashboard = () => {
 
     return {
       revenueInRange,
+      netProfitInRange,
       totalOrdersInRange,
       pendingTotalCount: rangeOrders.filter(o => o.status === 'Pendiente').length,
       lastPendingOrders,
@@ -202,7 +231,16 @@ const Dashboard = () => {
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4, gap: 2 }}>
         <Typography variant="h4" sx={{ fontWeight: 800 }}>Dashboard</Typography>
 
-        <Paper elevation={0} sx={{ p: 1, borderRadius: 3, border: '1px solid rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Paper elevation={0} sx={{
+          p: { xs: 2, sm: 1 },
+          borderRadius: 3,
+          border: '1px solid rgba(0,0,0,0.05)',
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'center' },
+          gap: { xs: 1.5, sm: 2 },
+          width: { xs: '100%', sm: 'auto' }
+        }}>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ px: 1 }}>
             <Calendar size={18} color="#666" />
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>RANGO:</Typography>
@@ -215,9 +253,10 @@ const Dashboard = () => {
             value={startDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
             onClick={(e) => (e.target as any).showPicker?.()}
+            inputProps={{ lang: 'es-ES' }}
             sx={{
               '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5, cursor: 'pointer' },
-              width: 150
+              width: { xs: '100%', sm: 150 }
             }}
           />
           <TextField
@@ -228,17 +267,105 @@ const Dashboard = () => {
             value={endDate}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
             onClick={(e) => (e.target as any).showPicker?.()}
+            inputProps={{ lang: 'es-ES' }}
             sx={{
               '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5, cursor: 'pointer' },
-              width: 150
+              width: { xs: '100%', sm: 150 }
             }}
           />
         </Paper>
       </Stack>
 
-      <Grid container spacing={4} sx={{ mb: 6 }}>
-        {/* Ventas Finalizadas */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+      {/* ─── Mobile: Acordeón de Métricas ─── */}
+      <Box sx={{ display: { xs: 'block', md: 'none' }, mb: 4 }}>
+        <Accordion
+          elevation={0}
+          sx={{
+            borderRadius: 3,
+            border: '1px solid rgba(0,0,0,0.08)',
+            '&:before': { display: 'none' },
+            overflow: 'hidden',
+          }}
+        >
+          <AccordionSummary
+            expandIcon={<ChevronDown size={20} />}
+            sx={{ px: 3, py: 1.5, bgcolor: 'rgba(0,0,0,0.01)' }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#cc000010', color: '#cc0000', display: 'flex' }}>
+                <DollarSign size={16} />
+              </Box>
+              <Box>
+                <Typography sx={{ fontWeight: 800, fontSize: '0.95rem' }}>Resumen del Período</Typography>
+                <Typography variant="caption" color="text.secondary">Facturación, ganancias y estado de pedidos</Typography>
+              </Box>
+            </Stack>
+          </AccordionSummary>
+          <AccordionDetails sx={{ p: 0 }}>
+            <Stack divider={<Divider sx={{ borderColor: 'rgba(0,0,0,0.08)' }} />}>
+              {/* Facturación */}
+              <Box sx={{ px: 2, py: 2 }}>
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.68rem' }}>Facturación</Typography>
+                </Stack>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.4rem' }}>${metrics.revenueInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</Typography>
+              </Box>
+              {/* Ganancia Neta */}
+              <Box sx={{ px: 3, py: 2 }}>
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                  <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#00bfa508', color: '#00bfa5', display: 'flex' }}><Banknote size={16} /></Box>
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.68rem' }}>Ganancia Neta</Typography>
+                </Stack>
+                <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: metrics.netProfitInRange >= 0 ? '#00796b' : '#f44336' }}>
+                  ${metrics.netProfitInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">Utilidad real del periodo</Typography>
+              </Box>
+              {/* Pedidos */}
+              <Box component={Link} href="/admin/orders" sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none' }}>
+                <Box>
+                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: '#2196f308', color: '#2196f3', display: 'flex' }}><ShoppingBag size={16} /></Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.68rem' }}>Pedidos</Typography>
+                  </Stack>
+                  <Typography sx={{ fontWeight: 800, fontSize: '1.4rem' }}>{metrics.totalOrdersInRange}</Typography>
+                  <Typography variant="caption" color="text.secondary">Total periodo</Typography>
+                </Box>
+                <ArrowUpRight size={18} color="#bbb" />
+              </Box>
+              {/* Pendientes */}
+              <Box component={Link} href="/admin/orders?status=Pendiente" sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none' }}>
+                <Box>
+                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: metrics.pendingTotalCount > 0 ? '#ff980008' : '#f5f5f5', color: metrics.pendingTotalCount > 0 ? '#ff9800' : 'text.disabled', display: 'flex' }}><Clock size={16} /></Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.68rem' }}>Pendientes</Typography>
+                  </Stack>
+                  <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: metrics.pendingTotalCount > 0 ? '#ff9800' : 'text.primary' }}>{metrics.pendingTotalCount}</Typography>
+                  <Typography variant="caption" color="text.secondary">Por preparar</Typography>
+                </Box>
+                <ArrowUpRight size={18} color="#bbb" />
+              </Box>
+              {/* Bajo Stock */}
+              <Box component={Link} href="/admin/products?filter=critical" sx={{ px: 3, py: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center', textDecoration: 'none' }}>
+                <Box>
+                  <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+                    <Box sx={{ p: 0.75, borderRadius: 2, bgcolor: metrics.lowStockCount > 0 ? '#f4433608' : '#f5f5f5', color: metrics.lowStockCount > 0 ? '#f44336' : 'text.disabled', display: 'flex' }}><AlertTriangle size={16} /></Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.68rem' }}>Bajo Stock</Typography>
+                  </Stack>
+                  <Typography sx={{ fontWeight: 800, fontSize: '1.4rem', color: metrics.lowStockCount > 0 ? '#f44336' : 'text.primary' }}>{metrics.lowStockCount}</Typography>
+                  <Typography variant="caption" color="text.secondary">Críticos</Typography>
+                </Box>
+                <ArrowUpRight size={18} color="#bbb" />
+              </Box>
+            </Stack>
+          </AccordionDetails>
+        </Accordion>
+      </Box>
+
+      {/* ─── Desktop: Grid de Métricas ─── */}
+      <Grid container spacing={3} sx={{ mb: 6, display: { xs: 'none', md: 'flex' } }}>
+        {/* Facturación */}
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             sx={{
               p: 3,
@@ -249,20 +376,46 @@ const Dashboard = () => {
               width: '100%',
               position: 'relative'
             }}>
-
             <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
               <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#4caf5008', color: '#4caf50', display: 'flex' }}><DollarSign size={18} /></Box>
-              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Ganancia</Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Facturación</Typography>
             </Stack>
-            <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1.1rem, 2.5vw, 1.75rem)', lineHeight: 1.2, wordBreak: 'break-word' }}>
+            <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1rem, 2vw, 1.6rem)', lineHeight: 1.2, wordBreak: 'break-word' }}>
               ${metrics.revenueInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
             </Typography>
             <Typography variant="caption" color="text.secondary">Ventas entregadas</Typography>
           </Paper>
         </Grid>
 
+        {/* Ganancia Neta */}
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
+          <Paper elevation={0}
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              bgcolor: 'white',
+              border: '1px solid rgba(0,0,0,0.08)',
+              height: '100%',
+              width: '100%',
+              position: 'relative',
+              background: metrics.netProfitInRange > 0
+                ? 'linear-gradient(135deg, #fff 60%, rgba(0,191,165,0.04) 100%)'
+                : 'white',
+              borderColor: metrics.netProfitInRange > 0 ? 'rgba(0,191,165,0.25)' : 'rgba(0,0,0,0.08)'
+            }}>
+            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+              <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#00bfa508', color: '#00bfa5', display: 'flex' }}><Banknote size={18} /></Box>
+              <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Ganancia Neta</Typography>
+            </Stack>
+            <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1rem, 2vw, 1.6rem)', lineHeight: 1.2, wordBreak: 'break-word', color: metrics.netProfitInRange >= 0 ? '#00796b' : '#f44336' }}>
+              ${metrics.netProfitInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">Utilidad real del periodo</Typography>
+          </Paper>
+        </Grid>
+
         {/* Pedidos del Periodo */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             component={Link}
             href="/admin/orders"
@@ -282,9 +435,7 @@ const Dashboard = () => {
                 '& .nav-arrow': { transform: 'translate(2px, -2px)', opacity: 1 }
               }
             }}>
-            <Box className="nav-arrow" sx={{
-              position: 'absolute', top: 20, right: 20, color: 'text.disabled', opacity: 0.5, transition: '0.3s'
-            }}>
+            <Box className="nav-arrow" sx={{ position: 'absolute', top: 20, right: 20, color: 'text.disabled', opacity: 0.5, transition: '0.3s' }}>
               <ArrowUpRight size={18} />
             </Box>
             <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
@@ -297,7 +448,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Pedidos Pendientes */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             component={Link}
             href="/admin/orders?status=Pendiente"
@@ -317,20 +468,14 @@ const Dashboard = () => {
                 '& .nav-arrow': { transform: 'translate(2px, -2px)', opacity: 1 }
               }
             }}>
-            <Box className="nav-arrow" sx={{
-              position: 'absolute', top: 20, right: 20, color: 'text.disabled', opacity: 0.5, transition: '0.3s'
-            }}>
+            <Box className="nav-arrow" sx={{ position: 'absolute', top: 20, right: 20, color: 'text.disabled', opacity: 0.5, transition: '0.3s' }}>
               <ArrowUpRight size={18} />
             </Box>
             <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
               <Box sx={{ p: 1, borderRadius: 2, bgcolor: metrics.pendingTotalCount > 0 ? '#ff980008' : '#f5f5f5', color: metrics.pendingTotalCount > 0 ? '#ff9800' : 'text.disabled', display: 'flex' }}><Clock size={18} /></Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Pendientes</Typography>
             </Stack>
-            <Typography variant="h4" sx={{
-              fontWeight: 800,
-              color: metrics.pendingTotalCount > 0 ? '#ff9800' : 'text.primary',
-              mb: 0.5
-            }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: metrics.pendingTotalCount > 0 ? '#ff9800' : 'text.primary', mb: 0.5 }}>
               {metrics.pendingTotalCount}
             </Typography>
             <Typography variant="caption" color="text.secondary">Por preparar</Typography>
@@ -338,7 +483,7 @@ const Dashboard = () => {
         </Grid>
 
         {/* Stock Bajo */}
-        <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
+        <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
             component={Link}
             href="/admin/products?filter=critical"
@@ -358,20 +503,14 @@ const Dashboard = () => {
                 '& .nav-arrow': { transform: 'translate(2px, -2px)', opacity: 1 }
               }
             }}>
-            <Box className="nav-arrow" sx={{
-              position: 'absolute', top: 20, right: 20, color: 'text.disabled', opacity: 0.5, transition: '0.3s'
-            }}>
+            <Box className="nav-arrow" sx={{ position: 'absolute', top: 20, right: 20, color: 'text.disabled', opacity: 0.5, transition: '0.3s' }}>
               <ArrowUpRight size={18} />
             </Box>
             <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
               <Box sx={{ p: 1, borderRadius: 2, bgcolor: metrics.lowStockCount > 0 ? '#f4433608' : '#f5f5f5', color: metrics.lowStockCount > 0 ? '#f44336' : 'text.disabled', display: 'flex' }}><AlertTriangle size={18} /></Box>
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Bajo Stock</Typography>
             </Stack>
-            <Typography variant="h4" sx={{
-              fontWeight: 800,
-              color: metrics.lowStockCount > 0 ? '#f44336' : 'text.primary',
-              mb: 0.5
-            }}>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: metrics.lowStockCount > 0 ? '#f44336' : 'text.primary', mb: 0.5 }}>
               {metrics.lowStockCount}
             </Typography>
             <Typography variant="caption" color="text.secondary">Críticos</Typography>
@@ -477,14 +616,23 @@ const Dashboard = () => {
       </Grid>
 
       <Box sx={{ mt: 4 }}>
-        <Paper elevation={0} sx={{ p: 4, borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)', height: 380 }}>
-          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-              <History size={20} color="#cc0000" />
-              <Box>
-                <Typography variant="h6" sx={{ fontWeight: 800 }}>Evolución del Rango</Typography>
-                <Typography variant="caption" color="text.secondary">Resumen visual del periodo seleccionado</Typography>
-              </Box>
+        <Paper elevation={0} sx={{
+          px: { xs: 1.5, sm: 4 },
+          py: { xs: 2.5, sm: 4 },
+          borderRadius: 4,
+          border: '1px solid rgba(0,0,0,0.05)',
+          height: { xs: 'auto', sm: 380 }
+        }}>
+          {/* Mobile: título arriba, tabs abajo — Desktop: fila */}
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            spacing={{ xs: 1.5, sm: 0 }}
+            sx={{ mb: 2 }}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 800 }}>Grafico Devil</Typography>
             </Box>
 
             <ToggleButtonGroup
@@ -495,7 +643,7 @@ const Dashboard = () => {
               sx={{ bgcolor: 'rgba(0,0,0,0.02)', borderRadius: 2 }}
             >
               <ToggleButton value="revenue" sx={{ textTransform: 'none', px: 2, fontWeight: 700 }}>
-                Facturación ($)
+                Facturación
               </ToggleButton>
               <ToggleButton value="units" sx={{ textTransform: 'none', px: 2, fontWeight: 700 }}>
                 Unidades
@@ -503,10 +651,10 @@ const Dashboard = () => {
             </ToggleButtonGroup>
           </Stack>
 
-          <Box sx={{ height: 260, width: '100%' }}>
-            {metrics.chartData.length > 0 ? (
+          <Box sx={{ height: { xs: 240, sm: 260 }, width: '100%', overflow: 'hidden' }}>
+            {mounted && metrics.chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <AreaChart data={metrics.chartData}>
+                <AreaChart data={metrics.chartData} margin={{ top: 10, right: 10, left: 40, bottom: 0 }}>
                   <defs>
                     <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="#cc0000" stopOpacity={0.3} />
@@ -527,6 +675,7 @@ const Dashboard = () => {
                     tickLine={false}
                     tick={{ fill: '#888', fontSize: 12 }}
                     tickFormatter={(val) => metricType === 'revenue' ? `$${val}` : `${val}`}
+                    width={35}
                   />
                   <RechartsTooltip
                     formatter={(value: any) => [

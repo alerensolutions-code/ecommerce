@@ -1,16 +1,16 @@
 "use client";
 
-import { 
-  Box, 
-  Typography, 
-  Paper, 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  IconButton, 
+import {
+  Box,
+  Typography,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
   Chip,
   Select,
   MenuItem,
@@ -33,9 +33,10 @@ import {
   InputLabel,
   Avatar,
   TableSortLabel,
+  Collapse,
 } from '@mui/material';
-import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign } from 'lucide-react';
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useMemo, Suspense, Fragment } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
 
@@ -61,12 +62,12 @@ const statusColors: { [key: string]: any } = {
 // WhatsApp SVG icon inline
 const WhatsAppIcon = () => (
   <svg viewBox="0 0 24 24" width="16" height="16" fill="#25d366">
-    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
   </svg>
 );
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-type OrderItem = { id: string; name: string; price: number; quantity: number; images?: string[] };
+type OrderItem = { id: string; name: string; price: number; quantity: number; images?: string[]; stock?: number };
 type Product = { id: string; name: string; price: number; stock: number; category_id: string; images?: string[]; category?: { name: string } };
 type Category = { id: string; name: string; parent_id?: string | null };
 
@@ -108,8 +109,8 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
     if (selectedParentId) {
       // Si hay subcategoría seleccionada, usamos solo esa. 
       // Si no, usamos el padre + todos sus hijos.
-      const idsToFetch = selectedSubCategoryId 
-        ? [selectedSubCategoryId] 
+      const idsToFetch = selectedSubCategoryId
+        ? [selectedSubCategoryId]
         : [selectedParentId, ...categories.filter(c => c.parent_id === selectedParentId).map(c => c.id)];
 
       supabase
@@ -126,9 +127,17 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
     setCartItems(prev => {
       const existing = prev.find(i => i.id === product.id);
       if (existing) {
+        if (existing.quantity + 1 > product.stock) {
+          alert(`No se puede agregar más unidades. El stock disponible de "${product.name}" es ${product.stock}.`);
+          return prev;
+        }
         return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images }];
+      if (product.stock < 1) {
+        alert(`"${product.name}" no tiene stock disponible.`);
+        return prev;
+      }
+      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images, stock: product.stock }];
     });
   };
 
@@ -138,7 +147,14 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
 
   const handleQtyChange = (id: string, qty: number) => {
     if (qty < 1) { handleRemoveProduct(id); return; }
-    setCartItems(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
+    setCartItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item && item.stock !== undefined && qty > item.stock) {
+        alert(`No se puede agregar más unidades. El stock disponible es ${item.stock}.`);
+        return prev;
+      }
+      return prev.map(i => i.id === id ? { ...i, quantity: qty } : i);
+    });
   };
 
   const total = cartItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
@@ -156,7 +172,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
       status: 'Pendiente',
       created_at: new Date(orderDate).toISOString(),
     }]).select('id').single();
-    
+
     setSaving(false);
     if (!error && data) {
       onCreated();
@@ -255,11 +271,11 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <ShoppingBag size={16} /> Productos disponibles
               </Typography>
-              <Box sx={{ 
-                maxHeight: 320, 
-                overflowY: 'auto', 
-                border: '1px solid rgba(0,0,0,0.08)', 
-                borderRadius: 2, 
+              <Box sx={{
+                maxHeight: 320,
+                overflowY: 'auto',
+                border: '1px solid rgba(0,0,0,0.08)',
+                borderRadius: 2,
                 p: 1.5,
                 '&::-webkit-scrollbar': { width: '6px' },
                 '&::-webkit-scrollbar-track': { background: 'rgba(0,0,0,0.02)', borderRadius: '4px' },
@@ -270,7 +286,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
                   <Box sx={{ py: 6, textAlign: 'center' }}>
                     <Search size={32} color="rgba(0,0,0,0.1)" style={{ margin: '0 auto 12px' }} />
                     <Typography variant="body2" color="text.secondary">
-                    {(selectedSubCategoryId || selectedParentId) ? 'No hay productos en esta categoría.' : 'Seleccioná una categoría para ver productos.'}
+                      {(selectedSubCategoryId || selectedParentId) ? 'No hay productos en esta categoría.' : 'Seleccioná una categoría para ver productos.'}
                     </Typography>
                   </Box>
                 ) : products.map(p => (
@@ -299,12 +315,12 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
               <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CheckCircle size={16} /> Carrito ({cartItems.length} items)
               </Typography>
-              <Box sx={{ 
-                height: 480, 
+              <Box sx={{
+                height: 480,
                 display: 'flex',
                 flexDirection: 'column',
-                border: '1px solid rgba(0,0,0,0.08)', 
-                borderRadius: 2, 
+                border: '1px solid rgba(0,0,0,0.08)',
+                borderRadius: 2,
                 bgcolor: 'rgba(0,0,0,0.01)'
               }}>
                 <Box sx={{
@@ -349,7 +365,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
                     </Stack>
                   )}
                 </Box>
-                
+
                 <Box sx={{ p: 2, borderTop: '1px solid rgba(0,0,0,0.08)', bgcolor: 'white', borderBottomLeftRadius: 8, borderBottomRightRadius: 8 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.secondary' }}>Total Estimado:</Typography>
@@ -420,6 +436,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
               onChange={e => setOrderDate(e.target.value)}
               InputLabelProps={{ shrink: true }}
               onClick={(e) => (e.target as any).showPicker?.()}
+              inputProps={{ lang: 'es-ES' }}
             />
           </Stack>
         )}
@@ -531,7 +548,7 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
   const [zipCode, setZipCode] = useState('');
   const [orderDate, setOrderDate] = useState('');
   const [saving, setSaving] = useState(false);
-  
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedParentId, setSelectedParentId] = useState('');
@@ -545,7 +562,29 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
       setAddress(order.address || '');
       setCity(order.city || '');
       setZipCode(order.zip_code || '');
-      setCartItems(order.items || []);
+      
+      const fetchStocksAndSetItems = async () => {
+        const items = order.items || [];
+        if (items.length > 0) {
+          const itemIds = items.map((i: any) => i.id);
+          const { data: productsData } = await supabase
+            .from('products')
+            .select('id, stock')
+            .in('id', itemIds);
+            
+          const stockMap = new Map(productsData?.map(p => [p.id, p.stock]) || []);
+          
+          setCartItems(items.map((i: any) => ({
+            ...i,
+            stock: stockMap.get(i.id) ?? 9999
+          })));
+        } else {
+          setCartItems([]);
+        }
+      };
+
+      fetchStocksAndSetItems();
+
       if (order.created_at) {
         const d = new Date(order.created_at);
         d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -562,8 +601,8 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
 
   useEffect(() => {
     if (selectedParentId) {
-      const idsToFetch = selectedSubCategoryId 
-        ? [selectedSubCategoryId] 
+      const idsToFetch = selectedSubCategoryId
+        ? [selectedSubCategoryId]
         : [selectedParentId, ...categories.filter(c => c.parent_id === selectedParentId).map(c => c.id)];
 
       supabase
@@ -580,9 +619,17 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
     setCartItems(prev => {
       const existing = prev.find(i => i.id === product.id);
       if (existing) {
+        if (existing.quantity + 1 > product.stock) {
+          alert(`No se puede agregar más unidades. El stock disponible de "${product.name}" es ${product.stock}.`);
+          return prev;
+        }
         return prev.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
       }
-      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images }];
+      if (product.stock < 1) {
+        alert(`"${product.name}" no tiene stock disponible.`);
+        return prev;
+      }
+      return [...prev, { id: product.id, name: product.name, price: product.price, quantity: 1, images: product.images, stock: product.stock }];
     });
   };
 
@@ -592,7 +639,14 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
 
   const handleQtyChange = (id: string, qty: number) => {
     if (qty < 1) { handleRemoveProduct(id); return; }
-    setCartItems(prev => prev.map(i => i.id === id ? { ...i, quantity: qty } : i));
+    setCartItems(prev => {
+      const item = prev.find(i => i.id === id);
+      if (item && item.stock !== undefined && qty > item.stock) {
+        alert(`No se puede agregar más unidades. El stock disponible es ${item.stock}.`);
+        return prev;
+      }
+      return prev.map(i => i.id === id ? { ...i, quantity: qty } : i);
+    });
   };
 
   const total = cartItems.reduce((acc, i) => acc + i.price * i.quantity, 0);
@@ -672,6 +726,7 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                   onChange={e => setOrderDate(e.target.value)}
                   InputLabelProps={{ shrink: true }}
                   onClick={(e) => (e.target as any).showPicker?.()}
+                  inputProps={{ lang: 'es-ES' }}
                 />
               </Grid>
               <Grid size={{ xs: 12 }}>
@@ -749,11 +804,11 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                   </Stack>
                 </Box>
 
-                <Box sx={{ 
-                  maxHeight: 280, 
-                  overflowY: 'auto', 
-                  border: '1px solid rgba(0,0,0,0.08)', 
-                  borderRadius: 2, 
+                <Box sx={{
+                  maxHeight: 280,
+                  overflowY: 'auto',
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  borderRadius: 2,
                   p: 1.5,
                   '&::-webkit-scrollbar': { width: '6px' },
                   '&::-webkit-scrollbar-track': { background: 'rgba(0,0,0,0.02)', borderRadius: '4px' },
@@ -789,12 +844,12 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
               </Grid>
 
               <Grid size={{ xs: 12, md: 6 }}>
-                <Box sx={{ 
-                  height: 380, 
+                <Box sx={{
+                  height: 380,
                   display: 'flex',
                   flexDirection: 'column',
-                  border: '1px solid rgba(0,0,0,0.08)', 
-                  borderRadius: 2, 
+                  border: '1px solid rgba(0,0,0,0.08)',
+                  borderRadius: 2,
                   bgcolor: 'rgba(0,0,0,0.01)'
                 }}>
                   <Box sx={{
@@ -872,7 +927,7 @@ const OrdersManagement = () => {
   const [openDetail, setOpenDetail] = useState(false);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
-  
+
   // Filtros y Paginación
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -894,7 +949,17 @@ const OrdersManagement = () => {
 
   // Create wizard
   const [createOpen, setCreateOpen] = useState(false);
-  
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  const toggleRow = (id: string) => {
+    setExpandedRows(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -926,7 +991,7 @@ const OrdersManagement = () => {
       // Pagination
       const { data, count, error } = await query
         .range(page * rowsPerPage, (page + 1) * rowsPerPage - 1);
-      
+
       if (error) throw error;
       setOrders(data || []);
       setTotalCount(count || 0);
@@ -956,7 +1021,7 @@ const OrdersManagement = () => {
       const processDeepLink = async () => {
         // Primero buscamos en la lista local
         let order = orders.find(o => String(o.id).toLowerCase() === String(orderId).toLowerCase());
-        
+
         // Si no está (puede que aún no cargue o esté fuera del filtro inicial)
         if (!order) {
           const { data } = await supabase.from('orders').select('*').eq('id', orderId).single();
@@ -981,7 +1046,7 @@ const OrdersManagement = () => {
         .select('*')
         .eq('id', id)
         .single();
-      
+
       if (fetchErr || !order) {
         console.error("Error al obtener pedido para cambiar estado:", fetchErr);
         return;
@@ -999,7 +1064,7 @@ const OrdersManagement = () => {
             .select('stock')
             .eq('id', item.id)
             .single();
-          
+
           if (product) {
             const currentStock = product.stock || 0;
             const newStock = Math.max(0, currentStock - item.quantity);
@@ -1009,16 +1074,16 @@ const OrdersManagement = () => {
               .eq('id', item.id);
           }
         }
-        
-        // También actualizamos la fecha del pedido a la fecha actual para que las estadísticas reflejen el día de finalización
+
+        // También actualizamos la fecha de entrega (delivered_at) a la fecha actual
         const nowStr = new Date().toISOString();
         const { error: updateErr } = await supabase
           .from('orders')
-          .update({ status: newStatus, created_at: nowStr })
+          .update({ status: newStatus, delivered_at: nowStr })
           .eq('id', id);
-        
+
         if (updateErr) throw updateErr;
-      } 
+      }
       // Si sale de 'Entregado' hacia cualquier otro estado
       else if (oldStatus === 'Entregado' && newStatus !== 'Entregado') {
         // Devolver stock
@@ -1028,7 +1093,7 @@ const OrdersManagement = () => {
             .select('stock')
             .eq('id', item.id)
             .single();
-          
+
           if (product) {
             const currentStock = product.stock || 0;
             const newStock = currentStock + item.quantity;
@@ -1041,18 +1106,18 @@ const OrdersManagement = () => {
 
         const { error: updateErr } = await supabase
           .from('orders')
-          .update({ status: newStatus })
+          .update({ status: newStatus, delivered_at: null })
           .eq('id', id);
-        
+
         if (updateErr) throw updateErr;
-      } 
+      }
       // Cualquier otra transición de estado intermedia (ej. Pendiente -> Enviado, Pagado, etc.)
       else {
         const { error: updateErr } = await supabase
           .from('orders')
           .update({ status: newStatus })
           .eq('id', id);
-        
+
         if (updateErr) throw updateErr;
       }
 
@@ -1069,7 +1134,7 @@ const OrdersManagement = () => {
 
   const handleCloseDetail = () => {
     setOpenDetail(false);
-    
+
     // Limpiar orderId de la URL para evitar que se abra solo al recargar/navegar
     const params = new URLSearchParams(searchParams.toString());
     if (params.has('orderId')) {
@@ -1104,13 +1169,19 @@ const OrdersManagement = () => {
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800 }}>Gestión de Pedidos</Typography>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        justifyContent="space-between"
+        alignItems={{ xs: 'stretch', sm: 'center' }}
+        gap={{ xs: 2, sm: 0 }}
+        sx={{ mb: 4 }}
+      >
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>Pedidos</Typography>
         <Button
           variant="contained"
           startIcon={<Plus size={20} />}
           onClick={() => setCreateOpen(true)}
-          sx={{ py: 1.5, px: 3, fontWeight: 700 }}
+          sx={{ py: 1.5, px: 3, fontWeight: 700, width: { xs: '100%', sm: 'auto' } }}
         >
           Nuevo Pedido
         </Button>
@@ -1164,7 +1235,7 @@ const OrdersManagement = () => {
                   <MenuItem value="Entregado">Entregado</MenuItem>
                   <MenuItem value="Cancelado">Cancelado</MenuItem>
                 </Select>
-                
+
 
               </Stack>
             </Grid>
@@ -1181,91 +1252,192 @@ const OrdersManagement = () => {
                     direction={idOrder}
                     onClick={() => { setActiveSort('id'); setIdOrder(o => o === 'asc' ? 'desc' : 'asc'); }}
                   >
-                    ID Pedido
+                    ID
                   </TableSortLabel>
                 </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Cliente</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Dirección</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Dirección</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>
                   <TableSortLabel
                     active={activeSort === 'date'}
                     direction={dateOrder}
                     onClick={() => { setActiveSort('date'); setDateOrder(d => d === 'asc' ? 'desc' : 'asc'); }}
                   >
-                    Fecha
+                    Creado
                   </TableSortLabel>
                 </TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Total</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Estado</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Entregado</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Total</TableCell>
+                <TableCell sx={{ fontWeight: 700, display: { xs: 'none', md: 'table-cell' } }}>Estado</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 700 }}>Acciones</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={6} align="center">Cargando...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} align="center">Cargando...</TableCell></TableRow>
               ) : orders.map((order) => (
-                <TableRow key={order.id} hover>
-                  <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>#{order.id}</TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>{order.customer_name}</TableCell>
-                  <TableCell sx={{ fontWeight: 500, maxWidth: 180 }}>
-                    {order.address ? (
-                      <Tooltip title={`${order.address}, ${order.city || ''} ${order.zip_code ? `(CP: ${order.zip_code})` : ''}`}>
-                        <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {order.address}, {order.city || ''}
+                <Fragment key={order.id}>
+                  <TableRow hover>
+                    <TableCell sx={{ fontWeight: 700, color: 'primary.main' }}>#{order.id}</TableCell>
+                    <TableCell sx={{ fontWeight: 500 }}>
+                      <Box>
+                        <Typography variant="body2" sx={{ fontWeight: 500 }}>{order.customer_name}</Typography>
+                        {/* Mobile: botón para expandir detalles */}
+                        <Box
+                          component="button"
+                          onClick={() => toggleRow(order.id)}
+                          sx={{
+                            display: { xs: 'flex', md: 'none' },
+                            alignItems: 'center',
+                            gap: 0.5,
+                            mt: 0.5,
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            p: 0,
+                            color: 'text.secondary',
+                            fontSize: '0.72rem',
+                            fontWeight: 600
+                          }}
+                        >
+                          {expandedRows.has(order.id) ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          {expandedRows.has(order.id) ? 'Ocultar detalles' : 'Ver detalles'}
                         </Box>
-                      </Tooltip>
-                    ) : (
-                      <Typography variant="body2" color="text.disabled">N/A</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>{new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}</TableCell>
-                  <TableCell sx={{ fontWeight: 500 }}>${Number(order.total).toLocaleString('es-ES')}</TableCell>
-                  <TableCell>
-                    <Select
-                      size="small"
-                      value={order.status}
-                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                      sx={{ 
-                        minWidth: 140, 
-                        fontWeight: 600,
-                        '& .MuiSelect-select': { 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: 1,
-                          py: 0.5 
-                        } 
-                      }}
-                      renderValue={(value) => (
-                        <Chip 
-                          icon={statusIcons[value]}
-                          label={value} 
-                          size="small" 
-                          color={statusColors[value]}
-                          sx={{ fontWeight: 700, border: 'none' }}
-                        />
+                      </Box>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500, maxWidth: 180, display: { xs: 'none', md: 'table-cell' } }}>
+                      {order.address ? (
+                        <Tooltip title={`${order.address}, ${order.city || ''} ${order.zip_code ? `(CP: ${order.zip_code})` : ''}`}>
+                          <Box sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {order.address}, {order.city || ''}
+                          </Box>
+                        </Tooltip>
+                      ) : (
+                        <Typography variant="body2" color="text.disabled">N/A</Typography>
                       )}
-                    >
-                      <MenuItem value="Pendiente"><Clock size={16} style={{marginRight: 8}}/> Pendiente</MenuItem>
-                      <MenuItem value="Enviado"><Truck size={16} style={{marginRight: 8}}/> Enviado</MenuItem>
-                      <MenuItem value="Pagado"><DollarSign size={16} style={{marginRight: 8}}/> Pagado</MenuItem>
-                      <MenuItem value="Entregado"><CheckCircle size={16} style={{marginRight: 8}}/> Entregado</MenuItem>
-                      <MenuItem value="Cancelado"><AlertCircle size={16} style={{marginRight: 8}}/> Cancelado</MenuItem>
-                    </Select>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                      <IconButton size="small" onClick={() => handleViewDetail(order)} aria-label="Ver detalles">
-                        <Eye size={18} />
-                      </IconButton>
-                      <IconButton size="small" onClick={() => handleEditClick(order)} color="primary" aria-label="Editar">
-                        <Edit2 size={18} />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDeleteClick(order)} aria-label="Eliminar">
-                        <Trash2 size={18} />
-                      </IconButton>
-                    </Stack>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>
+                      {new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>
+                      {order.delivered_at ? new Date(order.delivered_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '−'}
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: 500, display: { xs: 'none', md: 'table-cell' } }}>${Number(order.total).toLocaleString('es-ES')}</TableCell>
+                    <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
+                      <Select
+                        size="small"
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        sx={{
+                          minWidth: 140,
+                          fontWeight: 600,
+                          '& .MuiSelect-select': {
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            py: 0.5
+                          }
+                        }}
+                        renderValue={(value) => (
+                          <Chip
+                            icon={statusIcons[value]}
+                            label={value}
+                            size="small"
+                            color={statusColors[value]}
+                            sx={{ fontWeight: 700, border: 'none' }}
+                          />
+                        )}
+                      >
+                        <MenuItem value="Pendiente"><Clock size={16} style={{ marginRight: 8 }} /> Pendiente</MenuItem>
+                        <MenuItem value="Enviado"><Truck size={16} style={{ marginRight: 8 }} /> Enviado</MenuItem>
+                        <MenuItem value="Pagado"><DollarSign size={16} style={{ marginRight: 8 }} /> Pagado</MenuItem>
+                        <MenuItem value="Entregado"><CheckCircle size={16} style={{ marginRight: 8 }} /> Entregado</MenuItem>
+                        <MenuItem value="Cancelado"><AlertCircle size={16} style={{ marginRight: 8 }} /> Cancelado</MenuItem>
+                      </Select>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                        <IconButton size="small" onClick={() => handleViewDetail(order)} aria-label="Ver detalles">
+                          <Eye size={18} />
+                        </IconButton>
+                        <IconButton size="small" onClick={() => handleEditClick(order)} color="primary" aria-label="Editar">
+                          <Edit2 size={18} />
+                        </IconButton>
+                        <IconButton size="small" color="error" onClick={() => handleDeleteClick(order)} aria-label="Eliminar">
+                          <Trash2 size={18} />
+                        </IconButton>
+                      </Stack>
+                    </TableCell>
+                  </TableRow>
+                  {/* Mobile expandable details row */}
+                  <TableRow sx={{ display: { xs: 'table-row', md: 'none' } }}>
+                    <TableCell colSpan={3} sx={{ p: 0, border: 0 }}>
+                      <Collapse in={expandedRows.has(order.id)} timeout="auto" unmountOnExit>
+                        <Box sx={{ px: 2, pb: 2, pt: 1, bgcolor: 'rgba(0,0,0,0.015)', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                          <Stack spacing={1.5}>
+                            <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem', mt: 0.5 }}>Dirección</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500, textAlign: 'right', maxWidth: '70%' }}>
+                                {order.address ? `${order.address}, ${order.city || ''} ${order.zip_code ? `(CP: ${order.zip_code})` : ''}` : 'N/A'}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Creado</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {new Date(order.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Entregado</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                                {order.delivered_at ? new Date(order.delivered_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '−'}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Total</Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                ${Number(order.total).toLocaleString('es-ES')}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between" alignItems="center">
+                              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.65rem' }}>Estado</Typography>
+                              <Select
+                                size="small"
+                                value={order.status}
+                                onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                                sx={{
+                                  minWidth: 140,
+                                  fontWeight: 600,
+                                  '& .MuiSelect-select': {
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 1,
+                                    py: 0.5
+                                  }
+                                }}
+                                renderValue={(value) => (
+                                  <Chip
+                                    icon={statusIcons[value]}
+                                    label={value}
+                                    size="small"
+                                    color={statusColors[value]}
+                                    sx={{ fontWeight: 700, border: 'none' }}
+                                  />
+                                )}
+                              >
+                                <MenuItem value="Pendiente"><Clock size={16} style={{ marginRight: 8 }} /> Pendiente</MenuItem>
+                                <MenuItem value="Enviado"><Truck size={16} style={{ marginRight: 8 }} /> Enviado</MenuItem>
+                                <MenuItem value="Pagado"><DollarSign size={16} style={{ marginRight: 8 }} /> Pagado</MenuItem>
+                                <MenuItem value="Entregado"><CheckCircle size={16} style={{ marginRight: 8 }} /> Entregado</MenuItem>
+                                <MenuItem value="Cancelado"><AlertCircle size={16} style={{ marginRight: 8 }} /> Cancelado</MenuItem>
+                              </Select>
+                            </Stack>
+                          </Stack>
+                        </Box>
+                      </Collapse>
+                    </TableCell>
+                  </TableRow>
+                </Fragment>
               ))}
             </TableBody>
           </Table>
@@ -1330,7 +1502,7 @@ const OrdersManagement = () => {
                         <IconButton
                           size="small"
                           onClick={() => handleWhatsAppClient(selectedOrder.phone)}
-                          sx={{ 
+                          sx={{
                             border: '1px solid #25d366',
                             color: '#25d366',
                             '&:hover': { bgcolor: 'rgba(37,211,102,0.08)' }
@@ -1343,16 +1515,33 @@ const OrdersManagement = () => {
                   </Stack>
                 </Grid>
 
-                {/* Estado y Fecha */}
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <Stack direction="row" spacing={2} alignItems="center">
                     <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#ff9800', color: 'white', display: 'flex' }}>
                       <Clock size={18} />
                     </Box>
                     <Box>
-                      <Typography variant="caption" color="text.secondary">Fecha</Typography>
+                      <Typography variant="caption" color="text.secondary">Creado</Typography>
                       <Typography variant="body1" sx={{ fontWeight: 700 }}>
-                        {selectedOrder?.created_at ? new Date(selectedOrder.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        {selectedOrder?.created_at
+                          ? new Date(selectedOrder.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : 'N/A'}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+
+                <Grid size={{ xs: 12, sm: 6 }}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Box sx={{ p: 1, borderRadius: 2, bgcolor: selectedOrder?.delivered_at ? '#4caf50' : 'rgba(0,0,0,0.08)', color: selectedOrder?.delivered_at ? 'white' : 'text.disabled', display: 'flex' }}>
+                      <CheckCircle size={18} />
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Entregado</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 700, color: selectedOrder?.delivered_at ? 'success.main' : 'text.disabled' }}>
+                        {selectedOrder?.delivered_at
+                          ? new Date(selectedOrder.delivered_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                          : '—'}
                       </Typography>
                     </Box>
                   </Stack>
@@ -1371,34 +1560,45 @@ const OrdersManagement = () => {
                             size="small"
                             value={selectedOrder.status}
                             onChange={(e) => {
-                              handleStatusChange(selectedOrder.id, e.target.value);
-                              setSelectedOrder((prev: any) => prev ? { ...prev, status: e.target.value } : null);
+                              const newStatus = e.target.value;
+                              handleStatusChange(selectedOrder.id, newStatus);
+                              setSelectedOrder((prev: any) => {
+                                if (!prev) return null;
+                                const nowISO = new Date().toISOString();
+                                return {
+                                  ...prev,
+                                  status: newStatus,
+                                  delivered_at: newStatus === 'Entregado'
+                                    ? nowISO
+                                    : (prev.status === 'Entregado' ? null : prev.delivered_at)
+                                };
+                              });
                             }}
-                            sx={{ 
-                              minWidth: 140, 
+                            sx={{
+                              minWidth: 140,
                               fontWeight: 600,
-                              '& .MuiSelect-select': { 
-                                display: 'flex', 
-                                alignItems: 'center', 
+                              '& .MuiSelect-select': {
+                                display: 'flex',
+                                alignItems: 'center',
                                 gap: 1,
-                                py: 0.5 
-                              } 
+                                py: 0.5
+                              }
                             }}
                             renderValue={(value) => (
-                              <Chip 
+                              <Chip
                                 icon={statusIcons[value]}
-                                label={value} 
-                                size="small" 
+                                label={value}
+                                size="small"
                                 color={statusColors[value]}
                                 sx={{ fontWeight: 700, border: 'none' }}
                               />
                             )}
                           >
-                            <MenuItem value="Pendiente"><Clock size={16} style={{marginRight: 8}}/> Pendiente</MenuItem>
-                            <MenuItem value="Enviado"><Truck size={16} style={{marginRight: 8}}/> Enviado</MenuItem>
-                            <MenuItem value="Pagado"><DollarSign size={16} style={{marginRight: 8}}/> Pagado</MenuItem>
-                            <MenuItem value="Entregado"><CheckCircle size={16} style={{marginRight: 8}}/> Entregado</MenuItem>
-                            <MenuItem value="Cancelado"><AlertCircle size={16} style={{marginRight: 8}}/> Cancelado</MenuItem>
+                            <MenuItem value="Pendiente"><Clock size={16} style={{ marginRight: 8 }} /> Pendiente</MenuItem>
+                            <MenuItem value="Enviado"><Truck size={16} style={{ marginRight: 8 }} /> Enviado</MenuItem>
+                            <MenuItem value="Pagado"><DollarSign size={16} style={{ marginRight: 8 }} /> Pagado</MenuItem>
+                            <MenuItem value="Entregado"><CheckCircle size={16} style={{ marginRight: 8 }} /> Entregado</MenuItem>
+                            <MenuItem value="Cancelado"><AlertCircle size={16} style={{ marginRight: 8 }} /> Cancelado</MenuItem>
                           </Select>
                         )}
                       </Box>

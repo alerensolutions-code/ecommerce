@@ -105,7 +105,7 @@ const ShopContent = () => {
       // Pagination
       const start = isNewSearch ? 0 : (page + 1) * ITEMS_PER_PAGE;
       const end = start + ITEMS_PER_PAGE - 1;
-      
+
       const { data, count, error } = await query.range(start, end);
 
       if (error) throw error;
@@ -141,7 +141,7 @@ const ShopContent = () => {
     if (categories.length > 0 || !category) {
       fetchProducts(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, category, minPrice, maxPrice, sortBy, stockFilter, featuredFilter, categories.length]);
 
   // Función para obtener IDs de categorías de forma recursiva (hijos, nietos, etc)
@@ -197,7 +197,7 @@ const ShopContent = () => {
             {category && <Typography color="text.secondary">{category}</Typography>}
             {searchQuery && <Typography color="primary" sx={{ fontWeight: 700 }}>Búsqueda: {searchQuery}</Typography>}
           </Breadcrumbs>
-          <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: -1 }}>
+          <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: 0 }}>
             {searchQuery ? `Resultados para: "${searchQuery}"` : (category || 'Todos los Productos')}
           </Typography>
         </Container>
@@ -377,12 +377,12 @@ const ShopContent = () => {
                     </Grid>
                   ))}
                 </Grid>
-                
+
                 {hasMore && (
                   <Box sx={{ mt: 6, textAlign: 'center' }}>
-                    <Button 
-                      variant="outlined" 
-                      onClick={() => fetchProducts(false)} 
+                    <Button
+                      variant="outlined"
+                      onClick={() => fetchProducts(false)}
                       disabled={loadingMore}
                       sx={{ borderRadius: 2, px: 6, py: 1.5, fontWeight: 800 }}
                     >
