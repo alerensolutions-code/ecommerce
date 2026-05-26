@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 const GoogleReviews = () => {
   const [reviews, setReviews] = useState<any[]>([]);
   const [rating, setRating] = useState<number>(5.0);
+  const [reviewsCount, setReviewsCount] = useState<number>(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -21,11 +22,12 @@ const GoogleReviews = () => {
           if (data.rating) {
             setRating(data.rating);
           }
+          setReviewsCount(data.reviewsCount || 0);
           const mapped = (data.reviews || []).map((r: any) => ({
-            author_name: r.user?.name || "Usuario de Google",
+            author_name: r.author_name || r.user?.name || "Usuario de Google",
             rating: r.rating || 5,
-            text: r.snippet || "",
-            time: "Reseña de Google"
+            text: r.text || r.snippet || "",
+            time: r.time || r.date || "Reseña de Google",
           }));
           setReviews(mapped);
         } else {
@@ -107,7 +109,7 @@ const GoogleReviews = () => {
               }}
             />
             <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.5)', fontWeight: 600 }}>
-              (valoraciones en Google)
+              {reviewsCount} opiniones en Google
             </Typography>
           </Stack>
         </Box>

@@ -23,14 +23,14 @@ const FALLBACK_REVIEWS = {
 
 export async function GET() {
   try {
-    const apiKey = process.env.SERPAPI_KEY;
+    const apiKey = process.env.NEXT_PUBLIC_SERPAPI_KEY;
     if (!apiKey) {
-      console.warn("SERPAPI_KEY is not defined in environment variables. Returning fallback reviews.");
+      console.warn("NEXT_PUBLIC_SERPAPI_KEY is not defined in environment variables. Returning fallback reviews.");
       return NextResponse.json(FALLBACK_REVIEWS);
     }
 
-    const placeId = "ChIJgbHnOUy5vJURLGVmBUYV61Y";
-    const url = `https://serpapi.com/search.json?engine=google_maps_reviews&place_id=${placeId}&api_key=${apiKey}`;
+    const dataId = "0x95bcb94c39e7b181:0x56eb15460566652c";
+    const url = `https://serpapi.com/search.json?engine=google_maps_reviews&data_id=${dataId}&api_key=${apiKey}&hl=es&sort_by=newestFirst`;
 
     const res = await fetch(url, {
       next: { revalidate: 86400 } // Cache results for 24 hours (1 search per day)
@@ -55,6 +55,8 @@ export async function GET() {
       },
       rating: r.rating || 5,
       snippet: r.snippet || "",
+      date: r.date || "",
+      time: r.date || "Hace poco",
     }));
 
     if (formattedReviews.length === 0) {
