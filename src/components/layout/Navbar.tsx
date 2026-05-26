@@ -41,7 +41,9 @@ import {
   Phone,
   Instagram,
   Facebook,
-  Loader2
+  Loader2,
+  User,
+  MessageSquare
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -149,8 +151,8 @@ const Navbar = () => {
       if (data) {
         const catMap = new Map();
         data.forEach((c: any) => {
-          const path = c.name.toLowerCase().includes('armada') 
-            ? '/pcs-armadas' 
+          const path = c.name.toLowerCase().includes('armada')
+            ? '/pcs-armadas'
             : `/shop?category=${encodeURIComponent(c.name)}`;
           catMap.set(c.id, {
             ...c,
@@ -244,7 +246,9 @@ const Navbar = () => {
         }}
       >
         <Container maxWidth="xl">
-          <Toolbar disableGutters sx={{ minHeight: { xs: 70, md: 80 } }}>
+
+          {/* TOP TIER */}
+          <Toolbar disableGutters sx={{ minHeight: { xs: 70, md: 80 }, justifyContent: 'space-between' }}>
             {/* Mobile Menu Icon */}
             <IconButton
               color="inherit"
@@ -256,244 +260,8 @@ const Navbar = () => {
               <MenuIcon />
             </IconButton>
 
-            {/* Logo */}
-            <Typography
-              variant="h6"
-              noWrap
-              component={Link}
-              href="/"
-              sx={{
-                mr: 2,
-                display: 'flex',
-                fontWeight: 900,
-                color: 'white',
-                textDecoration: 'none',
-                fontSize: { xs: '1.2rem', md: '1.5rem' },
-                letterSpacing: '-0.02em',
-                transition: 'transform 0.3s ease',
-                '&:hover': {
-                  transform: 'scale(1.02)',
-                },
-                '& span': {
-                  color: 'primary.main',
-                  ml: 0.5
-                }
-              }}
-            >
-              DEVIL<span>GAMING</span>
-            </Typography>
-
-            {/* Desktop Categories */}
-            <Box sx={{ flexGrow: { xs: 0, md: 1 }, display: { xs: 'none', md: 'flex' }, ml: 4, alignItems: 'center' }}>
-              {/* Desktop Mega Menu Wrapper */}
-              <Box
-                onMouseEnter={() => { fetchCategories(); setIsMenuOpen(true); }}
-                onMouseLeave={() => { setIsMenuOpen(false); setHoveredCat(null); }}
-                sx={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center', py: 3 }}
-              >
-                <Box
-                  sx={{
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    fontWeight: 700,
-                    fontSize: '0.9rem',
-                    transition: 'all 0.3s',
-                    color: isMenuOpen ? 'primary.main' : 'rgba(255,255,255,0.9)',
-                    position: 'relative',
-                    '&::after': {
-                      content: '""',
-                      position: 'absolute',
-                      width: isMenuOpen ? '100%' : '0%',
-                      height: '2px',
-                      bottom: -4,
-                      left: 0,
-                      backgroundColor: 'primary.main',
-                      transition: 'width 0.3s'
-                    },
-                    '&:hover::after': { width: '100%' }
-                  }}
-                >
-                  Categorías
-                  <motion.div
-                    animate={{ rotate: isMenuOpen ? 180 : 0 }}
-                    transition={{ duration: 0.2 }}
-                    style={{ display: 'flex', alignItems: 'center', marginLeft: 4 }}
-                  >
-                    <ChevronDown size={14} />
-                  </motion.div>
-                </Box>
-
-                {/* Dropdown Container */}
-                <AnimatePresence>
-                  {isMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 15, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                      transition={{ duration: 0.2, ease: 'easeOut' }}
-                      style={{
-                        position: 'absolute',
-                        top: '100%',
-                        left: 0,
-                        zIndex: 1400,
-                        paddingTop: '10px'
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          minWidth: { md: 280, lg: activeHoverCategory?.subcategories && activeHoverCategory.subcategories.length > 0 ? 550 : 280 },
-                          minHeight: 300,
-                          backgroundColor: 'rgba(15, 15, 15, 0.95)',
-                          backdropFilter: 'blur(20px)',
-                          borderRadius: '16px',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                          boxShadow: '0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(204,0,0,0.15)',
-                          overflow: 'hidden',
-                          transition: 'min-width 0.3s ease'
-                        }}
-                      >
-                        {loadingCategories ? (
-                          <Box sx={{ display: 'flex', width: '100%', height: 300, alignItems: 'center', justifyContent: 'center' }}>
-                            <CircularProgress size={30} thickness={4} sx={{ color: 'primary.main' }} />
-                          </Box>
-                        ) : (
-                          <>
-                            {/* Left Panel: Parent Categories */}
-                            <Box sx={{ width: 280, py: 2, display: 'flex', flexDirection: 'column' }}>
-                              {dbCategories.map((cat, idx) => (
-                                <motion.div
-                                  key={cat.id}
-                                  initial={{ opacity: 0, x: -10 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: idx * 0.03 }}
-                                >
-                                  <Box
-                                    onMouseEnter={() => setHoveredCat(cat.id)}
-                                    onClick={() => {
-                                      router.push(cat.path);
-                                      setIsMenuOpen(false);
-                                    }}
-                                    sx={{
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      py: 1.5,
-                                      px: 3,
-                                      cursor: 'pointer',
-                                      position: 'relative',
-                                      backgroundColor: hoveredCat === cat.id ? 'rgba(204,0,0,0.08)' : 'transparent',
-                                      color: '#ffffff',
-                                      transition: 'all 0.2s ease',
-                                      borderLeft: hoveredCat === cat.id ? '3px solid #cc0000' : '3px solid transparent',
-                                      '&:hover': {
-                                        backgroundColor: 'rgba(204,0,0,0.12)',
-                                        color: hoveredCat === cat.id ? 'primary.main' : '#fff',
-
-                                      }
-                                    }}
-                                  >
-                                    <Typography sx={{ fontWeight: 800, fontSize: '0.95rem', letterSpacing: '0.02em' }}>
-                                      {cat.name}
-                                    </Typography>
-                                    {cat.subcategories && cat.subcategories.length > 0 && (
-                                      <ChevronRight size={16} />
-                                    )}
-                                  </Box>
-                                </motion.div>
-                              ))}
-                            </Box>
-
-                            {/* Right Panel: Subcategories */}
-                            {activeHoverCategory && activeHoverCategory.subcategories && activeHoverCategory.subcategories.length > 0 && (
-                              <Box
-                                sx={{
-                                  width: 270,
-                                  bgcolor: 'rgba(255,255,255,0.02)',
-                                  borderLeft: '1px solid rgba(255,255,255,0.05)',
-                                  p: 3,
-                                  display: 'flex',
-                                  flexDirection: 'column'
-                                }}
-                              >
-                                <Typography
-                                  variant="overline"
-                                  sx={{
-                                    color: 'primary.main',
-                                    fontWeight: 900,
-                                    mb: 2,
-                                    fontSize: '0.75rem',
-                                    letterSpacing: '0.1em'
-                                  }}
-                                >
-                                  {activeHoverCategory.name}
-                                </Typography>
-                                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                  {activeHoverCategory.subcategories.map((sub, idx) => (
-                                    <motion.div
-                                      key={sub.id}
-                                      initial={{ opacity: 0, x: 10 }}
-                                      animate={{ opacity: 1, x: 0 }}
-                                      transition={{ delay: idx * 0.04 }}
-                                    >
-                                      <Typography
-                                        onClick={() => {
-                                          router.push(sub.path);
-                                          setIsMenuOpen(false);
-                                        }}
-                                        sx={{
-                                          color: '#ffffff',
-                                          cursor: 'pointer',
-                                          fontSize: '0.9rem',
-                                          fontWeight: 600,
-                                          p: 1,
-                                          borderRadius: 1,
-                                          transition: 'all 0.2s',
-                                          '&:hover': {
-                                            color: '#fff',
-                                            bgcolor: 'rgba(255,255,255,0.08)',
-                                            transform: 'translateX(4px)'
-                                          }
-                                        }}
-                                      >
-                                        {sub.name}
-                                      </Typography>
-                                    </motion.div>
-                                  ))}
-                                </Box>
-                              </Box>
-                            )}
-                          </>
-                        )}
-                      </Box>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </Box>
-              <Button
-                component={Link}
-                href="/pcs-armadas"
-                color="inherit"
-                startIcon={<Zap size={16} color="#cc0000" />}
-                sx={{
-                  ml: 3,
-                  fontWeight: 800,
-                  textTransform: 'none',
-                  fontSize: '0.9rem',
-                  transition: 'all 0.3s',
-                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' }
-                }}
-              >
-                PCs Armadas
-              </Button>
-            </Box>
-
-            {/* Spacer for Mobile */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }} />
-
-            {/* Search Bar */}
-            <Box sx={{ flexGrow: 1, display: { xs: 'none', sm: 'flex' }, justifyContent: 'center' }}>
+            {/* Left: Search (Desktop only) */}
+            <Box sx={{ flex: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-start' }}>
               <ClickAwayListener onClickAway={() => setShowDropdown(false)}>
                 <SearchWrapper>
                   <SearchIconWrapper>
@@ -582,7 +350,7 @@ const Navbar = () => {
                                   </ListItemAvatar>
                                   <ListItemText
                                     primary={product.name}
-                                    secondary={`$${product.price.toLocaleString('es-ES')}`}
+                                    secondary={`${product.price.toLocaleString('es-ES')}`}
                                     primaryTypographyProps={{ fontWeight: 700, fontSize: '0.85rem', color: 'text.primary', noWrap: true }}
                                     secondaryTypographyProps={{ fontWeight: 800, color: 'primary.main', fontSize: '0.8rem' }}
                                   />
@@ -617,51 +385,262 @@ const Navbar = () => {
               </ClickAwayListener>
             </Box>
 
-            {/* Icons */}
-            <Box sx={{ display: 'flex', alignItems: 'center', ml: 2, gap: 1 }}>
-              {user?.role === 'admin' && (
-                <Button
-                  component={Link}
-                  href="/admin"
-                  size="small"
-                  variant="outlined"
-                  startIcon={<LayoutDashboard size={16} />}
-                  sx={{
-                    fontWeight: 800,
-                    fontSize: '0.75rem',
-                    borderColor: 'primary.main',
+            {/* Center: Logo */}
+            <Box sx={{ display: 'flex', flex: { xs: 1, md: 0 }, justifyContent: { xs: 'flex-end', md: 'center' } }}>
+              <Typography
+                variant="h6"
+                noWrap
+                component={Link}
+                href="/"
+                sx={{
+                  mr: 2,
+                  display: 'flex',
+                  fontWeight: 900,
+                  color: 'white',
+                  textDecoration: 'none',
+                  fontSize: { xs: '1.2rem', md: '1.5rem' },
+                  letterSpacing: '-0.02em',
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: 'scale(1.02)',
+                  },
+                  '& span': {
                     color: 'primary.main',
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 2,
-                    display: { xs: 'none', sm: 'flex' },
-                    '&:hover': {
-                      bgcolor: 'rgba(204,0,0,0.06)',
-                      borderColor: 'primary.dark',
-                    }
-                  }}
-                >
-                  Admin
-                </Button>
-              )}
-              <IconButton
-                color="inherit"
-                sx={{ ml: 0.5, '&:hover': { color: 'primary.main' } }}
-                onClick={() => setCartOpen(true)}
+                    ml: 0.5
+                  }
+                }}
               >
-                <Badge badgeContent={cartCount} color="primary">
-                  <motion.div
-                    key={cartCount}
-                    initial={{ scale: 1.5 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 10 }}
+                DEVIL<span>GAMING</span>
+              </Typography>
+            </Box>
+
+            {/* Right: Icons */}
+            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: { xs: 1, md: 4 } }}>
+              {/* Admin & Cart */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                {user?.role === 'admin' && (
+                  <Button
+                    component={Link}
+                    href="/admin"
+                    size="small"
+                    variant="outlined"
+                    startIcon={<LayoutDashboard size={16} />}
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: '0.75rem',
+                      borderColor: 'primary.main',
+                      color: 'primary.main',
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 2,
+                      display: { xs: 'none', sm: 'flex' },
+                      '&:hover': {
+                        bgcolor: 'rgba(204,0,0,0.06)',
+                        borderColor: 'primary.dark',
+                      }
+                    }}
                   >
-                    <ShoppingCart size={22} />
-                  </motion.div>
-                </Badge>
-              </IconButton>
+                    Admin
+                  </Button>
+                )}
+
+                <IconButton
+                  color="inherit"
+                  sx={{ ml: 0.5, '&:hover': { color: 'primary.main' } }}
+                  onClick={() => setCartOpen(true)}
+                >
+                  <Badge badgeContent={cartCount} color="primary">
+                    <motion.div
+                      key={cartCount}
+                      initial={{ scale: 1.5 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 300, damping: 10 }}
+                    >
+                      <ShoppingCart size={22} />
+                    </motion.div>
+                  </Badge>
+                </IconButton>
+              </Box>
             </Box>
           </Toolbar>
+
+          {/* BOTTOM TIER */}
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, borderTop: '1px solid rgba(255,255,255,0.08)', py: 0, justifyContent: 'center', alignItems: 'center', minHeight: 48 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Button component={Link} href="/" sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 800, fontSize: '0.85rem', '&:hover': { color: 'primary.main', bgcolor: 'transparent' } }}>
+                INICIO
+              </Button>
+
+              <Box
+                onMouseEnter={() => { fetchCategories(); setIsMenuOpen(true); }}
+                onMouseLeave={() => { setIsMenuOpen(false); setHoveredCat(null); }}
+                sx={{ height: '100%', display: 'flex', alignItems: 'center', py: 1.5 }}
+              >
+                <Box
+                  sx={{
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    fontWeight: 800,
+                    fontSize: '0.85rem',
+                    transition: 'all 0.3s',
+                    color: isMenuOpen ? 'primary.main' : 'rgba(255,255,255,0.9)',
+                    position: 'relative',
+                    textTransform: 'uppercase',
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      width: isMenuOpen ? '100%' : '0%',
+                      height: '2px',
+                      bottom: -4,
+                      left: 0,
+                      backgroundColor: 'primary.main',
+                      transition: 'width 0.3s'
+                    },
+                    '&:hover::after': { width: '100%' }
+                  }}
+                >
+                  CATEGORÍAS
+                  <motion.div
+                    animate={{ rotate: isMenuOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ display: 'flex', alignItems: 'center', marginLeft: 4 }}
+                  >
+                    <ChevronDown size={14} />
+                  </motion.div>
+                </Box>
+
+                <AnimatePresence>
+                  {isMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 15, scale: 0.98 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                      transition={{ duration: 0.2, ease: 'easeOut' }}
+                      style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        right: 0,
+                        zIndex: 1400,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          width: '100%',
+                          backgroundColor: 'rgba(10, 10, 10, 0.95)',
+                          backdropFilter: 'blur(20px)',
+                          borderTop: '1px solid rgba(255,255,255,0.08)',
+                          borderBottom: '1px solid rgba(255,255,255,0.08)',
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.8)',
+                          overflow: 'hidden',
+                          py: 4
+                        }}
+                      >
+                        <Container maxWidth="xl" sx={{ display: 'flex', flex: 1 }}>
+                          {loadingCategories ? (
+                            <Box sx={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                              <CircularProgress size={30} thickness={4} sx={{ color: 'primary.main' }} />
+                            </Box>
+                          ) : (
+                            <Box sx={{ 
+                              columnWidth: { xs: '150px', md: '180px' }, 
+                              columnGap: { xs: '32px', md: '64px' }, 
+                              width: '100%' 
+                            }}>
+                              {dbCategories.map((cat, idx) => (
+                                <Box
+                                  key={cat.id}
+                                  sx={{
+                                    breakInside: 'avoid',
+                                    pageBreakInside: 'avoid',
+                                    mb: { xs: 4, md: 6 },
+                                    display: 'inline-block',
+                                    width: '100%'
+                                  }}
+                                >
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                  >
+                                    <Box>
+                                      <Typography 
+                                        variant="subtitle1" 
+                                        sx={{ 
+                                          fontWeight: 900, 
+                                          color: 'white', 
+                                          mb: (cat.subcategories && cat.subcategories.length > 0) ? 2 : 0, 
+                                          fontSize: '0.95rem',
+                                          letterSpacing: '0.02em',
+                                          cursor: 'pointer',
+                                          '&:hover': { color: 'primary.main' }
+                                        }}
+                                      onClick={() => {
+                                        router.push(cat.path);
+                                        setIsMenuOpen(false);
+                                      }}
+                                    >
+                                      {cat.name}
+                                    </Typography>
+                                    {cat.subcategories && cat.subcategories.length > 0 && (
+                                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                                        {cat.subcategories.map(sub => (
+                                          <Typography
+                                            key={sub.id}
+                                            onClick={() => {
+                                              router.push(sub.path);
+                                              setIsMenuOpen(false);
+                                            }}
+                                            sx={{
+                                              color: 'rgba(255,255,255,0.7)',
+                                              fontSize: '0.85rem',
+                                              fontWeight: 500,
+                                              cursor: 'pointer',
+                                              transition: 'all 0.2s',
+                                              '&:hover': {
+                                                color: 'primary.main',
+                                                transform: 'translateX(4px)'
+                                              }
+                                            }}
+                                          >
+                                            {sub.name}
+                                          </Typography>
+                                        ))}
+                                      </Box>
+                                    )}
+                                    </Box>
+                                  </motion.div>
+                                </Box>
+                              ))}
+                            </Box>
+                          )}
+                        </Container>
+                      </Box>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Box>
+
+              <Button
+                component={Link}
+                href="/pcs-armadas"
+                sx={{
+                  color: 'rgba(255,255,255,0.9)',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  transition: 'all 0.3s',
+                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' }
+                }}
+              >
+                PC GAMER ARMADAS
+              </Button>
+
+
+            </Box>
+          </Box>
         </Container>
       </AppBar>
 
