@@ -274,7 +274,7 @@ const HomePage = () => {
                   <Stack direction="row" spacing={3}>
                     <Button
                       component={Link}
-                      href="/pcs-armadas"
+                      href="/shop?category=PCs%20Armadas"
                       variant="contained"
                       size="large"
                       startIcon={<Zap />}
@@ -389,8 +389,9 @@ const HomePage = () => {
               autoplay={{ delay: 5000 }}
               breakpoints={{
                 640: { slidesPerView: 2 },
-                1024: { slidesPerView: 3 },
-                1440: { slidesPerView: 4 },
+                960: { slidesPerView: 3 },
+                1200: { slidesPerView: 4 },
+                1536: { slidesPerView: 5 },
               }}
               style={{ padding: '20px 5px 50px 5px' }}
             >

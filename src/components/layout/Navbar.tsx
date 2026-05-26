@@ -128,6 +128,8 @@ const Navbar = () => {
   // Categorías
   type CategoryType = { id: string, name: string, path: string, subcategories: CategoryType[] };
   const [dbCategories, setDbCategories] = useState<CategoryType[]>([]);
+  const [armadaPath, setArmadaPath] = useState('/shop?category=PCs%20Armadas');
+  const [outletPath, setOutletPath] = useState('/shop?category=Placas%20de%20Video%20Outlet');
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [openCats, setOpenCats] = useState<Record<string, boolean>>({});
@@ -150,10 +152,11 @@ const Navbar = () => {
 
       if (data) {
         const catMap = new Map();
+        let newArmadaPath = '/shop?category=PCs%20Armadas';
+        let newOutletPath = '/shop?category=Placas%20de%20Video%20Outlet';
+
         data.forEach((c: any) => {
-          const path = c.name.toLowerCase().includes('armada')
-            ? '/pcs-armadas'
-            : `/shop?category=${encodeURIComponent(c.name)}`;
+          const path = `/shop?category=${encodeURIComponent(c.name)}`;
           catMap.set(c.id, {
             ...c,
             path,
@@ -163,14 +166,26 @@ const Navbar = () => {
 
         const parentCats: CategoryType[] = [];
         data.forEach((c: any) => {
+          const lowerName = c.name.toLowerCase();
+          const isSpecial = lowerName.includes('armada') || lowerName.includes('outlet');
+
+          if (isSpecial) {
+            if (lowerName.includes('armada')) newArmadaPath = catMap.get(c.id).path;
+            if (lowerName.includes('outlet')) newOutletPath = catMap.get(c.id).path;
+          }
+
           if (c.parent_id && catMap.has(c.parent_id)) {
-            catMap.get(c.parent_id).subcategories.push(catMap.get(c.id));
-          } else if (!c.parent_id) {
+            if (!isSpecial) {
+              catMap.get(c.parent_id).subcategories.push(catMap.get(c.id));
+            }
+          } else if (!c.parent_id && !isSpecial) {
             parentCats.push(catMap.get(c.id));
           }
         });
 
         setDbCategories(parentCats);
+        setArmadaPath(newArmadaPath);
+        setOutletPath(newOutletPath);
         setCategoriesLoaded(true);
       }
     } catch (err) {
@@ -189,6 +204,10 @@ const Navbar = () => {
   };
 
   const activeHoverCategory = hoveredCat ? dbCategories.find(c => c.id === hoveredCat) : undefined;
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const fetchSearch = async () => {
@@ -626,7 +645,8 @@ const Navbar = () => {
 
               <Button
                 component={Link}
-                href="/pcs-armadas"
+                href={armadaPath}
+                onClick={() => setIsMenuOpen(false)}
                 sx={{
                   color: 'rgba(255,255,255,0.9)',
                   fontWeight: 800,
@@ -636,6 +656,21 @@ const Navbar = () => {
                 }}
               >
                 PC GAMER ARMADAS
+              </Button>
+
+              <Button
+                component={Link}
+                href={outletPath}
+                onClick={() => setIsMenuOpen(false)}
+                sx={{
+                  color: 'rgba(255,255,255,0.9)',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  transition: 'all 0.3s',
+                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' }
+                }}
+              >
+                PLACAS OUTLET
               </Button>
 
 
@@ -807,7 +842,7 @@ const Navbar = () => {
             <Box sx={{ mb: 2 }}>
               <Button
                 component={Link}
-                href="/pcs-armadas"
+                href={armadaPath}
                 variant="contained"
                 fullWidth
                 onClick={toggleDrawer(false)}
@@ -822,6 +857,24 @@ const Navbar = () => {
                 }}
               >
                 PCs Armadas
+              </Button>
+              <Button
+                component={Link}
+                href={outletPath}
+                variant="outlined"
+                fullWidth
+                onClick={toggleDrawer(false)}
+                startIcon={<Zap size={18} />}
+                sx={{
+                  borderRadius: 2,
+                  py: 1.5,
+                  mb: 1.5,
+                  fontWeight: 900,
+                  color: 'primary.main',
+                  borderColor: 'primary.main',
+                }}
+              >
+                Placas Outlet
               </Button>
             </Box>
 

@@ -197,30 +197,30 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
 
         <CardContent sx={{
           flexGrow: 1,
-          p: 2.5,
+          p: 1.5,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center'
         }}>
-          <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontWeight: 600, letterSpacing: 1 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', fontWeight: 700, letterSpacing: 0.5, fontSize: '0.65rem' }}>
             {product.category?.name || 'Sin Categoría'}
           </Typography>
-          <Typography variant="subtitle1" component="h3" sx={{ fontWeight: 800, mb: 1, lineHeight: 1.2, height: layout === 'list' ? 'auto' : '2.4em', overflow: 'hidden', color: '#333' }}>
+          <Typography variant="subtitle2" component="h3" sx={{ fontWeight: 800, mb: 0.5, lineHeight: 1.2, height: layout === 'list' ? 'auto' : '2.4em', overflow: 'hidden', color: '#333', fontSize: '0.85rem' }}>
             {product.name}
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 2.5 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1.5 }}>
             {product.discount > 0 && !isOutOfStock ? (
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <Typography variant="body2" sx={{ textDecoration: 'line-through', color: '#5e5858ff', fontWeight: 600, fontSize: '1.2rem' }}>
+                <Typography variant="body2" sx={{ textDecoration: 'line-through', color: '#5e5858ff', fontWeight: 600, fontSize: '0.9rem' }}>
                   ${product.price.toLocaleString('es-ES')}
                 </Typography>
-                <Typography variant="h6" color="error.main" sx={{ fontWeight: 900, fontSize: '1.4rem' }}>
+                <Typography variant="h6" color="error.main" sx={{ fontWeight: 900, fontSize: '1.1rem' }}>
                   ${(product.price * (1 - product.discount / 100)).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
                 </Typography>
               </Box>
             ) : (
-              <Typography variant="h6" color={isOutOfStock ? 'text.secondary' : 'primary.main'} sx={{ fontWeight: 900 }}>
+              <Typography variant="h6" color={isOutOfStock ? 'text.secondary' : 'primary.main'} sx={{ fontWeight: 900, fontSize: '1.1rem' }}>
                 ${displayPrice.toLocaleString('es-ES')}
               </Typography>
             )}
@@ -238,20 +238,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
               }
               sx={{
                 width: '100%',
-                py: 1,
+                py: 0.5,
                 px: layout === 'list' ? 4 : undefined,
-                fontWeight: 700,
+                fontWeight: 800,
                 borderRadius: 2,
                 borderColor: '#25d366',
                 color: '#25d366',
-                fontSize: '0.8rem',
+                fontSize: '0.75rem',
                 '&:hover': {
                   bgcolor: 'rgba(37,211,102,0.06)',
                   borderColor: '#1da851',
                 }
               }}
             >
-              Consultar Disponibilidad
+              Consultar
             </Button>
           ) : (
             <motion.div
@@ -280,9 +280,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
                 disabled={isAdded}
                 sx={{
                   width: '100%',
-                  py: 1,
+                  py: 0.5,
                   px: layout === 'list' ? 4 : undefined,
                   fontWeight: 800,
+                  fontSize: '0.75rem',
                   borderRadius: 2,
                   boxShadow: 'none',
                   transition: 'all 0.3s ease',

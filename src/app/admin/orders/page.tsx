@@ -35,7 +35,7 @@ import {
   TableSortLabel,
   Collapse,
 } from '@mui/material';
-import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign, ChevronDown, ChevronRight } from 'lucide-react';
+import { Eye, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag, Search, User, Phone, Trash2, Plus, X, MessageCircle, Edit2, MapPin, DollarSign, ChevronDown, ChevronRight, Mail } from 'lucide-react';
 import { useState, useEffect, useMemo, Suspense, Fragment } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../../lib/supabase';
@@ -89,6 +89,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
   const [cartItems, setCartItems] = useState<OrderItem[]>([]);
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -164,6 +165,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
     const { data, error } = await supabase.from('orders').insert([{
       customer_name: contactName.trim(),
       phone: contactPhone.trim(),
+      email: contactEmail.trim(),
       address: address.trim(),
       city: city.trim(),
       zip_code: zipCode.trim(),
@@ -189,6 +191,7 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
     setCartItems([]);
     setContactName('');
     setContactPhone('');
+    setContactEmail('');
     setAddress('');
     setCity('');
     setZipCode('');
@@ -403,6 +406,16 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
             />
             <TextField
               fullWidth
+              type="email"
+              label="Correo Electrónico"
+              value={contactEmail}
+              onChange={e => setContactEmail(e.target.value)}
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><Mail size={18} /></InputAdornment>
+              }}
+            />
+            <TextField
+              fullWidth
               label="Dirección"
               value={address}
               onChange={e => setAddress(e.target.value)}
@@ -461,6 +474,17 @@ const CreateOrderWizard = ({ open, onClose, onCreated }: CreateOrderWizardProps)
                   <Typography variant="caption" color="text.secondary">Teléfono</Typography>
                   <Typography variant="body1" sx={{ fontWeight: 700 }}>{contactPhone}</Typography>
                 </Box>
+                {contactEmail && (
+                  <>
+                    <Box sx={{ ml: 2, p: 1, borderRadius: 2, bgcolor: '#3f51b5', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Mail size={18} />
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">Email</Typography>
+                      <Typography variant="body1" sx={{ fontWeight: 700 }}>{contactEmail}</Typography>
+                    </Box>
+                  </>
+                )}
               </Stack>
 
               <Divider sx={{ my: 2, borderStyle: 'dashed' }} />
@@ -543,6 +567,7 @@ interface EditOrderWizardProps {
 const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardProps) => {
   const [contactName, setContactName] = useState('');
   const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
   const [zipCode, setZipCode] = useState('');
@@ -559,10 +584,11 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
     if (order) {
       setContactName(order.customer_name || '');
       setContactPhone(order.phone || '');
+      setContactEmail(order.email || '');
       setAddress(order.address || '');
       setCity(order.city || '');
       setZipCode(order.zip_code || '');
-      
+
       const fetchStocksAndSetItems = async () => {
         const items = order.items || [];
         if (items.length > 0) {
@@ -571,9 +597,9 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
             .from('products')
             .select('id, stock')
             .in('id', itemIds);
-            
+
           const stockMap = new Map(productsData?.map(p => [p.id, p.stock]) || []);
-          
+
           setCartItems(items.map((i: any) => ({
             ...i,
             stock: stockMap.get(i.id) ?? 9999
@@ -659,6 +685,7 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
       .update({
         customer_name: contactName.trim(),
         phone: contactPhone.trim(),
+        email: contactEmail.trim(),
         address: address.trim(),
         city: city.trim(),
         zip_code: zipCode.trim(),
@@ -714,6 +741,18 @@ const EditOrderWizard = ({ open, order, onClose, onUpdated }: EditOrderWizardPro
                   onChange={e => setContactPhone(e.target.value)}
                   InputProps={{
                     startAdornment: <InputAdornment position="start"><Phone size={18} /></InputAdornment>
+                  }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12, md: 12 }}>
+                <TextField
+                  fullWidth
+                  type="email"
+                  label="Correo Electrónico"
+                  value={contactEmail}
+                  onChange={e => setContactEmail(e.target.value)}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start"><Mail size={18} /></InputAdornment>
                   }}
                 />
               </Grid>
@@ -1514,6 +1553,21 @@ const OrdersManagement = () => {
                     )}
                   </Stack>
                 </Grid>
+
+                {/* Email */}
+                {selectedOrder?.email && (
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Box sx={{ p: 1, borderRadius: 2, bgcolor: '#3f51b5', color: 'white', display: 'flex' }}>
+                        <Mail size={18} />
+                      </Box>
+                      <Box sx={{ flexGrow: 1 }}>
+                        <Typography variant="caption" color="text.secondary">Email</Typography>
+                        <Typography variant="body1" sx={{ fontWeight: 700 }}>{selectedOrder.email}</Typography>
+                      </Box>
+                    </Stack>
+                  </Grid>
+                )}
 
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <Stack direction="row" spacing={2} alignItems="center">

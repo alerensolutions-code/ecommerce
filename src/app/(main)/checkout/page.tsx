@@ -45,7 +45,8 @@ const CheckoutPage = () => {
     address: '',
     city: '',
     zipCode: '',
-    phone: ''
+    phone: '',
+    email: ''
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +68,7 @@ const CheckoutPage = () => {
       const newOrder = {
         customer_name: `${formData.firstName} ${formData.lastName}`,
         phone: formData.phone,
+        email: formData.email,
         address: formData.address,
         city: formData.city,
         zip_code: formData.zipCode,
@@ -94,6 +96,7 @@ const CheckoutPage = () => {
       // 2. Format WhatsApp Message
       const message = `*NUEVO PEDIDO: #${orderId}*\n\n` +
         `*Cliente:* ${formData.firstName} ${formData.lastName}\n` +
+        `*Email:* ${formData.email}\n` +
         `*Teléfono:* ${formData.phone}\n` +
         `*Dirección:* ${formData.address}, ${formData.city}\n\n` +
         `*Productos:*\n` +
@@ -145,6 +148,9 @@ const CheckoutPage = () => {
         </Grid>
         <Grid size={{ xs: 12, sm: 6 }}>
           <TextField fullWidth label="Apellidos" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
+        </Grid>
+        <Grid size={12}>
+          <TextField fullWidth type="email" label="Correo Electrónico" name="email" value={formData.email} onChange={handleInputChange} required />
         </Grid>
         <Grid size={12}>
           <TextField fullWidth label="Teléfono (WhatsApp)" name="phone" value={formData.phone} onChange={handleInputChange} required placeholder="Ej: +54 9 11 ..." />

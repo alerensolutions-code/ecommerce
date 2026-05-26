@@ -64,9 +64,10 @@ const CategorySidebar = () => {
     fetchCategories();
   }, [currentCategory]);
 
-  const hierarchy = useMemo(() => {
-    const roots = categories.filter(c => !c.parent_id);
+  const { roots, childrenMap, isSpecialTree } = useMemo(() => {
+    let roots = categories.filter(c => !c.parent_id);
     const childrenMap: Record<string, any[]> = {};
+    let isSpecialTree = false;
 
     categories.forEach(c => {
       if (c.parent_id) {
@@ -75,8 +76,42 @@ const CategorySidebar = () => {
       }
     });
 
-    return { roots, childrenMap };
-  }, [categories]);
+    if (currentCategory) {
+      const current = categories.find(c => c.name.toLowerCase() === currentCategory.toLowerCase());
+      if (current) {
+        let rootOfCurrent = current;
+        while (rootOfCurrent.parent_id) {
+          const parent = categories.find(c => c.id === rootOfCurrent.parent_id);
+          if (parent) rootOfCurrent = parent;
+          else break;
+        }
+
+        const lowerName = rootOfCurrent.name.toLowerCase();
+        isSpecialTree = lowerName.includes('armada') || lowerName.includes('outlet');
+
+        if (isSpecialTree) {
+          roots = [rootOfCurrent];
+        } else {
+          roots = roots.filter(r => {
+             const lowerR = r.name.toLowerCase();
+             return !lowerR.includes('armada') && !lowerR.includes('outlet');
+          });
+        }
+      } else {
+        roots = roots.filter(r => {
+           const lowerR = r.name.toLowerCase();
+           return !lowerR.includes('armada') && !lowerR.includes('outlet');
+        });
+      }
+    } else {
+      roots = roots.filter(r => {
+         const lowerR = r.name.toLowerCase();
+         return !lowerR.includes('armada') && !lowerR.includes('outlet');
+      });
+    }
+
+    return { roots, childrenMap, isSpecialTree };
+  }, [categories, currentCategory]);
 
   const handleCategoryClick = (value: string, id?: string) => {
     const newParams = new URLSearchParams(searchParams?.toString() || '');
@@ -149,14 +184,14 @@ const CategorySidebar = () => {
             }}
           >
             <ListItemText
-              primary="Todos los Productos"
+              primary={isSpecialTree ? "Volver a la Tienda Principal" : "Todos los Productos"}
               primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
             />
           </ListItemButton>
         </ListItem>
 
-        {hierarchy.roots.map((root) => {
-          const hasChildren = (hierarchy.childrenMap[root.id] || []).length > 0;
+        {roots.map((root) => {
+          const hasChildren = (childrenMap[root.id] || []).length > 0;
           const isSelected = currentCategory.toLowerCase() === root.name.toLowerCase();
           const isOpen = activeParent === root.id;
 
@@ -197,7 +232,7 @@ const CategorySidebar = () => {
               {hasChildren && (
                 <Collapse in={isOpen} timeout="auto" unmountOnExit>
                   <List disablePadding sx={{ pl: 2, mb: 1 }}>
-                    {hierarchy.childrenMap[root.id].map((sub) => {
+                    {childrenMap[root.id].map((sub) => {
                       const isSubSelected = currentCategory.toLowerCase() === sub.name.toLowerCase();
                       return (
                         <ListItem key={sub.id} disablePadding sx={{ mb: 0.2 }}>

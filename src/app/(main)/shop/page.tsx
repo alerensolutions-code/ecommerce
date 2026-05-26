@@ -84,6 +84,20 @@ const ShopContent = () => {
           const allowedIds = getRecursiveIds(selectedCat.id, categories);
           query = query.in('category_id', allowedIds);
         }
+      } else if (!category && categories.length > 0) {
+        const specialCats = categories.filter(c => {
+          const lower = c.name.toLowerCase();
+          return lower.includes('armada') || lower.includes('outlet');
+        });
+        
+        let forbiddenIds: string[] = [];
+        specialCats.forEach(sc => {
+           forbiddenIds = [...forbiddenIds, ...getRecursiveIds(sc.id, categories)];
+        });
+
+        if (forbiddenIds.length > 0) {
+          query = query.not('category_id', 'in', `(${forbiddenIds.join(',')})`);
+        }
       }
 
       if (minPrice > 0) query = query.gte('price', minPrice);
@@ -372,7 +386,7 @@ const ShopContent = () => {
               <>
                 <Grid container spacing={3}>
                   {products.map((product) => (
-                    <Grid key={product.id} size={viewMode === 'grid' ? { xs: 12, sm: 6, lg: 4 } : { xs: 12 }}>
+                    <Grid key={product.id} size={viewMode === 'grid' ? { xs: 12, sm: 6, md: 4, lg: 3 } : { xs: 12 }}>
                       <ProductCard product={product} layout={viewMode} />
                     </Grid>
                   ))}
