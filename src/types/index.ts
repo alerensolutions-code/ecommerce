@@ -2,7 +2,6 @@ export interface Category {
   id: string;
   name: string;
   parent_id?: string | null;
-  spec_template?: string[];
   created_at?: string;
 }
 
@@ -23,11 +22,6 @@ export interface Product {
   images?: string[];
   stock: number;
   featured: boolean;
-  specs?: {
-    label: string;
-    value: string;
-  }[];
-  technical_specs?: Record<string, any>;
   created_at?: string;
 }
 

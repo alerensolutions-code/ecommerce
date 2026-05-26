@@ -48,8 +48,6 @@ type Product = {
   category?: { name: string; parent_id?: string | null; parent?: { name: string } };
   stock: number;
   featured?: boolean;
-  discount?: number;
-  technical_specs?: Record<string, any>;
 };
 
 type Category = {
@@ -57,7 +55,6 @@ type Category = {
   name: string;
   parent_id?: string | null;
   parent?: { name: string };
-  spec_template?: string[];
 };
 
 const ProductsManagement = () => {
@@ -82,9 +79,7 @@ const ProductsManagement = () => {
     cost_price: '' as number | string,
     stock: '' as number | string,
     featured: false,
-    discount: '' as number | string,
-    images: [] as string[],
-    technical_specs: [] as { key: string, value: string }[]
+    images: [] as string[]
   });
 
   // Filtros y Paginación
@@ -184,11 +179,7 @@ const ProductsManagement = () => {
       cost_price: product?.cost_price != null ? product.cost_price : '',
       stock: product ? product.stock : '',
       featured: product?.featured || false,
-      discount: product && product.discount !== undefined && product.discount !== null ? product.discount : '',
-      images: product?.images || [],
-      technical_specs: product?.technical_specs
-        ? Object.entries(product.technical_specs).map(([key, value]) => ({ key, value: String(value) }))
-        : []
+      images: product?.images || []
     });
     setSelectedParentId(product?.category?.parent_id || '');
     setSelectedFiles([]);
@@ -214,55 +205,13 @@ const ProductsManagement = () => {
     }
   };
 
-  // Función para aplicar la plantilla de especificaciones de una categoría (con herencia de padres)
-  const applySpecTemplate = (categoryId: string) => {
-    const category = dbCategories.find(c => c.id === categoryId);
-    if (!category) return;
-
-    let allSpecs: string[] = [];
-
-    // 1. Si es una subcategoría, intentamos obtener las specs del padre primero
-    if (category.parent_id) {
-      const parent = dbCategories.find(c => c.id === category.parent_id);
-      if (parent?.spec_template) {
-        allSpecs = [...parent.spec_template];
-      }
-    }
-
-    // 2. Añadimos las specs de la propia categoría (evitando duplicados)
-    if (category.spec_template) {
-      const uniqueNewSpecs = category.spec_template.filter(s => !allSpecs.includes(s));
-      allSpecs = [...allSpecs, ...uniqueNewSpecs];
-    }
-
-    if (allSpecs.length > 0) {
-      const templateSpecs = allSpecs.map(key => ({ key, value: '' }));
-      setFormValues(prev => ({
-        ...prev,
-        technical_specs: templateSpecs
-      }));
-    } else {
-      setFormValues(prev => ({
-        ...prev,
-        technical_specs: []
-      }));
-    }
-  };
-
   const handleParentChange = (parentId: string) => {
     setSelectedParentId(parentId);
     setFormValues(prev => ({ ...prev, category_id: parentId }));
-    applySpecTemplate(parentId);
   };
 
   const handleSubCategoryChange = (subId: string) => {
-    setFormValues(prev => ({ ...prev, category_id: subId }));
-    if (subId) {
-      applySpecTemplate(subId);
-    } else {
-      // Si deseleccionamos la subcategoría, volvemos a la plantilla del padre
-      applySpecTemplate(selectedParentId);
-    }
+    setFormValues(prev => ({ ...prev, category_id: subId || selectedParentId }));
   };
 
   const removeSelectedFile = (index: number) => {
@@ -342,14 +291,7 @@ const ProductsManagement = () => {
       cost_price: Number(formValues.cost_price),
       stock: Number(formValues.stock) || 0,
       featured: formValues.featured,
-      discount: Number(formValues.discount) || 0,
-      images: finalImages,
-      technical_specs: formValues.technical_specs.reduce((acc, curr) => {
-        if (curr.key.trim()) {
-          acc[curr.key.trim()] = curr.value;
-        }
-        return acc;
-      }, {} as Record<string, any>)
+      images: finalImages
     };
 
     try {
@@ -768,51 +710,12 @@ const ProductsManagement = () => {
                       helperText="Opcional. Máximo 3 dígitos."
                       inputProps={{ min: 0, max: 999 }}
                     />
-                  </Grid>
                 </Grid>
 
+                  </Grid>
 
 
-                <Box sx={{ mt: 2 }}>
-                  <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 2 }}>Especificaciones Técnicas (Basadas en Categoría)</Typography>
-                  <Stack spacing={2}>
-                    {formValues.technical_specs.map((spec, idx) => (
-                      <Stack key={idx} direction="row" spacing={2} alignItems="center">
-                        <TextField
-                          size="small"
-                          label="Propiedad"
-                          value={spec.key}
-                          disabled
-                          sx={{
-                            flex: 1,
-                            '& .MuiInputBase-input.Mui-disabled': {
-                              WebkitTextFillColor: 'rgba(0, 0, 0, 0.6)',
-                              fontWeight: 700
-                            }
-                          }}
-                        />
-                        <TextField
-                          size="small"
-                          label={`Valor para ${spec.key}`}
-                          value={spec.value}
-                          onChange={(e) => {
-                            const newSpecs = [...formValues.technical_specs];
-                            newSpecs[idx].value = e.target.value;
-                            setFormValues({ ...formValues, technical_specs: newSpecs });
-                          }}
-                          sx={{ flex: 1.5 }}
-                        />
-                      </Stack>
-                    ))}
-                    {formValues.technical_specs.length === 0 && (
-                      <Paper variant="outlined" sx={{ p: 2, bgcolor: 'rgba(0,0,0,0.02)', borderStyle: 'dashed' }}>
-                        <Typography variant="caption" color="text.secondary" display="block" textAlign="center">
-                          Esta categoría no tiene una plantilla de especificaciones definida.
-                        </Typography>
-                      </Paper>
-                    )}
-                  </Stack>
-                </Box>
+
               </Stack>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
