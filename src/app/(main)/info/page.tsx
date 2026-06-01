@@ -40,7 +40,11 @@ const infoData = {
   },
   terminos: {
     title: 'Términos y Condiciones',
-    intro: 'Al utilizar y operar en nuestra plataforma (Devil Gaming), estás aceptando de forma plena los términos, condiciones y normativas estipulados en este documento.',
+    intro: (
+      <>
+        Al utilizar y operar en nuestra plataforma (<span style={{ color: '#cc0000', fontWeight: 800 }}>Devil</span> <span style={{ color: '#1a1a1a', fontWeight: 800 }}>Gaming</span>), estás aceptando de forma plena los términos, condiciones y normativas estipulados en este documento.
+      </>
+    ),
     items: [
       { id: 't1', title: 'Propósito de la Plataforma', content: 'Nuestra web opera como un catálogo y gestor de pedidos informáticos de hardware electrónico orientado al mundo gamer y profesional. Los precios mostrados están sujetos a modificaciones sin previo aviso debido a disponibilidad de stock e importaciones.' },
       { id: 't2', title: 'Proceso de Reserva y Compra', content: 'El sistema de nuestra web no cobra al usuario de forma directa en el checkout. La web toma tu "Pedido" como una intención real de reserva. Una vez emitido el pedido, serás contactado a la brevedad por un asesor a través de WhatsApp para coordinar el pago y liquidar la transacción comercial definitiva.' },

@@ -22,7 +22,7 @@ const Footer = () => {
                 Dominá tu mundo con el estándar de élite en hardware y periféricos premium.
               </Typography>
               <Typography variant="caption" sx={{ opacity: 0.3, display: 'block', mt: 1 }}>
-                © 2026 DEVIL GAMING. Todos los derechos reservados.
+                © 2026 <span style={{ color: '#cc0000', fontWeight: 800 }}>DEVIL</span> <span style={{ color: '#ffffff', fontWeight: 800 }}>GAMING</span>. Todos los derechos reservados.
               </Typography>
             </Stack>
           </Grid>

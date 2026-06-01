@@ -90,8 +90,8 @@ const LocationCard = () => {
               />
 
               <Box>
-                <Typography variant="h4" sx={{ fontWeight: 900, mb: 1, color: 'primary.main' }}>
-                  DEVIL GAMING
+                <Typography variant="h4" sx={{ fontWeight: 900, mb: 1, color: 'white' }}>
+                  <span style={{ color: '#cc0000' }}>DEVIL</span> GAMING
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}>
                   Tu tienda gamer preferida en Zona Oeste. Vení a retirar tus compras y asesorarte con los que saben.

@@ -93,20 +93,20 @@ const CategorySidebar = () => {
           roots = [rootOfCurrent];
         } else {
           roots = roots.filter(r => {
-             const lowerR = r.name.toLowerCase();
-             return !lowerR.includes('armada') && !lowerR.includes('outlet');
+            const lowerR = r.name.toLowerCase();
+            return !lowerR.includes('armada') && !lowerR.includes('outlet');
           });
         }
       } else {
         roots = roots.filter(r => {
-           const lowerR = r.name.toLowerCase();
-           return !lowerR.includes('armada') && !lowerR.includes('outlet');
+          const lowerR = r.name.toLowerCase();
+          return !lowerR.includes('armada') && !lowerR.includes('outlet');
         });
       }
     } else {
       roots = roots.filter(r => {
-         const lowerR = r.name.toLowerCase();
-         return !lowerR.includes('armada') && !lowerR.includes('outlet');
+        const lowerR = r.name.toLowerCase();
+        return !lowerR.includes('armada') && !lowerR.includes('outlet');
       });
     }
 
@@ -184,7 +184,7 @@ const CategorySidebar = () => {
             }}
           >
             <ListItemText
-              primary={isSpecialTree ? "Volver a la Tienda Principal" : "Todos los Productos"}
+              primary={"Todos los Productos"}
               primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
             />
           </ListItemButton>
@@ -332,60 +332,6 @@ const CategorySidebar = () => {
           Filtrar
         </Button>
       </Box>
-
-      <Divider sx={{ my: 3, opacity: 0.5 }} />
-
-      <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, px: 1, letterSpacing: -0.5 }}>
-        DISPONIBILIDAD
-      </Typography>
-      <List disablePadding>
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton
-            selected={currentStock === 'in-stock'}
-            onClick={() => handleStockClick('in-stock')}
-            sx={{
-              borderRadius: 2,
-              '&.Mui-selected': {
-                bgcolor: 'rgba(204, 0, 0, 0.08)',
-                color: 'primary.main',
-                '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' }
-              }
-            }}
-          >
-            <ListItemText
-              primary="En Stock"
-              primaryTypographyProps={{
-                fontSize: '0.85rem',
-                fontWeight: currentStock === 'in-stock' ? 700 : 600,
-                color: currentStock === 'in-stock' ? 'primary.main' : 'inherit'
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-        <ListItem disablePadding sx={{ mb: 0.5 }}>
-          <ListItemButton
-            selected={currentStock === 'out-of-stock'}
-            onClick={() => handleStockClick('out-of-stock')}
-            sx={{
-              borderRadius: 2,
-              '&.Mui-selected': {
-                bgcolor: 'rgba(204, 0, 0, 0.08)',
-                color: 'primary.main',
-                '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' }
-              }
-            }}
-          >
-            <ListItemText
-              primary="Sin Stock"
-              primaryTypographyProps={{
-                fontSize: '0.85rem',
-                fontWeight: currentStock === 'out-of-stock' ? 700 : 600,
-                color: currentStock === 'out-of-stock' ? 'primary.main' : 'inherit'
-              }}
-            />
-          </ListItemButton>
-        </ListItem>
-      </List>
 
       <Divider sx={{ my: 3, opacity: 0.5 }} />
 

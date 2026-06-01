@@ -101,6 +101,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
           {/* Llama de descuento (Top-Left) */}
           {product.discount > 0 && !isOutOfStock && (
             <Box
+              component={motion.div}
+              animate={{
+                y: [0, -6, 0],
+              }}
+              transition={{
+                duration: 2.2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
               sx={{
                 position: 'absolute',
                 top: 8,
@@ -141,39 +150,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
               >
                 OFF
               </Typography>
-            </Box>
-          )}
-
-          {/* Cuernos gaming (Top-Right) */}
-          {product.discount > 0 && !isOutOfStock && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 8,
-                right: 8,
-                zIndex: 3,
-                width: 42,
-                height: 42,
-                borderRadius: '50%',
-                overflow: 'hidden',
-                bgcolor: 'rgba(0, 0, 0, 0.65)',
-                border: '1.5px solid #ff0055',
-                boxShadow: '0 0 10px rgba(255, 0, 85, 0.5)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  backgroundImage: 'url(/discount_logo.png)',
-                  backgroundSize: '75%',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                }}
-              />
             </Box>
           )}
 

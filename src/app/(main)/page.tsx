@@ -111,14 +111,12 @@ const Hero = ({ banners, loading }: HeroProps) => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.7, ease: "easeOut" }}
                   style={{
-                    background: 'linear-gradient(90deg, #ff0000, #cc0000)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
                     display: 'inline-block',
                     textShadow: '0 0 40px rgba(255,0,0,0.6)'
                   }}
                 >
-                  DEVIL GAMING
+                  <span style={{ color: '#cc0000' }}>DEVIL</span>{' '}
+                  <span style={{ color: '#ffffff' }}>GAMING</span>
                 </motion.span>
               </Typography>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
@@ -624,7 +622,7 @@ const HomePage = () => {
       {/* Featured Carousel */}
       <Box sx={{ py: 10 }}>
         <Container maxWidth="xl">
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', mb: 6 }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'flex-end' }, mb: 6, gap: { xs: 1, md: 0 } }}>
             <Box>
               <Typography variant="h2" sx={{
                 fontWeight: 900,
@@ -632,7 +630,8 @@ const HomePage = () => {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 display: 'inline-block',
-                textShadow: '0 0 20px rgba(255,0,0,0.15)'
+                textShadow: '0 0 20px rgba(255,0,0,0.15)',
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '3rem' }
               }}>
                 Productos Destacados
               </Typography>

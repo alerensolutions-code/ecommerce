@@ -36,6 +36,7 @@ import { Collapse } from '@mui/material';
 import { supabase } from '../../../lib/supabase';
 import { FormControlLabel, Switch } from '@mui/material';
 import { compressAndConvertToWebP } from '../../../lib/imageUtils';
+import RichTextEditor from '../../../components/admin/RichTextEditor';
 
 type Product = {
   id: string;
@@ -623,14 +624,14 @@ const ProductsManagement = () => {
                   value={formValues.name}
                   onChange={(e) => setFormValues({ ...formValues, name: e.target.value })}
                 />
-                <TextField
-                  fullWidth
-                  label="Breve Descripción"
-                  multiline
-                  rows={2}
-                  value={formValues.description}
-                  onChange={(e) => setFormValues({ ...formValues, description: e.target.value })}
-                />
+                <Box>
+                  <Typography variant="body2" sx={{ mb: 1, fontWeight: 600, color: 'text.secondary' }}>Descripción del producto</Typography>
+                  <RichTextEditor
+                    value={formValues.description}
+                    onChange={(html: string) => setFormValues({ ...formValues, description: html })}
+                    placeholder="Escribí la descripción del producto..."
+                  />
+                </Box>
                 <Grid container spacing={2}>
                   <Grid size={6}>
                     <TextField

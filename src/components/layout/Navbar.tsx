@@ -248,6 +248,7 @@ const Navbar = () => {
     }
     setMobileOpen(open);
     if (open) fetchCategories();
+    if (!open) setOpenCats({});
   };
 
   return (
@@ -268,16 +269,17 @@ const Navbar = () => {
 
           {/* TOP TIER */}
           <Toolbar disableGutters sx={{ minHeight: { xs: 70, md: 80 }, justifyContent: 'space-between' }}>
-            {/* Mobile Menu Icon */}
-            <IconButton
-              color="inherit"
-              aria-label="open drawer"
-              edge="start"
-              onClick={toggleDrawer(true)}
-              sx={{ mr: 2, display: { md: 'none' } }}
-            >
-              <MenuIcon />
-            </IconButton>
+            {/* Mobile Menu Icon (align left on mobile) */}
+            <Box sx={{ flex: 1, display: { xs: 'flex', md: 'none' }, justifyContent: 'flex-start' }}>
+              <IconButton
+                color="inherit"
+                aria-label="open drawer"
+                onClick={toggleDrawer(true)}
+                sx={{ p: 1 }}
+              >
+                <MenuIcon />
+              </IconButton>
+            </Box>
 
             {/* Left: Search (Desktop only) */}
             <Box sx={{ flex: 1, display: { xs: 'none', md: 'flex' }, justifyContent: 'flex-start' }}>
@@ -404,18 +406,17 @@ const Navbar = () => {
               </ClickAwayListener>
             </Box>
 
-            {/* Center: Logo */}
-            <Box sx={{ display: 'flex', flex: { xs: 1, md: 0 }, justifyContent: { xs: 'flex-end', md: 'center' } }}>
+            {/* Center: Logo (Centered on mobile and desktop) */}
+            <Box sx={{ display: 'flex', flex: { xs: 'none', md: 0 }, justifyContent: 'center', alignItems: 'center', mx: 'auto', gap: 1 }}>
               <Typography
                 variant="h6"
                 noWrap
                 component={Link}
                 href="/"
                 sx={{
-                  mr: 2,
                   display: 'flex',
                   fontWeight: 900,
-                  color: 'white',
+                  color: 'primary.main', // DEVIL in red
                   textDecoration: 'none',
                   fontSize: { xs: '1.2rem', md: '1.5rem' },
                   letterSpacing: '-0.02em',
@@ -424,13 +425,30 @@ const Navbar = () => {
                     transform: 'scale(1.02)',
                   },
                   '& span': {
-                    color: 'primary.main',
+                    color: 'white', // GAMING in white
                     ml: 0.5
                   }
                 }}
               >
                 DEVIL<span>GAMING</span>
               </Typography>
+              {user?.role === 'admin' && (
+                <IconButton
+                  component={Link}
+                  href="/admin"
+                  size="small"
+                  sx={{
+                    display: { xs: 'flex', sm: 'none' },
+                    color: 'primary.main',
+                    border: '1px solid',
+                    borderColor: 'primary.main',
+                    width: 28,
+                    height: 28,
+                  }}
+                >
+                  <LayoutDashboard size={14} />
+                </IconButton>
+              )}
             </Box>
 
             {/* Right: Icons */}
@@ -482,6 +500,44 @@ const Navbar = () => {
               </Box>
             </Box>
           </Toolbar>
+
+          {/* Mobile Search Bar */}
+          <Box sx={{ display: { xs: 'block', md: 'none' }, px: 2, pb: 1.5 }}>
+            <Box sx={{ position: 'relative' }}>
+              <SearchWrapper sx={{ maxWidth: '100%', ml: 0, mr: 0 }}>
+                <SearchIconWrapper>
+                  <Search size={16} />
+                </SearchIconWrapper>
+                <StyledInputBase
+                  placeholder="Buscar productos..."
+                  inputProps={{ 'aria-label': 'search' }}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSearchSubmit(e);
+                    }
+                  }}
+                  endAdornment={
+                    searchQuery ? (
+                      <InputAdornment position="end" sx={{ mr: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => {
+                            setSearchQuery('');
+                            setSearchResults([]);
+                          }}
+                          sx={{ color: 'rgba(255,255,255,0.7)', '&:hover': { color: 'white' } }}
+                        >
+                          <X size={16} />
+                        </IconButton>
+                      </InputAdornment>
+                    ) : null
+                  }
+                />
+              </SearchWrapper>
+            </Box>
+          </Box>
 
           {/* BOTTOM TIER */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, borderTop: '1px solid rgba(255,255,255,0.08)', py: 0, justifyContent: 'center', alignItems: 'center', minHeight: 48 }}>
@@ -687,7 +743,8 @@ const Navbar = () => {
         PaperProps={{
           sx: {
             width: 300,
-            background: 'white',
+            background: '#121212',
+            color: 'white',
           }
         }}
       >
@@ -696,150 +753,120 @@ const Navbar = () => {
           role="presentation"
         >
           {/* Drawer Header */}
-          <Box sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 900,
-                color: 'secondary.main',
-                fontSize: '1.2rem',
-                textDecoration: 'none',
-                '& span': { color: 'primary.main', ml: 0.5 }
-              }}
-            >
-              DEVIL<span>GAMING</span>
-            </Typography>
-            <IconButton onClick={toggleDrawer(false)}>
-              <X size={20} />
-            </IconButton>
+          <Box sx={{ p: 3, borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 900,
+                  color: 'primary.main', // DEVIL in red
+                  fontSize: '1.2rem',
+                  textDecoration: 'none',
+                  '& span': { color: 'white', ml: 0.5 } // GAMING in white
+                }}
+              >
+                DEVIL<span>GAMING</span>
+              </Typography>
+              <IconButton onClick={toggleDrawer(false)} sx={{ color: 'white' }}>
+                <X size={20} />
+              </IconButton>
+            </Box>
+
           </Box>
 
           {/* Drawer Categories */}
           <Box sx={{ flexGrow: 1, py: 2, overflowY: 'auto' }}>
-            <Typography variant="overline" sx={{ px: 3, fontWeight: 800, color: 'text.secondary', letterSpacing: '0.1em' }}>
-              Búsqueda
-            </Typography>
-            <Box sx={{ px: 3, mb: 3 }}>
-              <TextField
-                fullWidth
-                placeholder="¿Qué estás buscando?"
-                size="small"
-                value={searchQuery}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
-                  if (e.key === 'Enter') {
-                    handleSearchSubmit(e);
-                    toggleDrawer(false)(e as any);
-                  }
-                }}
-                InputProps={{
-                  sx: { borderRadius: 2, bgcolor: 'rgba(0,0,0,0.02)' },
-                  startAdornment: <Search size={16} style={{ marginRight: 8, opacity: 0.5 }} />,
-                  endAdornment: searchQuery ? (
-                    <InputAdornment position="end">
-                      <IconButton
-                        size="small"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSearchResults([]);
-                          setShowDropdown(false);
-                        }}
-                      >
-                        <X size={16} />
-                      </IconButton>
-                    </InputAdornment>
-                  ) : null
-                }}
-              />
-            </Box>
-
-            <Typography variant="overline" sx={{ px: 3, fontWeight: 800, color: 'text.secondary', letterSpacing: '0.1em' }}>
-              Categorías
-            </Typography>
             <List>
               {loadingCategories ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                   <CircularProgress size={24} color="primary" />
                 </Box>
-              ) : dbCategories.map((cat, index) => (
-                <Box key={cat.id}>
-                  <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <ListItem disablePadding>
-                      <ListItemButton
-                        component={Link}
-                        href={cat.path}
-                        onClick={toggleDrawer(false)}
-                        sx={{
-                          py: 2,
-                          px: 3,
-                          '&:hover': { bgcolor: 'rgba(204,0,0,0.04)', color: 'primary.main' }
-                        }}
-                      >
-                        <ListItemText
-                          primary={cat.name}
-                          primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem' }}
-                        />
-                      </ListItemButton>
-                      {cat.subcategories && cat.subcategories.length > 0 && (
-                        <IconButton
-                          onClick={(e) => handleMobileCatToggle(cat.id, e)}
-                          sx={{ mr: 2, color: openCats[cat.id] ? 'primary.main' : 'inherit' }}
+              ) : dbCategories.map((cat, index) => {
+                const hasSub = cat.subcategories && cat.subcategories.length > 0;
+                return (
+                  <Box key={cat.id}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <ListItem disablePadding>
+                        <ListItemButton
+                          {...(hasSub ? {} : { component: Link, href: cat.path })}
+                          onClick={(e) => {
+                            if (hasSub) {
+                              handleMobileCatToggle(cat.id, e);
+                            } else {
+                              toggleDrawer(false)(e as any);
+                            }
+                          }}
+                          sx={{
+                            py: 2,
+                            px: 3,
+                            color: 'white',
+                            '&:hover': { bgcolor: 'rgba(204,0,0,0.06)', color: 'primary.main' }
+                          }}
                         >
-                          <motion.div
-                            animate={{ rotate: openCats[cat.id] ? 90 : 0 }}
-                            transition={{ duration: 0.2 }}
-                            style={{ display: 'flex' }}
-                          >
-                            <ChevronRight size={20} />
-                          </motion.div>
-                        </IconButton>
-                      )}
-                    </ListItem>
-                  </motion.div>
+                          <ListItemText
+                            primary={cat.name}
+                            primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem' }}
+                          />
+                          {hasSub && (
+                            <Box sx={{ color: openCats[cat.id] ? 'primary.main' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center' }}>
+                              <motion.div
+                                animate={{ rotate: openCats[cat.id] ? 90 : 0 }}
+                                transition={{ duration: 0.2 }}
+                                style={{ display: 'flex' }}
+                              >
+                                <ChevronRight size={20} />
+                              </motion.div>
+                            </Box>
+                          )}
+                        </ListItemButton>
+                      </ListItem>
+                    </motion.div>
 
-                  {cat.subcategories && cat.subcategories.length > 0 && (
-                    <Collapse in={openCats[cat.id]} timeout="auto" unmountOnExit>
-                      <List component="div" disablePadding sx={{ bgcolor: 'rgba(0,0,0,0.02)' }}>
-                        {cat.subcategories.map((sub, subIdx) => (
-                          <motion.div
-                            key={sub.id}
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: subIdx * 0.03 }}
-                          >
-                            <ListItemButton
-                              component={Link}
-                              href={sub.path}
-                              onClick={toggleDrawer(false)}
-                              sx={{
-                                py: 1.5,
-                                pl: 6,
-                                pr: 3,
-                                '&:hover': { bgcolor: 'rgba(204,0,0,0.04)', color: 'primary.main' }
-                              }}
+                    {hasSub && (
+                      <Collapse in={openCats[cat.id]} timeout="auto" unmountOnExit>
+                        <List component="div" disablePadding sx={{ bgcolor: 'rgba(255,255,255,0.02)' }}>
+                          {cat.subcategories.map((sub, subIdx) => (
+                            <motion.div
+                              key={sub.id}
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: subIdx * 0.03 }}
                             >
-                              <ListItemText
-                                primary={sub.name}
-                                primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
-                              />
-                            </ListItemButton>
-                          </motion.div>
-                        ))}
-                      </List>
-                    </Collapse>
-                  )}
-                </Box>
-              ))}
+                              <ListItemButton
+                                component={Link}
+                                href={sub.path}
+                                onClick={toggleDrawer(false)}
+                                sx={{
+                                  py: 1.5,
+                                  pl: 6,
+                                  pr: 3,
+                                  color: 'rgba(255,255,255,0.7)',
+                                  '&:hover': { bgcolor: 'rgba(204,0,0,0.06)', color: 'primary.main' }
+                                }}
+                              >
+                                <ListItemText
+                                  primary={sub.name}
+                                  primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
+                                />
+                              </ListItemButton>
+                            </motion.div>
+                          ))}
+                        </List>
+                      </Collapse>
+                    )}
+                  </Box>
+                );
+              })}
             </List>
           </Box>
 
           {/* Drawer Footer */}
-          <Box sx={{ p: 3, borderTop: '1px solid rgba(0,0,0,0.06)', bgcolor: 'rgba(0,0,0,0.01)' }}>
-            <Box sx={{ mb: 2 }}>
+          <Box sx={{ p: 3, borderTop: '1px solid rgba(255,255,255,0.08)', bgcolor: 'rgba(0,0,0,0.2)' }}>
+            <Box sx={{ mb: 0 }}>
               <Button
                 component={Link}
                 href={armadaPath}
@@ -853,7 +880,10 @@ const Navbar = () => {
                   mb: 1.5,
                   fontWeight: 900,
                   bgcolor: 'primary.main',
-                  boxShadow: '0 4px 12px rgba(204,0,0,0.3)'
+                  boxShadow: '0 4px 12px rgba(204,0,0,0.3)',
+                  '&:hover': {
+                    bgcolor: 'primary.dark'
+                  }
                 }}
               >
                 PCs Armadas
@@ -868,21 +898,17 @@ const Navbar = () => {
                 sx={{
                   borderRadius: 2,
                   py: 1.5,
-                  mb: 1.5,
                   fontWeight: 900,
                   color: 'primary.main',
                   borderColor: 'primary.main',
+                  '&:hover': {
+                    borderColor: 'primary.light',
+                    bgcolor: 'rgba(204,0,0,0.05)'
+                  }
                 }}
               >
                 Placas Outlet
               </Button>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, color: 'text.secondary' }}>
-              <Instagram size={20} cursor="pointer" />
-              <Facebook size={20} cursor="pointer" />
-              <Mail size={20} cursor="pointer" />
-              <Phone size={20} cursor="pointer" />
             </Box>
           </Box>
         </Box>
