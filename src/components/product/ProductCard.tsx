@@ -98,76 +98,50 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.1)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           />
-          {/* Llama de descuento (Top-Left) */}
-          {product.discount > 0 && !isOutOfStock && (
+          {/* Descuento badge (Top-Left) */}
+          {product.discount > 0 && (
             <Box
-              component={motion.div}
-              animate={{
-                y: [0, -6, 0],
-              }}
-              transition={{
-                duration: 2.2,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
               sx={{
                 position: 'absolute',
                 top: 8,
                 left: 8,
                 zIndex: 3,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '8px 14px',
-                background: 'linear-gradient(135deg, #ff0055 0%, #ff5500 100%)',
-                borderRadius: '20px 4px 20px 20px', // Flame/drop shape
-                boxShadow: '0 4px 15px rgba(255, 0, 85, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
+                bgcolor: '#cc0000',
+                color: '#fff',
+                fontSize: '0.72rem',
+                fontWeight: 900,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '5px 12px',
+                borderRadius: '100px',
+                boxShadow: '0 2px 8px rgba(204, 0, 0, 0.25)',
               }}
             >
-              <Typography
-                sx={{
-                  color: '#fff',
-                  fontWeight: 900,
-                  fontSize: '1.1rem',
-                  lineHeight: 1,
-                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                }}
-              >
-                {product.discount}%
-              </Typography>
-              <Typography
-                sx={{
-                  color: '#fff',
-                  fontWeight: 900,
-                  fontSize: '0.8rem',
-                  lineHeight: 1,
-                  letterSpacing: '0.5px',
-                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                  mt: 0.3,
-                }}
-              >
-                OFF
-              </Typography>
+              -{product.discount}%
             </Box>
           )}
 
-          {/* Sin Stock badge */}
+          {/* Sin Stock badge (Top-Right) */}
           {isOutOfStock && (
-            <Chip
-              label="Sin Stock"
-              size="small"
+            <Box
               sx={{
                 position: 'absolute',
                 top: 8,
-                left: 8,
-                bgcolor: 'error.main',
+                right: 8,
+                zIndex: 3,
+                bgcolor: '#111',
                 color: 'white',
-                fontWeight: 700,
+                fontWeight: 900,
                 fontSize: '0.7rem',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '5px 12px',
+                borderRadius: '100px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
               }}
-            />
+            >
+              Sin Stock
+            </Box>
           )}
         </Box>
 
@@ -185,18 +159,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
             {product.name}
           </Typography>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1.5 }}>
-            {product.discount > 0 && !isOutOfStock ? (
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-                <Typography variant="body2" sx={{ textDecoration: 'line-through', color: '#5e5858ff', fontWeight: 600, fontSize: '0.9rem' }}>
-                  ${product.price.toLocaleString('es-ES')}
-                </Typography>
-                <Typography variant="h6" color="error.main" sx={{ fontWeight: 900, fontSize: '1.1rem' }}>
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1.5, width: '100%', mb: 1.5 }}>
+            {product.discount > 0 ? (
+              <>
+                <Typography variant="h6" color={isOutOfStock ? 'text.secondary' : 'primary.main'} sx={{ fontWeight: 900, fontSize: '1.25rem', lineHeight: 1 }}>
                   ${(product.price * (1 - product.discount / 100)).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
                 </Typography>
-              </Box>
+                <Typography variant="body2" sx={{ textDecoration: 'line-through', color: '#8c8c8c', fontWeight: 600, fontSize: '0.9rem', lineHeight: 1 }}>
+                  ${product.price.toLocaleString('es-ES')}
+                </Typography>
+              </>
             ) : (
-              <Typography variant="h6" color={isOutOfStock ? 'text.secondary' : 'primary.main'} sx={{ fontWeight: 900, fontSize: '1.1rem' }}>
+              <Typography variant="h6" color={isOutOfStock ? 'text.secondary' : 'primary.main'} sx={{ fontWeight: 900, fontSize: '1.25rem', lineHeight: 1 }}>
                 ${displayPrice.toLocaleString('es-ES')}
               </Typography>
             )}
@@ -214,10 +188,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
               }
               sx={{
                 width: '100%',
+                height: '38px',
                 py: 0.5,
                 px: layout === 'list' ? 4 : undefined,
                 fontWeight: 800,
-                borderRadius: 2,
+                borderRadius: '12px',
                 borderColor: '#25d366',
                 color: '#25d366',
                 fontSize: '0.75rem',
@@ -256,19 +231,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
                 disabled={isAdded}
                 sx={{
                   width: '100%',
+                  height: '38px',
                   py: 0.5,
                   px: layout === 'list' ? 4 : undefined,
                   fontWeight: 800,
                   fontSize: '0.75rem',
-                  borderRadius: 2,
+                  borderRadius: '12px',
                   boxShadow: 'none',
                   transition: 'all 0.3s ease',
                   ...(isAdded ? {
-                    bgcolor: '#4caf50',
+                    bgcolor: '#111',
                     color: 'white',
-                    '&:hover': { bgcolor: '#45a049', boxShadow: 'none' },
+                    '&:hover': { bgcolor: '#111', boxShadow: 'none' },
                     '&.Mui-disabled': {
-                      bgcolor: '#4caf50',
+                      bgcolor: '#111',
                       color: 'white',
                       opacity: 1
                     }
@@ -277,7 +253,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
                   })
                 }}
               >
-                {isAdded ? '¡Agregado!' : 'Añadir al Carrito'}
+                {isAdded ? 'Agregado al carrito' : 'Añadir al Carrito'}
               </Button>
             </motion.div>
           )}

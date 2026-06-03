@@ -26,7 +26,8 @@ import {
   Avatar,
   ListItemAvatar,
   ClickAwayListener,
-  InputAdornment
+  InputAdornment,
+  Divider
 } from '@mui/material';
 import {
   Search,
@@ -111,6 +112,8 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
     },
   },
 }));
+
+const WHATSAPP_NUMBER = '5491155099149';
 
 const Navbar = () => {
   const { state } = useCart();
@@ -432,23 +435,6 @@ const Navbar = () => {
               >
                 DEVIL<span>GAMING</span>
               </Typography>
-              {user?.role === 'admin' && (
-                <IconButton
-                  component={Link}
-                  href="/admin"
-                  size="small"
-                  sx={{
-                    display: { xs: 'flex', sm: 'none' },
-                    color: 'primary.main',
-                    border: '1px solid',
-                    borderColor: 'primary.main',
-                    width: 28,
-                    height: 28,
-                  }}
-                >
-                  <LayoutDashboard size={14} />
-                </IconButton>
-              )}
             </Box>
 
             {/* Right: Icons */}
@@ -542,9 +528,40 @@ const Navbar = () => {
           {/* BOTTOM TIER */}
           <Box sx={{ display: { xs: 'none', md: 'flex' }, borderTop: '1px solid rgba(255,255,255,0.08)', py: 0, justifyContent: 'center', alignItems: 'center', minHeight: 48 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Button component={Link} href="/" sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 800, fontSize: '0.85rem', '&:hover': { color: 'primary.main', bgcolor: 'transparent' } }}>
+              <Box
+                component={Link}
+                href="/"
+                sx={{
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontWeight: 800,
+                  fontSize: '0.85rem',
+                  transition: 'all 0.3s',
+                  color: 'rgba(255,255,255,0.9)',
+                  position: 'relative',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    width: '0%',
+                    height: '2px',
+                    bottom: -4,
+                    left: 0,
+                    backgroundColor: 'primary.main',
+                    transition: 'width 0.3s'
+                  },
+                  '&:hover': {
+                    color: 'primary.main',
+                    '&::after': {
+                      width: '100%'
+                    }
+                  }
+                }}
+              >
                 INICIO
-              </Button>
+              </Box>
 
               <Box
                 onMouseEnter={() => { fetchCategories(); setIsMenuOpen(true); }}
@@ -699,35 +716,77 @@ const Navbar = () => {
                 </AnimatePresence>
               </Box>
 
-              <Button
+              <Box
                 component={Link}
                 href={armadaPath}
                 onClick={() => setIsMenuOpen(false)}
                 sx={{
-                  color: 'rgba(255,255,255,0.9)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
                   fontWeight: 800,
                   fontSize: '0.85rem',
                   transition: 'all 0.3s',
-                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' }
+                  color: 'rgba(255,255,255,0.9)',
+                  position: 'relative',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    width: '0%',
+                    height: '2px',
+                    bottom: -4,
+                    left: 0,
+                    backgroundColor: 'primary.main',
+                    transition: 'width 0.3s'
+                  },
+                  '&:hover': {
+                    color: 'primary.main',
+                    '&::after': {
+                      width: '100%'
+                    }
+                  }
                 }}
               >
                 PC GAMER ARMADAS
-              </Button>
+              </Box>
 
-              <Button
+              <Box
                 component={Link}
                 href={outletPath}
                 onClick={() => setIsMenuOpen(false)}
                 sx={{
-                  color: 'rgba(255,255,255,0.9)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
                   fontWeight: 800,
                   fontSize: '0.85rem',
                   transition: 'all 0.3s',
-                  '&:hover': { color: 'primary.main', bgcolor: 'transparent' }
+                  color: 'rgba(255,255,255,0.9)',
+                  position: 'relative',
+                  textTransform: 'uppercase',
+                  textDecoration: 'none',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    width: '0%',
+                    height: '2px',
+                    bottom: -4,
+                    left: 0,
+                    backgroundColor: 'primary.main',
+                    transition: 'width 0.3s'
+                  },
+                  '&:hover': {
+                    color: 'primary.main',
+                    '&::after': {
+                      width: '100%'
+                    }
+                  }
                 }}
               >
                 PLACAS OUTLET
-              </Button>
+              </Box>
 
 
             </Box>
@@ -777,6 +836,75 @@ const Navbar = () => {
           {/* Drawer Categories */}
           <Box sx={{ flexGrow: 1, py: 2, overflowY: 'auto' }}>
             <List>
+              {/* Inicio */}
+              <ListItem disablePadding>
+                <ListItemButton
+                  component={Link}
+                  href="/"
+                  onClick={toggleDrawer(false)}
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(204,0,0,0.06)', color: 'primary.main' }
+                  }}
+                >
+                  <ListItemText
+                    primary="Inicio"
+                    primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+                  />
+                </ListItemButton>
+              </ListItem>
+
+              {/* PCs Gamer Armadas */}
+              <ListItem disablePadding>
+                <ListItemButton
+                  component={Link}
+                  href={armadaPath}
+                  onClick={toggleDrawer(false)}
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    color: 'white',
+                    '&:hover': { bgcolor: 'rgba(204,0,0,0.06)', color: 'primary.main' }
+                  }}
+                >
+                  <ListItemText
+                    primary="PC Gamer Armadas"
+                    primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+                  />
+                </ListItemButton>
+              </ListItem>
+
+              {/* Placas Outlet */}
+              <ListItem disablePadding>
+                <ListItemButton
+                  component={Link}
+                  href={outletPath}
+                  onClick={toggleDrawer(false)}
+                  sx={{
+                    py: 1.5,
+                    px: 3,
+                    color: 'rgba(255,255,255,0.9)',
+                    '&:hover': { bgcolor: 'rgba(204,0,0,0.06)', color: 'primary.main' }
+                  }}
+                >
+                  <ListItemText
+                    primary="Placas Outlet"
+                    primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+                  />
+                </ListItemButton>
+              </ListItem>
+
+              <Divider sx={{ my: 2, borderColor: 'rgba(255,255,255,0.08)' }} />
+
+              {/* Categorías Title */}
+              <Box sx={{ px: 3, py: 1 }}>
+                <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 800, letterSpacing: '1px' }}>
+                  Categorías
+                </Typography>
+              </Box>
+
               {loadingCategories ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                   <CircularProgress size={24} color="primary" />
@@ -801,7 +929,7 @@ const Navbar = () => {
                             }
                           }}
                           sx={{
-                            py: 2,
+                            py: 1.5,
                             px: 3,
                             color: 'white',
                             '&:hover': { bgcolor: 'rgba(204,0,0,0.06)', color: 'primary.main' }
@@ -809,16 +937,16 @@ const Navbar = () => {
                         >
                           <ListItemText
                             primary={cat.name}
-                            primaryTypographyProps={{ fontWeight: 800, fontSize: '0.95rem' }}
+                            primaryTypographyProps={{ fontWeight: 700, fontSize: '0.9rem', color: 'rgba(255,255,255,0.8)' }}
                           />
                           {hasSub && (
-                            <Box sx={{ color: openCats[cat.id] ? 'primary.main' : 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center' }}>
+                            <Box sx={{ color: openCats[cat.id] ? 'primary.main' : 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center' }}>
                               <motion.div
                                 animate={{ rotate: openCats[cat.id] ? 90 : 0 }}
                                 transition={{ duration: 0.2 }}
                                 style={{ display: 'flex' }}
                               >
-                                <ChevronRight size={20} />
+                                <ChevronRight size={18} />
                               </motion.div>
                             </Box>
                           )}
@@ -841,16 +969,16 @@ const Navbar = () => {
                                 href={sub.path}
                                 onClick={toggleDrawer(false)}
                                 sx={{
-                                  py: 1.5,
-                                  pl: 6,
+                                  py: 1.2,
+                                  pl: 5,
                                   pr: 3,
-                                  color: 'rgba(255,255,255,0.7)',
+                                  color: 'rgba(255,255,255,0.6)',
                                   '&:hover': { bgcolor: 'rgba(204,0,0,0.06)', color: 'primary.main' }
                                 }}
                               >
                                 <ListItemText
                                   primary={sub.name}
-                                  primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
+                                  primaryTypographyProps={{ fontWeight: 600, fontSize: '0.8rem' }}
                                 />
                               </ListItemButton>
                             </motion.div>
@@ -864,53 +992,34 @@ const Navbar = () => {
             </List>
           </Box>
 
-          {/* Drawer Footer */}
-          <Box sx={{ p: 3, borderTop: '1px solid rgba(255,255,255,0.08)', bgcolor: 'rgba(0,0,0,0.2)' }}>
-            <Box sx={{ mb: 0 }}>
+          {/* Admin Button - only for admins */}
+          {user?.role === 'admin' && (
+            <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <Button
                 component={Link}
-                href={armadaPath}
-                variant="contained"
+                href="/admin"
                 fullWidth
-                onClick={toggleDrawer(false)}
-                startIcon={<Zap size={18} />}
-                sx={{
-                  borderRadius: 2,
-                  py: 1.5,
-                  mb: 1.5,
-                  fontWeight: 900,
-                  bgcolor: 'primary.main',
-                  boxShadow: '0 4px 12px rgba(204,0,0,0.3)',
-                  '&:hover': {
-                    bgcolor: 'primary.dark'
-                  }
-                }}
-              >
-                PCs Armadas
-              </Button>
-              <Button
-                component={Link}
-                href={outletPath}
                 variant="outlined"
-                fullWidth
+                startIcon={<LayoutDashboard size={16} />}
                 onClick={toggleDrawer(false)}
-                startIcon={<Zap size={18} />}
                 sx={{
-                  borderRadius: 2,
-                  py: 1.5,
-                  fontWeight: 900,
-                  color: 'primary.main',
                   borderColor: 'primary.main',
+                  color: 'primary.main',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  borderRadius: 2,
+                  py: 1,
                   '&:hover': {
+                    bgcolor: 'rgba(204,0,0,0.08)',
                     borderColor: 'primary.light',
-                    bgcolor: 'rgba(204,0,0,0.05)'
                   }
                 }}
               >
-                Placas Outlet
+                Panel de Administración
               </Button>
             </Box>
-          </Box>
+          )}
+
         </Box>
       </Drawer>
 

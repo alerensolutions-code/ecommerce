@@ -2,10 +2,10 @@
 import React, { useState } from 'react';
 import {
   Box, Drawer, List, ListItem, ListItemButton, ListItemIcon,
-  ListItemText, Typography, Divider, AppBar, Toolbar, Avatar, IconButton, useTheme, useMediaQuery
+  ListItemText, Typography, Divider, AppBar, Toolbar, Avatar, IconButton, useTheme, useMediaQuery, Collapse
 } from '@mui/material';
 import {
-  LayoutDashboard, Package, ShoppingBag, LogOut, Store, Menu, Settings, Image
+  LayoutDashboard, Package, ShoppingBag, LogOut, Store, Menu, Settings, Image, ChevronDown, ChevronUp, Tag
 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -22,18 +22,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
+  const [tiendaOpen, setTiendaOpen] = useState(true);
+  const [configOpen, setConfigOpen] = useState(true);
+
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-
-  const menuItems = [
-    { text: 'Dashboard', icon: <LayoutDashboard size={20} />, path: '/admin' },
-    { text: 'Productos', icon: <Package size={20} />, path: '/admin/products' },
-    { text: 'Categorías', icon: <Package size={20} />, path: '/admin/categories' },
-    { text: 'Banners', icon: <Image size={20} />, path: '/admin/banners' },
-    { text: 'Pedidos', icon: <ShoppingBag size={20} />, path: '/admin/orders' },
-    { text: 'Ajustes', icon: <Settings size={20} />, path: '/admin/settings' },
-  ];
 
   const handleLogout = () => {
     logout();
@@ -42,45 +36,160 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
 
   const drawerContent = (
     <>
-      <Box sx={{ p: 3, textAlign: 'center' }}>
+      <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="h6" sx={{ fontWeight: 800, color: 'primary.main' }}>
           {"DEVIL"}
           <span style={{ color: 'white' }}>ADMIN</span>
         </Typography>
       </Box>
       <Divider sx={{ borderColor: 'rgba(255,255,255,0.05)' }} />
-      <List sx={{ px: 2, py: 4 }}>
-        {menuItems.map((item) => {
-          const isActive = pathname === item.path;
-          return (
-            <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
-              <ListItemButton
-                component={Link}
-                href={item.path}
-                onClick={isMobile ? handleDrawerToggle : undefined}
-                sx={{
-                  borderRadius: 2,
-                  bgcolor: isActive ? 'primary.main' : 'transparent',
-                  '&:hover': {
-                    bgcolor: isActive ? 'primary.main' : 'rgba(204, 0, 0, 0.1)'
-                  }
-                }}
-              >
-                <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
-                />
-              </ListItemButton>
-            </ListItem>
-          );
-        })}
+      <List sx={{ px: 2, py: 1.5 }}>
+        {/* General */}
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            component={Link}
+            href="/admin"
+            onClick={isMobile ? handleDrawerToggle : undefined}
+            sx={{
+              borderRadius: 2,
+              bgcolor: pathname === '/admin' ? 'primary.main' : 'transparent',
+              '&:hover': {
+                bgcolor: pathname === '/admin' ? 'primary.main' : 'rgba(204, 0, 0, 0.1)'
+              }
+            }}
+          >
+            <ListItemIcon sx={{ color: 'white', minWidth: 40 }}>
+              <LayoutDashboard size={20} />
+            </ListItemIcon>
+            <ListItemText
+              primary="Dashboard"
+              primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
+            />
+          </ListItemButton>
+        </ListItem>
+
+        {/* Grupo Tienda */}
+        <Box sx={{ mb: 0.5 }}>
+          <ListItemButton
+            onClick={() => setTiendaOpen(!tiendaOpen)}
+            sx={{
+              borderRadius: 2,
+              color: 'rgba(255, 255, 255, 0.7)',
+              justifyContent: 'space-between',
+              '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ListItemIcon sx={{ color: 'rgba(255, 255, 255, 0.7)', minWidth: 40 }}>
+                <Package size={20} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Tienda"
+                primaryTypographyProps={{ fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+              />
+            </Box>
+            {tiendaOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </ListItemButton>
+          
+          <Collapse in={tiendaOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding sx={{ pl: 2, mt: 0.5 }}>
+              {[
+                { text: 'Productos', icon: <Package size={18} />, path: '/admin/products' },
+                { text: 'Categorías', icon: <Tag size={18} />, path: '/admin/categories' },
+                { text: 'Pedidos', icon: <ShoppingBag size={18} />, path: '/admin/orders' },
+              ].map((item) => {
+                const isActive = pathname === item.path;
+                return (
+                  <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                    <ListItemButton
+                      component={Link}
+                      href={item.path}
+                      onClick={isMobile ? handleDrawerToggle : undefined}
+                      sx={{
+                        borderRadius: 2,
+                        bgcolor: isActive ? 'primary.main' : 'transparent',
+                        '&:hover': {
+                          bgcolor: isActive ? 'primary.main' : 'rgba(204, 0, 0, 0.1)'
+                        }
+                      }}
+                    >
+                      <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.text}
+                        primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Collapse>
+        </Box>
+
+        {/* Grupo Personalizar */}
+        <Box sx={{ mb: 0.5 }}>
+          <ListItemButton
+            onClick={() => setConfigOpen(!configOpen)}
+            sx={{
+              borderRadius: 2,
+              color: 'rgba(255, 255, 255, 0.7)',
+              justifyContent: 'space-between',
+              '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.05)' }
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ListItemIcon sx={{ color: 'rgba(255, 255, 255, 0.7)', minWidth: 40 }}>
+                <Settings size={20} />
+              </ListItemIcon>
+              <ListItemText
+                primary="Personalizar"
+                primaryTypographyProps={{ fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+              />
+            </Box>
+            {configOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </ListItemButton>
+          
+          <Collapse in={configOpen} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding sx={{ pl: 2, mt: 0.5 }}>
+              {[
+                { text: 'Banners', icon: <Image size={18} />, path: '/admin/banners' },
+                { text: 'Ajustes', icon: <Settings size={18} />, path: '/admin/settings' },
+              ].map((item) => {
+                const isActive = pathname === item.path;
+                return (
+                  <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
+                    <ListItemButton
+                      component={Link}
+                      href={item.path}
+                      onClick={isMobile ? handleDrawerToggle : undefined}
+                      sx={{
+                        borderRadius: 2,
+                        bgcolor: isActive ? 'primary.main' : 'transparent',
+                        '&:hover': {
+                          bgcolor: isActive ? 'primary.main' : 'rgba(204, 0, 0, 0.1)'
+                        }
+                      }}
+                    >
+                      <ListItemIcon sx={{ color: 'white', minWidth: 36 }}>
+                        {item.icon}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={item.text}
+                        primaryTypographyProps={{ fontWeight: 600, fontSize: '0.85rem' }}
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Collapse>
+        </Box>
       </List>
-      <Box sx={{ mt: 'auto', p: 2 }}>
+      <Box sx={{ mt: 'auto', p: 1.5 }}>
         <List>
-          <ListItem disablePadding sx={{ mb: 1 }}>
+          <ListItem disablePadding sx={{ mb: 0.5 }}>
             <ListItemButton component={Link} href="/" sx={{ borderRadius: 2, '&:hover': { bgcolor: 'rgba(255,255,255,0.07)' } }}>
               <ListItemIcon sx={{ color: 'rgba(255,255,255,0.6)', minWidth: 40 }}>
                 <Store size={20} />
@@ -122,6 +231,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 width: drawerWidth,
                 bgcolor: 'secondary.main',
                 color: 'white',
+                overflowY: 'auto',
+                scrollbarWidth: 'none',
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
               },
             }}
           >
@@ -137,6 +251,11 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
                 borderRight: '1px solid rgba(0,0,0,0.05)',
                 bgcolor: 'secondary.main',
                 color: 'white',
+                overflowY: 'auto',
+                scrollbarWidth: 'none',
+                '&::-webkit-scrollbar': {
+                  display: 'none',
+                },
               },
             }}
             open

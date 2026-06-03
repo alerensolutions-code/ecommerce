@@ -21,6 +21,7 @@ const GoogleReviews = () => {
           const data = await res.json();
           if (data.rating) {
             setRating(data.rating);
+            console.log(data);
           }
           setReviewsCount(data.reviewsCount || 0);
           const mapped = (data.reviews || []).map((r: any) => ({
@@ -73,7 +74,7 @@ const GoogleReviews = () => {
   };
 
   return (
-    <Box sx={{ py: 10, bgcolor: '#fafafa', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+    <Box sx={{ py: 3, bgcolor: '#f4f4f4', borderTop: '1px solid rgba(255,255,255,0.05)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
       <Container maxWidth="xl">
         {/* Title */}
         <Box sx={{ textAlign: 'center', mb: 6 }}>
@@ -114,135 +115,122 @@ const GoogleReviews = () => {
           </Stack>
         </Box>
 
-        {/* Container with Red/Black Radial Gradient (matching PCs Pre-armadas) */}
-        <Box
-          sx={{
-            bgcolor: '#000000ff',
-            borderRadius: 6,
-            border: '1px solid rgba(204, 0, 0, 0.23)',
-            backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(204, 0, 0, 0.2) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(204, 0, 0, 0.15) 0%, transparent 40%)',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.8), 0 0 35px rgba(204, 0, 0, 0.28)',
-            p: { xs: 3, md: 5 },
-            position: 'relative',
-            overflow: 'hidden',
-            mb: 4
-          }}
-        >
-          {/* Carousel / Grid Container */}
-          <Box sx={{ position: 'relative', width: '100%' }}>
-            <Box
-              ref={scrollContainerRef}
-              onScroll={handleScroll}
-              sx={{
-                display: 'flex',
-                gap: 3,
-                overflowX: 'auto',
-                scrollSnapType: isMobile ? 'x mandatory' : 'none',
-                scrollbarWidth: 'none', // Firefox
-                '&::-webkit-scrollbar': {
-                  display: 'none' // Safari/Chrome
-                },
-                pt: 1.5, // Space at the top to prevent clipping card hover translation
-                pb: 2.5, // Space at the bottom to prevent clipping card hover shadows
-                px: { xs: 1, md: 2 }
-              }}
-            >
-              {reviews.map((review, idx) => (
-                <Box
-                  key={idx}
-                  component={motion.div}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  viewport={{ once: true }}
+        {/* Carousel / Grid Container */}
+        <Box sx={{ position: 'relative', width: '100%', mb: 4 }}>
+          <Box
+            ref={scrollContainerRef}
+            onScroll={handleScroll}
+            sx={{
+              display: 'flex',
+              gap: 3,
+              overflowX: 'auto',
+              scrollSnapType: isMobile ? 'x mandatory' : 'none',
+              scrollbarWidth: 'none', // Firefox
+              '&::-webkit-scrollbar': {
+                display: 'none' // Safari/Chrome
+              },
+              pt: 1.5, // Space at the top to prevent clipping card hover translation
+              pb: 2.5, // Space at the bottom to prevent clipping card hover shadows
+              px: { xs: 1, md: 2 }
+            }}
+          >
+            {reviews.map((review, idx) => (
+              <Box
+                key={idx}
+                component={motion.div}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: idx * 0.1 }}
+                viewport={{ once: true }}
+                sx={{
+                  flex: { xs: '0 0 100%', md: '1 1 0px' },
+                  minWidth: { xs: '280px', md: '300px' },
+                  scrollSnapAlign: 'center',
+                  display: 'flex',
+                }}
+              >
+                <Paper
+                  elevation={0}
                   sx={{
-                    flex: { xs: '0 0 100%', md: '1 1 0px' },
-                    minWidth: { xs: '280px', md: '300px' },
-                    scrollSnapAlign: 'center',
+                    p: 4,
+                    width: '100%',
+                    bgcolor: '#000000ff',
+                    border: '1px solid rgba(204, 0, 0, 0.23)',
+                    backgroundImage: 'radial-gradient(circle at 10% 20%, rgba(204, 0, 0, 0.2) 0%, transparent 40%), radial-gradient(circle at 90% 80%, rgba(204, 0, 0, 0.15) 0%, transparent 40%)',
+                    borderRadius: 4,
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: 'none',
+                    '&:hover': {
+                      boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                      borderColor: 'rgba(204,0,0,0.4)',
+                      transform: 'translateY(-6px)'
+                    }
                   }}
                 >
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 4,
-                      width: '100%',
-                      bgcolor: '#383535ff',
-                      border: '1px solid rgba(255,255,255,0.05)',
-                      borderRadius: 4,
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      '&:hover': {
-                        boxShadow: '0 12px 30px rgba(204,0,0,0.2)',
-                        borderColor: 'rgba(204,0,0,0.3)',
-                        transform: 'translateY(-6px)'
-                      }
-                    }}
-                  >
-                    <Box>
-                      {/* Header */}
-                      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-                        <Avatar
-                          sx={{
-                            bgcolor: '#000000',
-                            color: '#ffffff',
-                            fontWeight: 700,
-                            fontSize: '0.95rem',
-                            width: 44,
-                            height: 44,
-                            border: '1px solid rgba(255, 255, 255, 0.1)',
-                            boxShadow: '0 4px 10px rgba(0,0,0,0.4)'
-                          }}
-                        >
-                          {getInitials(review.author_name)}
-                        </Avatar>
-                        <Box>
-                          <Typography variant="body1" sx={{ fontWeight: 700, lineHeight: 1.2, color: 'white' }}>
-                            {review.author_name}
-                          </Typography>
-                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
-                            {review.time}
-                          </Typography>
-                        </Box>
-                      </Stack>
-
-                      {/* Stars */}
-                      <Rating
-                        value={review.rating}
-                        readOnly
-                        size="small"
+                  <Box>
+                    {/* Header */}
+                    <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+                      <Avatar
                         sx={{
-                          mb: 2,
-                          color: '#ffc107',
-                          '& .MuiRating-iconFilled': {
-                            color: '#ffc107'
-                          }
-                        }}
-                      />
-
-                      {/* Text */}
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255,255,255,0.7)',
-                          fontStyle: 'italic',
-                          lineHeight: 1.6,
-                          display: '-webkit-box',
-                          WebkitLineClamp: 4,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis'
+                          bgcolor: '#000000',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          fontSize: '0.95rem',
+                          width: 44,
+                          height: 44,
+                          border: '1px solid rgba(255, 255, 255, 0.1)',
+                          boxShadow: '0 4px 10px rgba(0,0,0,0.4)'
                         }}
                       >
-                        "{review.text}"
-                      </Typography>
-                    </Box>
-                  </Paper>
-                </Box>
-              ))}
-            </Box>
+                        {getInitials(review.author_name)}
+                      </Avatar>
+                      <Box>
+                        <Typography variant="body1" sx={{ fontWeight: 700, lineHeight: 1.2, color: 'white' }}>
+                          {review.author_name}
+                        </Typography>
+                        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.4)' }}>
+                          {review.time}
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    {/* Stars */}
+                    <Rating
+                      value={review.rating}
+                      readOnly
+                      size="small"
+                      sx={{
+                        mb: 2,
+                        color: '#ffc107',
+                        '& .MuiRating-iconFilled': {
+                          color: '#ffc107'
+                        }
+                      }}
+                    />
+
+                    {/* Text */}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'rgba(255,255,255,0.7)',
+                        fontStyle: 'italic',
+                        lineHeight: 1.6,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 4,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      "{review.text}"
+                    </Typography>
+                  </Box>
+                </Paper>
+              </Box>
+            ))}
           </Box>
         </Box>
 

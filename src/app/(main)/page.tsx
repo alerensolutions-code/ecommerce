@@ -368,56 +368,6 @@ const Hero = ({ banners, loading }: HeroProps) => {
   );
 };
 
-const Feature = ({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) => (
-  <motion.div
-    whileHover={{ y: -10 }}
-    transition={{ type: "spring", stiffness: 400, damping: 17 }}
-    style={{ height: '100%' }}
-  >
-    <Paper
-      elevation={0}
-      sx={{
-        p: 4,
-        textAlign: 'center',
-        bgcolor: 'white',
-        border: '1px solid rgba(0,0,0,0.05)',
-        borderRadius: 4,
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'flex-start',
-        alignItems: 'center',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.03)',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: 'default',
-        '&:hover': {
-          boxShadow: '0 15px 35px rgba(204,0,0,0.12)',
-          borderColor: 'rgba(204,0,0,0.2)',
-          '& .icon-wrapper': {
-            transform: 'scale(1.15) rotate(5deg)',
-            color: '#ff3333'
-          }
-        }
-      }}
-    >
-      <Box
-        className="icon-wrapper"
-        sx={{
-          color: 'primary.main',
-          mb: 2,
-          display: 'flex',
-          justifyContent: 'center',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-        }}
-      >
-        {icon}
-      </Box>
-      <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{title}</Typography>
-      <Typography variant="body2" color="text.secondary">{desc}</Typography>
-    </Paper>
-  </motion.div>
-);
-
 const HomePage = () => {
   const [featuredProducts, setFeaturedProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -465,33 +415,6 @@ const HomePage = () => {
   return (
     <Box>
       <Hero banners={banners} loading={bannersLoading} />
-
-      {/* Features Section - Commented out as requested
-      <Container maxWidth="xl" sx={{ py: 10 }}>
-        <Grid container spacing={4} alignItems="stretch">
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
-            <Box sx={{ width: '100%' }}>
-              <Feature icon={<Truck size={32} />} title="Envío Express" desc="En 24/48h en tu casa listo para viciar." />
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
-            <Box sx={{ width: '100%' }}>
-              <Feature icon={<ShieldCheck size={32} />} title="Garantía Premium" desc="3 años de garantía oficial en todo el hardware." />
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
-            <Box sx={{ width: '100%' }}>
-              <Feature icon={<Zap size={32} />} title="Soporte Técnico" desc="Expertos disponibles para ayudarte con tu setup." />
-            </Box>
-          </Grid>
-          <Grid size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: 'flex' }}>
-            <Box sx={{ width: '100%' }}>
-              <Feature icon={<Headphones size={32} />} title="Atención 24/7" desc="Siempre estamos ahí cuando nos necesitas." />
-            </Box>
-          </Grid>
-        </Grid>
-      </Container>
-      */}
 
       {/* Build PC Highlight Section */}
       <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -620,7 +543,7 @@ const HomePage = () => {
       </Container>
 
       {/* Featured Carousel */}
-      <Box sx={{ py: 10 }}>
+      <Box sx={{ py: 3 }}>
         <Container maxWidth="xl">
           <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'flex-end' }, mb: 6, gap: { xs: 1, md: 0 } }}>
             <Box>
