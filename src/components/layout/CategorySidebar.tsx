@@ -23,7 +23,11 @@ import {
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
 
-const CategorySidebar = () => {
+interface CategorySidebarProps {
+  onFilterChange?: () => void;
+}
+
+const CategorySidebar: React.FC<CategorySidebarProps> = ({ onFilterChange }) => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -41,6 +45,7 @@ const CategorySidebar = () => {
     setPriceRange([minPrice, maxPrice]);
   }, [minPrice, maxPrice]);
 
+  // Fetch categories only once on mount
   useEffect(() => {
     const fetchCategories = async () => {
       const { data, error } = await supabase
@@ -50,19 +55,23 @@ const CategorySidebar = () => {
 
       if (!error && data) {
         setCategories(data);
-
-        // Auto-expand parent if a subcategory is selected
-        const current = data.find(c => c.name.toLowerCase() === currentCategory.toLowerCase());
-        if (current?.parent_id) {
-          setActiveParent(current.parent_id);
-        } else if (current) {
-          setActiveParent(current.id);
-        }
       }
     };
 
     fetchCategories();
-  }, [currentCategory]);
+  }, []);
+
+  // Auto-expand parent category when selection changes
+  useEffect(() => {
+    if (categories.length > 0 && currentCategory) {
+      const current = categories.find(c => c.name.toLowerCase() === currentCategory.toLowerCase());
+      if (current?.parent_id) {
+        setActiveParent(current.parent_id);
+      } else if (current) {
+        setActiveParent(current.id);
+      }
+    }
+  }, [currentCategory, categories]);
 
   const { roots, childrenMap, isSpecialTree } = useMemo(() => {
     let roots = categories.filter(c => !c.parent_id);
@@ -125,6 +134,7 @@ const CategorySidebar = () => {
       }
     }
     router.push(`${pathname}?${newParams.toString()}`);
+    onFilterChange?.();
   };
 
   const handlePriceChange = (_event: Event, newValue: number | number[]) => {
@@ -137,6 +147,7 @@ const CategorySidebar = () => {
     newParams.set('minPrice', min.toString());
     newParams.set('maxPrice', max.toString());
     router.push(`${pathname}?${newParams.toString()}`);
+    onFilterChange?.();
   };
 
   const currentStock = searchParams?.get('stock') || '';
@@ -150,6 +161,7 @@ const CategorySidebar = () => {
       newParams.set('stock', value);
     }
     router.push(`${pathname}?${newParams.toString()}`);
+    onFilterChange?.();
   };
 
   const handleFeaturedClick = () => {
@@ -160,6 +172,7 @@ const CategorySidebar = () => {
       newParams.set('featured', 'true');
     }
     router.push(`${pathname}?${newParams.toString()}`);
+    onFilterChange?.();
   };
 
   return (

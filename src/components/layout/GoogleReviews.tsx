@@ -109,9 +109,11 @@ const GoogleReviews = () => {
                 }
               }}
             />
-            <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.5)', fontWeight: 600 }}>
-              {reviewsCount} opiniones en Google
-            </Typography>
+            {reviewsCount > 0 && (
+              <Typography variant="body2" sx={{ color: 'rgba(0,0,0,0.5)', fontWeight: 600 }}>
+                {reviewsCount} opiniones en Google
+              </Typography>
+            )}
           </Stack>
         </Box>
 

@@ -45,6 +45,7 @@ const ShopContent = () => {
 
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [categoriesLoaded, setCategoriesLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
@@ -59,6 +60,18 @@ const ShopContent = () => {
   useEffect(() => {
     setLocalSearch(searchQuery);
   }, [searchQuery]);
+
+  // Debounce para el buscador del catálogo
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localSearch !== searchQuery) {
+        updateSearch(localSearch);
+      }
+    }, 500);
+
+    return () => clearTimeout(handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localSearch]);
 
   const fetchProducts = async (isNewSearch = true) => {
     if (isNewSearch) {
@@ -144,19 +157,25 @@ const ShopContent = () => {
   // Fetch categories only once
   useEffect(() => {
     const fetchCats = async () => {
-      const { data } = await supabase.from('categories').select('*');
-      if (data) setCategories(data);
+      try {
+        const { data } = await supabase.from('categories').select('*');
+        if (data) setCategories(data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setCategoriesLoaded(true);
+      }
     };
     fetchCats();
   }, []);
 
   // Fetch products when filters change
   useEffect(() => {
-    if (categories.length > 0 || !category) {
+    if (categoriesLoaded) {
       fetchProducts(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, category, minPrice, maxPrice, sortBy, stockFilter, featuredFilter, categories.length]);
+  }, [searchQuery, category, minPrice, maxPrice, sortBy, stockFilter, featuredFilter, categoriesLoaded]);
 
   // Función para obtener IDs de categorías de forma recursiva (hijos, nietos, etc)
   const getRecursiveIds = (parentId: string, allCats: any[]): string[] => {
@@ -200,10 +219,20 @@ const ShopContent = () => {
     router.push(`${pathname}?${newParams.toString()}`);
   };
 
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (category) count++;
+    if (searchQuery) count++;
+    if (minPrice > 0 || maxPrice < 10000000) count++;
+    if (stockFilter) count++;
+    if (featuredFilter) count++;
+    return count;
+  }, [category, searchQuery, minPrice, maxPrice, stockFilter, featuredFilter]);
+
   return (
     <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', pb: 10 }}>
       {/* Header / Breadcrumbs */}
-      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: 4, mb: 4 }}>
+      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: { xs: 2.5, md: 4 }, mb: { xs: 2.5, md: 4 } }}>
         <Container maxWidth="xl">
           <Breadcrumbs separator="›" aria-label="breadcrumb" sx={{ mb: 2 }}>
             <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
@@ -226,155 +255,219 @@ const ShopContent = () => {
 
           {/* Product Grid */}
           <Grid size={{ xs: 12, md: 9, lg: 9.5 }}>
-            {/* Toolbar */}
-            <Paper
-              elevation={0}
+            {/* Contenedor Sticky en Mobile */}
+            <Box
               sx={{
-                p: 2,
-                mb: 3,
-                display: 'flex',
-                borderRadius: 3,
-                border: '1px solid rgba(0,0,0,0.05)',
-                bgcolor: 'white',
-
-                flexDirection: { xs: 'column', md: 'row' },
-                alignItems: { xs: 'flex-start', md: 'center' },
-                justifyContent: { xs: 'flex-start', md: 'space-between' },
-                gap: { xs: 2, md: 0 }
+                position: { xs: 'sticky', md: 'static' },
+                top: { xs: '120px', md: 'auto' }, // Posiciona la barra debajo del navbar móvil
+                zIndex: 1000,
+                bgcolor: '#f8f9fa',
+                pt: { xs: 1.5, md: 0 },
+                pb: { xs: 1, md: 0 },
+                mx: { xs: -2, md: 0 },
+                px: 0, // Sin padding horizontal en el contenedor sticky para scroll edge-to-edge
+                mb: { xs: 2, md: 0 }
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 500, mr: 3 }}>
-                  Mostrando <strong style={{ color: '#000' }}>{products.length}</strong> productos
-                </Typography>
+              {/* Toolbar */}
+              <Paper
+                elevation={0}
+                sx={{
+                  mx: { xs: 2, md: 0 }, // Margen horizontal en mobile para mantenerlo centrado
+                  p: { xs: 1.5, md: 2 },
+                  mb: { xs: 1.5, md: 3 },
+                  display: 'flex',
+                  borderRadius: 3,
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  bgcolor: 'white',
 
-                <TextField
-                  size="small"
-                  placeholder="Buscar en el catálogo..."
-                  value={localSearch}
-                  onChange={(e) => setLocalSearch(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && updateSearch(localSearch)}
-                  InputProps={{
-                    sx: { borderRadius: 2, bgcolor: 'rgba(0,0,0,0.02)', fontSize: '0.85rem', width: { xs: '100%', sm: 250 } },
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search size={16} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: localSearch ? (
-                      <InputAdornment position="end">
-                        <IconButton size="small" onClick={() => { setLocalSearch(''); updateSearch(''); }}>
-                          <X size={14} />
-                        </IconButton>
-                      </InputAdornment>
-                    ) : null
-                  }}
-                />
-              </Box>
+                  flexDirection: { xs: 'column', md: 'row' },
+                  alignItems: { xs: 'flex-start', md: 'center' },
+                  justifyContent: { xs: 'flex-start', md: 'space-between' },
+                  gap: { xs: 1, md: 0 }
+                }}
+              >
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, alignItems: { xs: 'stretch', md: 'center' }, width: { xs: '100%', md: 'auto' }, gap: { xs: 1, md: 2 } }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' }, fontWeight: 500, mr: 3 }}>
+                    Mostrando <strong style={{ color: '#000' }}>{products.length}</strong> productos
+                  </Typography>
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', sm: 'auto' }, justifyContent: 'space-between' }}>
-                <Button
-                  startIcon={<Filter size={16} />}
-                  sx={{ display: { xs: 'flex', md: 'none' }, borderRadius: 2, fontWeight: 700 }}
-                  onClick={() => setMobileFiltersOpen(true)}
-                  variant="outlined"
-                  size="small"
-                >
-                  Filtros
-                </Button>
-
-                <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, mr: 2 }}>
-                  <IconButton
+                  <TextField
                     size="small"
-                    color={viewMode === 'grid' ? 'primary' : 'default'}
-                    onClick={() => setViewMode('grid')}
-                    sx={{ bgcolor: viewMode === 'grid' ? 'rgba(204,0,0,0.05)' : 'transparent' }}
-                  >
-                    <LayoutGrid size={20} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    color={viewMode === 'list' ? 'primary' : 'default'}
-                    onClick={() => setViewMode('list')}
-                    sx={{ bgcolor: viewMode === 'list' ? 'rgba(204,0,0,0.05)' : 'transparent' }}
-                  >
-                    <ListIcon size={20} />
-                  </IconButton>
+                    placeholder="Buscar en el catálogo..."
+                    value={localSearch}
+                    onChange={(e) => setLocalSearch(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && updateSearch(localSearch)}
+                    InputProps={{
+                      sx: { borderRadius: 2, bgcolor: 'rgba(0,0,0,0.02)', fontSize: '0.85rem', width: { xs: '100%', md: 250 } },
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Search size={16} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: localSearch ? (
+                        <InputAdornment position="end">
+                          <IconButton size="small" onClick={() => { setLocalSearch(''); updateSearch(''); }}>
+                            <X size={14} />
+                          </IconButton>
+                        </InputAdornment>
+                      ) : null
+                    }}
+                  />
                 </Box>
 
-                <FormControl size="small" fullWidth
-                  sx={{
-                    minWidth: { md: 200 }
-                  }}>
-                  <InputLabel id="sort-label">Ordenar por</InputLabel>
-                  <Select
-                    labelId="sort-label"
-                    value={sortBy}
-                    label="Ordenar por"
-                    onChange={handleSortChange}
-                    sx={{ borderRadius: 2, fontWeight: 600 }}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: { xs: '100%', md: 'auto' }, justifyContent: { xs: 'flex-start', md: 'space-between' } }}>
+                  <Button
+                    startIcon={<Filter size={16} />}
+                    sx={{ display: { xs: 'flex', md: 'none' }, borderRadius: 2, fontWeight: 700, width: { xs: '45%', md: 'auto' } }}
+                    onClick={() => setMobileFiltersOpen(true)}
+                    variant="outlined"
+                    size="small"
                   >
-                    <MenuItem value="newest">Lo más nuevo</MenuItem>
-                    <MenuItem value="oldest">Lo más viejo</MenuItem>
-                    <MenuItem value="price-low">Precio: Menor a Mayor</MenuItem>
-                    <MenuItem value="price-high">Precio: Mayor a Menor</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-            </Paper>
+                    Filtros
+                  </Button>
 
-            {/* Active Filters */}
-            {(searchQuery || minPrice > 0 || maxPrice < 10000000 || stockFilter || featuredFilter || searchParams?.get('sort')) && (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
-                {searchQuery && (
-                  <Chip
-                    label={`Búsqueda: "${searchQuery}"`}
-                    onDelete={() => removeFilter('q')}
-                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
-                  />
-                )}
-                {(minPrice > 0 || maxPrice < 10000000) && (
-                  <Chip
-                    label={`Precio: $${minPrice.toLocaleString('es-ES')} - $${maxPrice.toLocaleString('es-ES')}`}
-                    onDelete={() => removeFilter('price')}
-                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
-                  />
-                )}
-                {stockFilter === 'in-stock' && (
-                  <Chip
-                    label="En Stock"
-                    onDelete={() => removeFilter('stock')}
-                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
-                  />
-                )}
-                {stockFilter === 'out-of-stock' && (
-                  <Chip
-                    label="Sin Stock"
-                    onDelete={() => removeFilter('stock')}
-                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
-                  />
-                )}
-                {featuredFilter && (
-                  <Chip
-                    label="Destacados"
-                    onDelete={() => removeFilter('featured')}
-                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
-                  />
-                )}
-                {searchParams?.get('sort') && (
-                  <Chip
-                    label={
-                      searchParams.get('sort') === 'price-low' ? 'Menor precio' :
-                        searchParams.get('sort') === 'price-high' ? 'Mayor precio' :
-                          searchParams.get('sort') === 'newest' ? 'Lo más nuevo' :
-                            searchParams.get('sort') === 'oldest' ? 'Lo más antiguo' : 'Ordenamiento'
-                    }
-                    onDelete={() => removeFilter('sort')}
-                    sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)' }}
-                  />
-                )}
-              </Box>
-            )}
+                  <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1, mr: 2 }}>
+                    <IconButton
+                      size="small"
+                      color={viewMode === 'grid' ? 'primary' : 'default'}
+                      onClick={() => setViewMode('grid')}
+                      sx={{ bgcolor: viewMode === 'grid' ? 'rgba(204,0,0,0.05)' : 'transparent' }}
+                    >
+                      <LayoutGrid size={20} />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      color={viewMode === 'list' ? 'primary' : 'default'}
+                      onClick={() => setViewMode('list')}
+                      sx={{ bgcolor: viewMode === 'list' ? 'rgba(204,0,0,0.05)' : 'transparent' }}
+                    >
+                      <ListIcon size={20} />
+                    </IconButton>
+                  </Box>
+
+                  <FormControl size="small"
+                    sx={{
+                      minWidth: { md: 200 },
+                      width: { xs: '50%', md: 'auto' }
+                    }}>
+                    <InputLabel id="sort-label">Ordenar por</InputLabel>
+                    <Select
+                      labelId="sort-label"
+                      value={sortBy}
+                      label="Ordenar por"
+                      onChange={handleSortChange}
+                      sx={{ borderRadius: 2, fontWeight: 600 }}
+                    >
+                      <MenuItem value="newest">Lo más nuevo</MenuItem>
+                      <MenuItem value="oldest">Lo más viejo</MenuItem>
+                      <MenuItem value="price-low">Precio: Menor a Mayor</MenuItem>
+                      <MenuItem value="price-high">Precio: Mayor a Menor</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Box>
+              </Paper>
+
+              {/* Active Filters */}
+              {(searchQuery || category || minPrice > 0 || maxPrice < 10000000 || stockFilter || featuredFilter || searchParams?.get('sort')) && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    gap: 1,
+                    overflowX: 'auto',
+                    pt: { xs: 0.5, md: 0 },
+                    pb: { xs: 1, md: 0 },
+                    px: { xs: 2, md: 0 }, // Padding horizontal para alinear los chips pero permitir scroll edge-to-edge
+                    mb: { xs: 1.5, md: 3 },
+                    '&::-webkit-scrollbar': { display: 'none' },
+                    msOverflowStyle: 'none',
+                    scrollbarWidth: 'none',
+                    flexWrap: { xs: 'nowrap', md: 'wrap' }
+                  }}
+                >
+                  {category && (
+                    <Chip
+                      label={`Categoría: ${category}`}
+                      onDelete={() => removeFilter('category')}
+                      sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {searchQuery && (
+                    <Chip
+                      label={`Búsqueda: "${searchQuery}"`}
+                      onDelete={() => removeFilter('q')}
+                      sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {(minPrice > 0 || maxPrice < 10000000) && (
+                    <Chip
+                      label={`Precio: $${minPrice.toLocaleString('es-ES')} - $${maxPrice.toLocaleString('es-ES')}`}
+                      onDelete={() => removeFilter('price')}
+                      sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {stockFilter === 'in-stock' && (
+                    <Chip
+                      label="En Stock"
+                      onDelete={() => removeFilter('stock')}
+                      sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {stockFilter === 'out-of-stock' && (
+                    <Chip
+                      label="Sin Stock"
+                      onDelete={() => removeFilter('stock')}
+                      sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {featuredFilter && (
+                    <Chip
+                      label="Destacados"
+                      onDelete={() => removeFilter('featured')}
+                      sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {searchParams?.get('sort') && (
+                    <Chip
+                      label={
+                        searchParams.get('sort') === 'price-low' ? 'Menor precio' :
+                          searchParams.get('sort') === 'price-high' ? 'Mayor precio' :
+                            searchParams.get('sort') === 'newest' ? 'Lo más nuevo' :
+                              searchParams.get('sort') === 'oldest' ? 'Lo más antiguo' : 'Ordenamiento'
+                      }
+                      onDelete={() => removeFilter('sort')}
+                      sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {activeFiltersCount > 1 && (
+                    <Chip
+                      label="Limpiar filtros"
+                      onClick={() => {
+                        const newParams = new URLSearchParams();
+                        const currentSort = searchParams?.get('sort');
+                        if (currentSort) {
+                          newParams.set('sort', currentSort);
+                        }
+                        setLocalSearch('');
+                        router.push(`${pathname}?${newParams.toString()}`);
+                      }}
+                      sx={{
+                        fontWeight: 700,
+                        borderRadius: 2,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        border: '1px solid',
+                        borderColor: 'primary.main',
+                        flexShrink: 0,
+                        '&:hover': {
+                          bgcolor: 'primary.dark',
+                        }
+                      }}
+                    />
+                  )}
+                </Box>
+              )}
+            </Box>
 
             {/* Grid */}
             {loading ? (
@@ -384,9 +477,9 @@ const ShopContent = () => {
               </Box>
             ) : products.length > 0 ? (
               <>
-                <Grid container spacing={3}>
+                <Grid container spacing={{ xs: 1.5, sm: 3 }}>
                   {products.map((product) => (
-                    <Grid key={product.id} size={viewMode === 'grid' ? { xs: 12, sm: 6, md: 4, lg: 3 } : { xs: 12 }}>
+                    <Grid key={product.id} size={viewMode === 'grid' ? { xs: 6, sm: 6, md: 4, lg: 3 } : { xs: 12 }}>
                       <ProductCard product={product} layout={viewMode} />
                     </Grid>
                   ))}
@@ -437,7 +530,7 @@ const ShopContent = () => {
             <Filter size={20} />
           </IconButton>
         </Box>
-        <CategorySidebar />
+        <CategorySidebar onFilterChange={() => setMobileFiltersOpen(false)} />
       </Drawer>
     </Box>
   );

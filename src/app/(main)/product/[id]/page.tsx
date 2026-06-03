@@ -785,7 +785,7 @@ export default function ProductDetailPage() {
               )}
 
               {/* Trust */}
-              <div className="pd-trust">
+              <div className="pd-trust" style={{ marginTop: '40px' }}>
                 {trustItems.map((t, i) => (
                   <div className="pd-trust-item" key={i}>
                     {t.icon}
