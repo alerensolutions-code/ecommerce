@@ -90,12 +90,12 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </Box>
             {tiendaOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </ListItemButton>
-          
+
           <Collapse in={tiendaOpen} timeout="auto" unmountOnExit>
             <List component="div" disablePadding sx={{ pl: 2, mt: 0.5 }}>
               {[
-                { text: 'Productos', icon: <Package size={18} />, path: '/admin/products' },
                 { text: 'Categorías', icon: <Tag size={18} />, path: '/admin/categories' },
+                { text: 'Productos', icon: <Package size={18} />, path: '/admin/products' },
                 { text: 'Pedidos', icon: <ShoppingBag size={18} />, path: '/admin/orders' },
               ].map((item) => {
                 const isActive = pathname === item.path;
@@ -150,7 +150,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
             </Box>
             {configOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </ListItemButton>
-          
+
           <Collapse in={configOpen} timeout="auto" unmountOnExit>
             <List component="div" disablePadding sx={{ pl: 2, mt: 0.5 }}>
               {[
