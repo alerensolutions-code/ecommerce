@@ -436,7 +436,7 @@ const css = `
     font-size: 1rem;
     line-height: 1.85;
     color: #444;
-    max-width: 820px;
+    max-width: 100%;
   }
   .pd-desc-body b, .pd-desc-body strong { color: #111; font-weight: 700; }
   .pd-desc-body ul, .pd-desc-body ol { padding-left: 20px; margin: 12px 0; }
@@ -445,7 +445,7 @@ const css = `
   .pd-desc-body h2, .pd-desc-body h3, .pd-desc-body h4 { color: #111; margin: 20px 0 8px; }
 
   /* ── Related ── */
-  .pd-related-section { margin-top: 80px; }
+  .pd-related-section { margin-top: 60px; }
   .pd-related-header {
     display: flex;
     align-items: center;
@@ -465,7 +465,7 @@ const css = `
   .pd-related-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 2px;
+    gap: 10px;
   }
 
   /* Loading */

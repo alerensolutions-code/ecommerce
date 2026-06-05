@@ -62,7 +62,7 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
               <LayoutDashboard size={20} />
             </ListItemIcon>
             <ListItemText
-              primary="Dashboard"
+              primary="Lobby"
               primaryTypographyProps={{ fontWeight: 600, fontSize: '0.9rem' }}
             />
           </ListItemButton>

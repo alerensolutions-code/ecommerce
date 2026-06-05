@@ -129,17 +129,11 @@ const CartPage = () => {
                           <Typography variant="caption" color="text.secondary" sx={{ textDecoration: 'line-through', mr: 1, display: 'block' }}>
                             ${item.price.toLocaleString('es-ES')}
                           </Typography>
-                          <Typography variant="caption" color="error.main" sx={{ fontWeight: 700 }}>
-                            ${(item.price * (1 - item.discount / 100)).toLocaleString('es-ES', { maximumFractionDigits: 0 })} / ud.
-                          </Typography>
                         </>
                       ) : (
                         <>
                           <Typography variant="h6" sx={{ fontWeight: 800 }}>
                             ${(item.price * item.quantity).toLocaleString('es-ES')}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            ${item.price.toLocaleString('es-ES')} / ud.
                           </Typography>
                         </>
                       )}
@@ -184,17 +178,11 @@ const CartPage = () => {
                   <Typography color="text.secondary">Subtotal</Typography>
                   <Typography sx={{ fontWeight: 600 }}>${subtotal.toLocaleString('es-ES')}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography color="text.secondary">Envío</Typography>
-                  <Typography sx={{ fontWeight: 600 }}>
-                    {shipping === 0 ? 'Gratis' : `$${shipping}`}
-                  </Typography>
-                </Box>
-                {shipping > 0 && (
+                {/* {shipping > 0 && (
                   <Typography variant="caption" color="primary" sx={{ fontWeight: 500 }}>
                     ¡Añade ${(500 - subtotal).toLocaleString('es-ES')} más para envío gratis!
                   </Typography>
-                )}
+                )} */}
 
                 <Divider sx={{ my: 1 }} />
 
@@ -212,12 +200,12 @@ const CartPage = () => {
                   fullWidth
                   size="large"
                   endIcon={<ArrowRight size={20} />}
-                  sx={{ py: 2, mt: 2, fontWeight: 800, fontSize: '1.1rem' }}
+                  sx={{ py: 2, mt: 2, mb: 4, fontWeight: 800, fontSize: '1.1rem' }}
                 >
                   Finalizar Compra
                 </Button>
 
-                <Stack spacing={2} sx={{ mt: 4 }}>
+                {/* <Stack spacing={2} sx={{ mt: 4 }}>
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <ShieldCheck size={20} style={{ color: '#4caf50', marginRight: '12px' }} />
                     <Typography variant="body2">Pago seguro garantizado</Typography>
@@ -226,7 +214,7 @@ const CartPage = () => {
                     <Truck size={20} style={{ color: '#1976d2', marginRight: '12px' }} />
                     <Typography variant="body2">Envío en 24/48 horas</Typography>
                   </Box>
-                </Stack>
+                </Stack> */}
               </Stack>
             </Paper>
           </Grid>
