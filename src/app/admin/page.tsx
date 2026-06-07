@@ -46,6 +46,11 @@ import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
 import { GraphicEq } from '@mui/icons-material';
 
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { esES } from '@mui/x-date-pickers/locales';
+import { es as esLocale } from 'date-fns/locale';
+
 const getDaysAgo = (days: number) => {
   const d = new Date();
   d.setDate(d.getDate() - days);
@@ -60,8 +65,21 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [metricType, setMetricType] = useState<'revenue' | 'units'>('revenue');
-  const [mounted, setMounted] = useState(false);
+  const formatDisplay = (date: string) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('es-ES');
+  };
 
+  const parseDisplay = (value: string) => {
+    // Expect DD/MM/YYYY
+    const parts = value.split('/');
+    if (parts.length !== 3) return '';
+    const [day, month, year] = parts;
+    const iso = new Date(`${year}-${month}-${day}`).toISOString().split('T')[0];
+    return iso;
+  };
+
+  const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -73,6 +91,11 @@ const Dashboard = () => {
     return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(() => new Date().toISOString().split('T')[0]);
+
+  const pickerSx = {
+    '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5, cursor: 'pointer' },
+    width: { xs: '100%', sm: 180 }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -221,7 +244,7 @@ const Dashboard = () => {
     return (
       <Box sx={{ p: 10, textAlign: 'center' }}>
         <CircularProgress color="primary" />
-        <Typography sx={{ mt: 2 }} color="text.secondary">Cargando métricas...</Typography>
+        <Typography sx={{ mt: 2 }} color="text.secondary">Buffeando el lobby</Typography>
       </Box>
     );
   }
@@ -229,7 +252,7 @@ const Dashboard = () => {
   return (
     <Box>
       <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" sx={{ mb: 4, gap: 2 }}>
-        <Typography variant="h4" sx={{ fontWeight: 800 }}>Dashboard</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>Lobby</Typography>
 
         <Paper elevation={0} sx={{
           p: { xs: 2, sm: 1 },
@@ -245,34 +268,22 @@ const Dashboard = () => {
             <Calendar size={18} color="#666" />
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>RANGO:</Typography>
           </Stack>
-          <TextField
-            type="date"
-            size="small"
-            label="Desde"
-            InputLabelProps={{ shrink: true }}
-            value={startDate}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setStartDate(e.target.value)}
-            onClick={(e) => (e.target as any).showPicker?.()}
-            inputProps={{ lang: 'es-ES' }}
-            sx={{
-              '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5, cursor: 'pointer' },
-              width: { xs: '100%', sm: 150 }
-            }}
-          />
-          <TextField
-            type="date"
-            size="small"
-            label="Hasta"
-            InputLabelProps={{ shrink: true }}
-            value={endDate}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEndDate(e.target.value)}
-            onClick={(e) => (e.target as any).showPicker?.()}
-            inputProps={{ lang: 'es-ES' }}
-            sx={{
-              '& .MuiInputBase-input': { fontSize: '0.8rem', py: 0.5, cursor: 'pointer' },
-              width: { xs: '100%', sm: 150 }
-            }}
-          />
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={esLocale} localeText={esES.components.MuiLocalizationProvider.defaultProps.localeText}>
+            <DatePicker
+              label="Desde"
+              value={startDate ? new Date(startDate) : null}
+              onChange={(newValue) => setStartDate(newValue ? newValue.toISOString().split('T')[0] : '')}
+              format="dd/MM/yyyy"
+              slotProps={{ textField: { size: 'small', sx: pickerSx } }}
+            />
+            <DatePicker
+              label="Hasta"
+              value={endDate ? new Date(endDate) : null}
+              onChange={(newValue) => setEndDate(newValue ? newValue.toISOString().split('T')[0] : '')}
+              format="dd/MM/yyyy"
+              slotProps={{ textField: { size: 'small', sx: pickerSx } }}
+            />
+          </LocalizationProvider>
         </Paper>
       </Stack>
 
@@ -363,7 +374,7 @@ const Dashboard = () => {
       </Box>
 
       {/* ─── Desktop: Grid de Métricas ─── */}
-      <Grid container spacing={3} sx={{ mb: 6, display: { xs: 'none', md: 'flex' } }}>
+      <Grid container spacing={3} sx={{ mb: 4, display: { xs: 'none', md: 'flex' } }}>
         {/* Facturación */}
         <Grid size={{ xs: 12, sm: 6, md: 2.4 }} sx={{ display: 'flex' }}>
           <Paper elevation={0}
@@ -383,7 +394,6 @@ const Dashboard = () => {
             <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1rem, 2vw, 1.6rem)', lineHeight: 1.2, wordBreak: 'break-word' }}>
               ${metrics.revenueInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
             </Typography>
-            <Typography variant="caption" color="text.secondary">Ventas entregadas</Typography>
           </Paper>
         </Grid>
 
@@ -410,7 +420,6 @@ const Dashboard = () => {
             <Typography sx={{ fontWeight: 800, mb: 0.5, fontSize: 'clamp(1rem, 2vw, 1.6rem)', lineHeight: 1.2, wordBreak: 'break-word', color: metrics.netProfitInRange >= 0 ? '#00796b' : '#f44336' }}>
               ${metrics.netProfitInRange.toLocaleString('es-ES', { minimumFractionDigits: 2 })}
             </Typography>
-            <Typography variant="caption" color="text.secondary">Utilidad real del periodo</Typography>
           </Paper>
         </Grid>
 
@@ -443,7 +452,6 @@ const Dashboard = () => {
               <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700, textTransform: 'uppercase', fontSize: '0.7rem' }}>Pedidos</Typography>
             </Stack>
             <Typography variant="h4" sx={{ fontWeight: 800, color: 'text.primary', mb: 0.5 }}>{metrics.totalOrdersInRange}</Typography>
-            <Typography variant="caption" color="text.secondary">Total periodo</Typography>
           </Paper>
         </Grid>
 
@@ -478,7 +486,6 @@ const Dashboard = () => {
             <Typography variant="h4" sx={{ fontWeight: 800, color: metrics.pendingTotalCount > 0 ? '#ff9800' : 'text.primary', mb: 0.5 }}>
               {metrics.pendingTotalCount}
             </Typography>
-            <Typography variant="caption" color="text.secondary">Por preparar</Typography>
           </Paper>
         </Grid>
 
@@ -513,7 +520,6 @@ const Dashboard = () => {
             <Typography variant="h4" sx={{ fontWeight: 800, color: metrics.lowStockCount > 0 ? '#f44336' : 'text.primary', mb: 0.5 }}>
               {metrics.lowStockCount}
             </Typography>
-            <Typography variant="caption" color="text.secondary">Críticos</Typography>
           </Paper>
         </Grid>
       </Grid>
@@ -542,7 +548,7 @@ const Dashboard = () => {
                   <tbody>
                     {metrics.lastPendingOrders.map((order) => (
                       <tr key={order.id} style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                        <td style={{ padding: '16px 24px', fontSize: '0.8rem', color: '#666' }}>{new Date(order.created_at).toLocaleDateString()}</td>
+                        <td style={{ padding: '16px 24px', fontSize: '0.8rem', color: '#666' }}>{formatDisplay(order.created_at)}</td>
                         <td style={{ padding: '16px 24px', fontSize: '0.85rem', fontWeight: 600 }}>{order.customer_name}</td>
                         <td style={{ padding: '16px 24px', fontSize: '0.85rem', fontWeight: 700 }}>${order.total}</td>
                         <td style={{ padding: '16px 24px' }}>

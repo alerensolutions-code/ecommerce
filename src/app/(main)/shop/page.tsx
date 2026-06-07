@@ -102,10 +102,10 @@ const ShopContent = () => {
           const lower = c.name.toLowerCase();
           return lower.includes('armada') || lower.includes('outlet');
         });
-        
+
         let forbiddenIds: string[] = [];
         specialCats.forEach(sc => {
-           forbiddenIds = [...forbiddenIds, ...getRecursiveIds(sc.id, categories)];
+          forbiddenIds = [...forbiddenIds, ...getRecursiveIds(sc.id, categories)];
         });
 
         if (forbiddenIds.length > 0) {
@@ -473,7 +473,7 @@ const ShopContent = () => {
             {loading ? (
               <Box sx={{ py: 10, textAlign: 'center' }}>
                 <CircularProgress color="primary" thickness={5} />
-                <Typography sx={{ mt: 2, fontWeight: 500 }} color="text.secondary">Cargando productos...</Typography>
+                <Typography sx={{ mt: 2, fontWeight: 500 }} color="text.secondary">Cargando arsenal...</Typography>
               </Box>
             ) : products.length > 0 ? (
               <>

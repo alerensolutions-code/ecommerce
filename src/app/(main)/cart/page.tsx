@@ -231,7 +231,7 @@ const CartPage = () => {
                   fullWidth
                   size="large"
                   endIcon={<ArrowRight size={20} />}
-                  sx={{ py: 2, mt: 2, fontWeight: 800, fontSize: '1.1rem' }}
+                  sx={{ py: 2, mt: 2, mb: 4, fontWeight: 800, fontSize: '1.1rem' }}
                 >
                   Finalizar Compra
                 </Button>

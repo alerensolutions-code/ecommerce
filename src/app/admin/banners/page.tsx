@@ -310,7 +310,7 @@ const BannersManagement = () => {
         gap={{ xs: 2, sm: 0 }}
         sx={{ mb: 4 }}
       >
-        <Typography variant="h4" sx={{ fontWeight: 800 }}>Banners Hero</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>Banners Devil</Typography>
         <Button
           variant="contained"
           startIcon={<Plus size={20} />}

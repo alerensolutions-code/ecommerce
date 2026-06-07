@@ -543,9 +543,9 @@ const HomePage = () => {
       </Container>
 
       {/* Featured Carousel */}
-      <Box sx={{ py: 3 }}>
+      <Box sx={{ py: 2.5 }}>
         <Container maxWidth="xl">
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'flex-end' }, mb: 6, gap: { xs: 1, md: 0 } }}>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'flex-end' }, mb: 1, gap: { xs: .5, md: 0 } }}>
             <Box>
               <Typography variant="h2" sx={{
                 fontWeight: 900,
