@@ -268,19 +268,19 @@ const Dashboard = () => {
             <Calendar size={18} color="#666" />
             <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary' }}>RANGO:</Typography>
           </Stack>
-          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={esLocale} localeText={esES}>
+          <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={esLocale} localeText={esES.components.MuiLocalizationProvider.defaultProps.localeText}>
             <DatePicker
               label="Desde"
               value={startDate ? new Date(startDate) : null}
               onChange={(newValue) => setStartDate(newValue ? newValue.toISOString().split('T')[0] : '')}
-              inputFormat="dd/MM/yyyy"
+              format="dd/MM/yyyy"
               slotProps={{ textField: { size: 'small', sx: pickerSx } }}
             />
             <DatePicker
               label="Hasta"
               value={endDate ? new Date(endDate) : null}
               onChange={(newValue) => setEndDate(newValue ? newValue.toISOString().split('T')[0] : '')}
-              inputFormat="dd/MM/yyyy"
+              format="dd/MM/yyyy"
               slotProps={{ textField: { size: 'small', sx: pickerSx } }}
             />
           </LocalizationProvider>
