@@ -27,12 +27,19 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'ADD_TO_CART': {
       const existingItem = state.items.find(item => item.id === action.payload.id);
       if (existingItem) {
+        const nextQty = existingItem.quantity + 1;
+        if (nextQty > action.payload.stock) {
+          return state; // Do not exceed stock
+        }
         return {
           ...state,
           items: state.items.map(item =>
-            item.id === action.payload.id ? { ...item, quantity: item.quantity + 1 } : item
+            item.id === action.payload.id ? { ...item, quantity: nextQty } : item
           ),
         };
+      }
+      if (action.payload.stock <= 0) {
+        return state; // Do not add out of stock items
       }
       return { ...state, items: [...state.items, { ...action.payload, quantity: 1 }] };
     }
@@ -41,12 +48,17 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
       action.payload.forEach(product => {
         const existingIndex = newItems.findIndex(item => item.id === product.id);
         if (existingIndex > -1) {
-          newItems[existingIndex] = {
-            ...newItems[existingIndex],
-            quantity: newItems[existingIndex].quantity + 1
-          };
+          const nextQty = newItems[existingIndex].quantity + 1;
+          if (nextQty <= product.stock) {
+            newItems[existingIndex] = {
+              ...newItems[existingIndex],
+              quantity: nextQty
+            };
+          }
         } else {
-          newItems.push({ ...product, quantity: 1 });
+          if (product.stock > 0) {
+            newItems.push({ ...product, quantity: 1 });
+          }
         }
       });
       return { ...state, items: newItems };
@@ -56,9 +68,14 @@ const cartReducer = (state: CartState, action: CartAction): CartState => {
     case 'UPDATE_QUANTITY':
       return {
         ...state,
-        items: state.items.map(item =>
-          item.id === action.payload.id ? { ...item, quantity: Math.max(1, action.payload.quantity) } : item
-        ),
+        items: state.items.map(item => {
+          if (item.id === action.payload.id) {
+            const requestedQty = Math.max(1, action.payload.quantity);
+            const allowedQty = Math.min(requestedQty, item.stock);
+            return { ...item, quantity: allowedQty };
+          }
+          return item;
+        }),
       };
     case 'CLEAR_CART':
       return { ...state, items: [] };
