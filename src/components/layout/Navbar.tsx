@@ -220,7 +220,7 @@ const Navbar = () => {
 
         const { data, error } = await supabase
           .from('products')
-          .select('id, name, images, price')
+          .select('id, name, images, price, discount')
           .ilike('name', `%${searchQuery.trim()}%`)
           .limit(5);
 
@@ -374,9 +374,26 @@ const Navbar = () => {
                                   </ListItemAvatar>
                                   <ListItemText
                                     primary={product.name}
-                                    secondary={`${product.price.toLocaleString('es-ES')}`}
+                                    secondary={
+                                      product.discount && product.discount > 0 ? (
+                                        <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                          <Typography component="span" sx={{ fontWeight: 800, color: 'primary.main', fontSize: '0.8rem' }}>
+                                            ${(product.price * (1 - product.discount / 100)).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                                          </Typography>
+                                          <Typography component="span" sx={{ textDecoration: 'line-through', color: 'text.secondary', fontWeight: 500, fontSize: '0.75rem' }}>
+                                            ${product.price.toLocaleString('es-ES')}
+                                          </Typography>
+                                          <Typography component="span" sx={{ fontWeight: 700, color: 'error.main', fontSize: '0.75rem' }}>
+                                            {product.discount}% OFF
+                                          </Typography>
+                                        </Box>
+                                      ) : (
+                                        <Typography component="span" sx={{ fontWeight: 800, color: 'primary.main', fontSize: '0.8rem' }}>
+                                          ${product.price.toLocaleString('es-ES')}
+                                        </Typography>
+                                      )
+                                    }
                                     primaryTypographyProps={{ fontWeight: 700, fontSize: '0.85rem', color: 'text.primary', noWrap: true }}
-                                    secondaryTypographyProps={{ fontWeight: 800, color: 'primary.main', fontSize: '0.8rem' }}
                                   />
                                 </ListItemButton>
                               </ListItem>

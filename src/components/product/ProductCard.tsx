@@ -25,15 +25,18 @@ interface ProductCardProps {
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) => {
-  const { dispatch } = useCart();
+  const { state, dispatch } = useCart();
   const [isAdded, setIsAdded] = React.useState(false);
 
   const isOutOfStock = product.stock === 0;
 
+  const existingCartItem = state.items.find(item => item.id === product.id);
+  const isMaxStockReached = existingCartItem ? existingCartItem.quantity >= product.stock : false;
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (isOutOfStock) return;
+    if (isOutOfStock || isMaxStockReached) return;
     dispatch({ type: 'ADD_TO_CART', payload: product });
     setIsAdded(true);
     setTimeout(() => {
@@ -44,7 +47,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
   const handleWhatsApp = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const msg = encodeURIComponent(`Hola! Me gustaría consultar la disponibilidad del producto: ${product.name}`);
+
+    const finalPrice = product.discount > 0 
+      ? product.price * (1 - product.discount / 100) 
+      : product.price;
+
+    const priceDetails = product.discount > 0
+      ? `(Precio: $${finalPrice.toLocaleString('es-ES', { maximumFractionDigits: 0 })} con ${product.discount}% OFF, antes $${product.price.toLocaleString('es-ES')})`
+      : `(Precio: $${product.price.toLocaleString('es-ES')})`;
+
+    const msg = encodeURIComponent(`Hola! Me gustaría consultar la disponibilidad del producto: ${product.name} ${priceDetails}`);
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, '_blank');
   };
 
@@ -230,7 +242,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
                   </AnimatePresence>
                 }
                 onClick={handleAddToCart}
-                disabled={isAdded}
+                disabled={isAdded || isMaxStockReached}
                 sx={{
                   width: '100%',
                   height: { xs: '32px', sm: '38px' },
@@ -250,16 +262,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, layout = 'grid' }) =
                       color: 'white',
                       opacity: 1
                     }
+                  } : isMaxStockReached ? {
+                    bgcolor: '#ccc',
+                    color: '#666',
+                    '&:hover': { bgcolor: '#ccc', boxShadow: 'none' },
+                    '&.Mui-disabled': {
+                      bgcolor: '#ccc',
+                      color: '#666',
+                      opacity: 1
+                    }
                   } : {
                     '&:hover': { boxShadow: '0 4px 12px rgba(204, 0, 0, 0.2)' }
                   })
                 }}
               >
                 <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-                  {isAdded ? 'Agregado' : 'Añadir'}
+                  {isAdded ? 'Agregado' : isMaxStockReached ? 'Sin Stock' : 'Añadir'}
                 </Box>
                 <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-                  {isAdded ? 'Agregado al carrito' : 'Añadir al Carrito'}
+                  {isAdded ? 'Agregado al carrito' : isMaxStockReached ? 'Límite de Stock' : 'Añadir al Carrito'}
                 </Box>
               </Button>
             </motion.div>

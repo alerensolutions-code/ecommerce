@@ -546,8 +546,24 @@ export default function ProductDetailPage() {
     })();
   }, [id]);
 
+  const existingCartItem = state.items.find((i: any) => i.id === product?.id);
+  const remainingStock = product ? (product.stock - (existingCartItem ? existingCartItem.quantity : 0)) : 0;
+  const isCartLimitReached = remainingStock <= 0;
+
+  useEffect(() => {
+    if (product) {
+      const existing = state.items.find((i: any) => i.id === product.id);
+      const remaining = product.stock - (existing ? existing.quantity : 0);
+      if (remaining <= 0) {
+        setQuantity(1);
+      } else if (quantity > remaining) {
+        setQuantity(remaining);
+      }
+    }
+  }, [state.items, product, quantity]);
+
   const handleAddToCart = () => {
-    if (isAdded) return;
+    if (isAdded || isCartLimitReached) return;
     const existing = state.items.find(i => i.id === product.id);
     if (existing) {
       dispatch({
@@ -609,6 +625,12 @@ export default function ProductDetailPage() {
     product.discount > 0
       ? product.price * (1 - product.discount / 100)
       : product.price;
+
+  const priceDetails = product.discount > 0
+    ? `(Precio: $${finalPrice.toLocaleString('es-ES', { maximumFractionDigits: 0 })} con ${product.discount}% OFF, antes $${product.price.toLocaleString('es-ES')})`
+    : `(Precio: $${product.price.toLocaleString('es-ES')})`;
+
+  const whatsappLink = `https://wa.me/5491155099149?text=${encodeURIComponent(`Hola! Quiero consultar la disponibilidad del producto: ${product.name} ${priceDetails}`)}`;
 
   const trustItems = [
     { icon: <Star size={20} />, label: 'Catálogo Premium', sub: 'Lo mejor para tu setup' },
@@ -733,15 +755,15 @@ export default function ProductDetailPage() {
                     <button
                       className="pd-qty-btn"
                       onClick={() => setQuantity(p => Math.max(1, p - 1))}
-                      disabled={quantity <= 1}
+                      disabled={quantity <= 1 || isCartLimitReached}
                     >
                       <Minus size={16} />
                     </button>
-                    <span className="pd-qty-num">{quantity}</span>
+                    <span className="pd-qty-num">{isCartLimitReached ? 0 : quantity}</span>
                     <button
                       className="pd-qty-btn"
-                      onClick={() => setQuantity(p => Math.min(product.stock, p + 1))}
-                      disabled={quantity >= product.stock}
+                      onClick={() => setQuantity(p => Math.min(remainingStock, p + 1))}
+                      disabled={quantity >= remainingStock || isCartLimitReached}
                     >
                       <Plus size={16} />
                     </button>
@@ -751,13 +773,13 @@ export default function ProductDetailPage() {
                   <motion.button
                     className={`pd-btn-cart ${isAdded ? 'added' : ''}`}
                     onClick={handleAddToCart}
-                    disabled={isAdded}
+                    disabled={isAdded || isCartLimitReached}
                     animate={isAdded ? { scale: [1, 1.03, 1] } : {}}
                     transition={{ duration: 0.25 }}
                   >
                     <AnimatePresence mode="wait">
                       <motion.span
-                        key={isAdded ? 'ok' : 'add'}
+                        key={isAdded ? 'ok' : isCartLimitReached ? 'limit' : 'add'}
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -6 }}
@@ -766,7 +788,9 @@ export default function ProductDetailPage() {
                       >
                         {isAdded
                           ? <><Check size={18} /> Agregado al carrito</>
-                          : <><ShoppingCart size={18} /> Agregar al carrito</>
+                          : isCartLimitReached
+                            ? <><ShoppingCart size={18} /> Límite de stock en carrito</>
+                            : <><ShoppingCart size={18} /> Agregar al carrito</>
                         }
                       </motion.span>
                     </AnimatePresence>
@@ -775,7 +799,7 @@ export default function ProductDetailPage() {
               ) : (
                 <a
                   className="pd-btn-wa"
-                  href={`https://wa.me/5491155099149?text=${encodeURIComponent(`Hola! Quiero consultar la disponibilidad del producto: ${product.name}`)}`}
+                  href={whatsappLink}
                   target="_blank"
                   rel="noopener noreferrer"
                 >

@@ -114,7 +114,11 @@ const CartDrawer: React.FC<CartDrawerProps> = ({ open, onClose }) => {
                           <Typography variant="body2" sx={{ px: 1, minWidth: 20, textAlign: 'center', fontWeight: 700 }}>
                             {item.quantity}
                           </Typography>
-                          <IconButton size="small" onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                            disabled={item.quantity >= item.stock}
+                          >
                             <Plus size={14} />
                           </IconButton>
                         </Stack>

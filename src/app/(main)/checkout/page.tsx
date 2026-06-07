@@ -102,7 +102,10 @@ const CheckoutPage = () => {
         `*Productos:*\n` +
         state.items.map(item => {
           const effPrice = item.price * (1 - (item.discount || 0) / 100);
-          return `- ${item.quantity}x ${item.name} ($${(effPrice * item.quantity).toLocaleString('es-ES')})`;
+          const priceDetail = item.discount && item.discount > 0
+            ? `$${effPrice.toLocaleString('es-ES', { maximumFractionDigits: 0 })} (con ${item.discount}% OFF, antes $${item.price.toLocaleString('es-ES')})`
+            : `$${item.price.toLocaleString('es-ES')}`;
+          return `- ${item.quantity}x ${item.name} - ${priceDetail} (Subtotal: $${(effPrice * item.quantity).toLocaleString('es-ES', { maximumFractionDigits: 0 })})`;
         }).join('\n') +
         `\n\n*TOTAL: $${total.toLocaleString('es-ES')}*`;
 
@@ -245,23 +248,29 @@ const CheckoutPage = () => {
                   <Typography variant="h6" sx={{ mb: 3, fontWeight: 800 }}>Resumen de Compra</Typography>
                   <Stack spacing={2}>
                     {state.items.map((item: any) => {
-                      const itemDiscount = item.discount && item.discount > 0 ? (item.price * item.discount / 100) * item.quantity : 0;
                       return (
                         <Box key={item.id}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, alignItems: 'flex-start' }}>
+                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
                               {item.quantity}x {item.name}
                             </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>
-                              ${(item.price * item.quantity).toLocaleString('es-ES')}
-                            </Typography>
-                          </Box>
-                          {itemDiscount > 0 && (
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', pl: 2 }}>
-                              <Typography variant="caption" color="error.main" sx={{ fontWeight: 600 }}>Descuento ({item.discount}%)</Typography>
-                              <Typography variant="caption" color="error.main" sx={{ fontWeight: 700 }}>-${itemDiscount.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</Typography>
+                            <Box sx={{ textAlign: 'right', minWidth: '80px' }}>
+                              {item.discount > 0 ? (
+                                <>
+                                  <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                                    ${(item.price * (1 - item.discount / 100) * item.quantity).toLocaleString('es-ES', { maximumFractionDigits: 0 })}
+                                  </Typography>
+                                  <Typography variant="caption" sx={{ textDecoration: 'line-through', color: 'text.secondary', display: 'block' }}>
+                                    ${(item.price * item.quantity).toLocaleString('es-ES')}
+                                  </Typography>
+                                </>
+                              ) : (
+                                <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                  ${(item.price * item.quantity).toLocaleString('es-ES')}
+                                </Typography>
+                              )}
                             </Box>
-                          )}
+                          </Box>
                         </Box>
                       );
                     })}
@@ -276,14 +285,14 @@ const CheckoutPage = () => {
                         <Typography variant="body2" color="error.main" sx={{ fontWeight: 700 }}>-${discountTotal.toLocaleString('es-ES', { maximumFractionDigits: 0 })}</Typography>
                       </Box>
                     )}
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    {/* <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2">Envío</Typography>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>{shipping === 0 ? 'Gratis' : `$${shipping}`}</Typography>
-                    </Box>
+                    </Box> */}
                     <Divider sx={{ my: 1 }} />
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="h6" sx={{ fontWeight: 800 }}>Total</Typography>
-                      <Typography variant="h6" color="primary" sx={{ fontWeight: 800 }}>
+                      <Typography variant="h5" color="primary.main" sx={{ fontWeight: 900 }}>
                         ${total.toLocaleString('es-ES', { maximumFractionDigits: 0 })}
                       </Typography>
                     </Box>
