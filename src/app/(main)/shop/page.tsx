@@ -22,7 +22,7 @@ import {
   Chip
 } from '@mui/material';
 import type { SelectChangeEvent } from '@mui/material';
-import { LayoutGrid, List as ListIcon, Filter, Search, X } from 'lucide-react';
+import { LayoutGrid, List as ListIcon, Filter, Search, X, Flame } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import NextLink from 'next/link';
 
@@ -42,6 +42,7 @@ const ShopContent = () => {
   const stockFilter = searchParams?.get('stock') || '';
   const searchQuery = searchParams?.get('q') || '';
   const featuredFilter = searchParams?.get('featured') === 'true';
+  const discountFilter = searchParams?.get('discount') === 'true';
 
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -120,6 +121,7 @@ const ShopContent = () => {
       else if (stockFilter === 'out-of-stock') query = query.eq('stock', 0);
 
       if (featuredFilter) query = query.eq('featured', true);
+      if (discountFilter) query = query.gt('discount', 0);
 
       // Sorting
       switch (sortBy) {
@@ -175,7 +177,7 @@ const ShopContent = () => {
       fetchProducts(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, category, minPrice, maxPrice, sortBy, stockFilter, featuredFilter, categoriesLoaded]);
+  }, [searchQuery, category, minPrice, maxPrice, sortBy, stockFilter, featuredFilter, discountFilter, categoriesLoaded]);
 
   // Función para obtener IDs de categorías de forma recursiva (hijos, nietos, etc)
   const getRecursiveIds = (parentId: string, allCats: any[]): string[] => {
@@ -226,23 +228,26 @@ const ShopContent = () => {
     if (minPrice > 0 || maxPrice < 10000000) count++;
     if (stockFilter) count++;
     if (featuredFilter) count++;
+    if (discountFilter) count++;
     return count;
-  }, [category, searchQuery, minPrice, maxPrice, stockFilter, featuredFilter]);
+  }, [category, searchQuery, minPrice, maxPrice, stockFilter, featuredFilter, discountFilter]);
 
   return (
     <Box sx={{ bgcolor: '#f8f9fa', minHeight: '100vh', pb: 10 }}>
       {/* Header / Breadcrumbs */}
-      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: { xs: 2.5, md: 4 }, mb: { xs: 2.5, md: 4 } }}>
+      <Box sx={{ bgcolor: 'white', borderBottom: '1px solid rgba(0,0,0,0.05)', py: { xs: 2, md: 2.5 }, mb: { xs: 2, md: 3 } }}>
         <Container maxWidth="xl">
-          <Breadcrumbs separator="›" aria-label="breadcrumb" sx={{ mb: 2 }}>
-            <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
-            <Link component={NextLink} href="/shop" color="inherit" underline="hover">Tienda</Link>
-            {category && <Typography color="text.secondary">{category}</Typography>}
-            {searchQuery && <Typography color="primary" sx={{ fontWeight: 700 }}>Búsqueda: {searchQuery}</Typography>}
-          </Breadcrumbs>
-          <Typography variant="h3" sx={{ fontWeight: 900, letterSpacing: 0 }}>
-            {searchQuery ? `Resultados para: "${searchQuery}"` : (category || 'Todos los Productos')}
-          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, gap: { xs: 1.5, sm: 2 } }}>
+            <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: -0.5, fontSize: { xs: '1.75rem', md: '2.25rem' } }}>
+              {searchQuery ? `Resultados para: "${searchQuery}"` : (category || 'Todos los Productos')}
+            </Typography>
+            <Breadcrumbs separator="›" aria-label="breadcrumb" sx={{ flexShrink: 0 }}>
+              <Link component={NextLink} href="/" color="inherit" underline="hover">Inicio</Link>
+              <Link component={NextLink} href="/shop" color="inherit" underline="hover">Tienda</Link>
+              {category && <Typography color="text.secondary">{category}</Typography>}
+              {searchQuery && <Typography color="primary" sx={{ fontWeight: 700 }}>Búsqueda: {searchQuery}</Typography>}
+            </Breadcrumbs>
+          </Box>
         </Container>
       </Box>
 
@@ -369,7 +374,7 @@ const ShopContent = () => {
               </Paper>
 
               {/* Active Filters */}
-              {(searchQuery || category || minPrice > 0 || maxPrice < 10000000 || stockFilter || featuredFilter || searchParams?.get('sort')) && (
+              {(searchQuery || category || minPrice > 0 || maxPrice < 10000000 || stockFilter || featuredFilter || discountFilter || searchParams?.get('sort')) && (
                 <Box
                   sx={{
                     display: 'flex',
@@ -425,6 +430,24 @@ const ShopContent = () => {
                       label="Destacados"
                       onDelete={() => removeFilter('featured')}
                       sx={{ fontWeight: 600, borderRadius: 2, bgcolor: 'rgba(204,0,0,0.08)', color: 'primary.main', border: '1px solid rgba(204,0,0,0.2)', flexShrink: 0 }}
+                    />
+                  )}
+                  {discountFilter && (
+                    <Chip
+                      icon={<Flame size={14} color="#CC0000" style={{ color: '#CC0000' }} />}
+                      label="Ofertas"
+                      onDelete={() => removeFilter('discount')}
+                      sx={{
+                        fontWeight: 600,
+                        borderRadius: 2,
+                        bgcolor: 'rgba(204,0,0,0.08)',
+                        color: 'primary.main',
+                        border: '1px solid rgba(204,0,0,0.2)',
+                        flexShrink: 0,
+                        '& .MuiChip-icon': {
+                          color: '#CC0000 !important'
+                        }
+                      }}
                     />
                   )}
                   {searchParams?.get('sort') && (
@@ -499,17 +522,121 @@ const ShopContent = () => {
                 )}
               </>
             ) : (
-              <Paper elevation={0} sx={{ py: 10, textAlign: 'center', borderRadius: 4, border: '1px solid rgba(0,0,0,0.05)' }}>
-                <Typography variant="h5" color="text.secondary" sx={{ fontWeight: 700 }}>
-                  {searchQuery ? `No encontramos resultados para "${searchQuery}"` : "No se encontraron productos."}
+              <Paper 
+                elevation={0} 
+                sx={{ 
+                  py: 8, 
+                  px: 4, 
+                  textAlign: 'center', 
+                  borderRadius: 4, 
+                  border: '1px solid rgba(0,0,0,0.05)',
+                  bgcolor: 'white',
+                  boxShadow: '0 10px 30px -15px rgba(0,0,0,0.05)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                {/* Custom gaming SVG */}
+                <svg viewBox="0 0 100 100" width="130" height="130" style={{ display: 'block', margin: '0 auto 24px', filter: 'drop-shadow(0px 8px 24px rgba(204,0,0,0.15))' }}>
+                  {/* Glitch / Spark background effects */}
+                  <path d="M 15 35 L 10 32 L 18 28 Z" fill="#E05A47" opacity="0.6" />
+                  <path d="M 85 65 L 90 68 L 82 72 Z" fill="#E05A47" opacity="0.6" />
+                  
+                  {/* Broken wires / electric arc spark */}
+                  <path d="M 50 25 L 48 35 L 53 45 L 49 55 L 51 65" fill="none" stroke="#CC0000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="3 3" opacity="0.9" />
+                  
+                  {/* Left Controller Half */}
+                  <path d="M 22,40 C 22,28 44,28 46,34 L 44,68 C 38,68 30,76 24,70 C 18,64 22,40 22,40 Z" fill="#2D2D2D" stroke="#1A1A1A" strokeWidth="2" />
+                  {/* D-Pad on Left Half */}
+                  <path d="M 29,48 H 35 V 54 H 29 Z" fill="#CC0000" />
+                  <path d="M 32,45 V 57" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" />
+                  <path d="M 26,51 H 38" stroke="#CC0000" strokeWidth="2" strokeLinecap="round" />
+                  
+                  {/* Left Analog Stick */}
+                  <circle cx="37" cy="61" r="5" fill="#444" stroke="#111" strokeWidth="1" />
+                  <circle cx="37" cy="61" r="2.5" fill="#CC0000" />
+
+                  {/* Right Controller Half - tilted, cracked off */}
+                  <g transform="translate(4, 3) rotate(8)">
+                    <path d="M 50,36 C 52,30 74,30 74,42 C 74,42 78,66 72,72 C 66,78 54,68 50,68 Z" fill="#202020" stroke="#1A1A1A" strokeWidth="2" />
+                    
+                    {/* Buttons on Right Half */}
+                    <circle cx="60" cy="46" r="2.5" fill="#888" />
+                    <circle cx="66" cy="52" r="2.5" fill="#CC0000" />
+                    
+                    {/* Glitched Right Analog - Popped out / tilted away */}
+                    <g transform="translate(52, 60) rotate(-20)">
+                      <circle cx="0" cy="0" r="5" fill="#111" />
+                      <circle cx="0" cy="0" r="2.5" fill="#555" />
+                      <line x1="0" y1="0" x2="-2" y2="4" stroke="#555" strokeWidth="1.5" />
+                    </g>
+                  </g>
+                  
+                  {/* Detached button falling down */}
+                  <circle cx="68" cy="85" r="2.5" fill="#CC0000" opacity="0.8" />
+                  {/* Warning / Hazard Icon overlay in center/top */}
+                  <g transform="translate(45, 12)">
+                    <path d="M 5,0 L 10,9 L 0,9 Z" fill="#CC0000" />
+                    <rect x="4.5" y="3" width="1" height="3" fill="#FFF" />
+                    <circle cx="5" cy="7.5" r="0.6" fill="#FFF" />
+                  </g>
+                </svg>
+
+                <Typography 
+                  variant="h5" 
+                  color="error" 
+                  sx={{ 
+                    fontWeight: 900, 
+                    mb: 1, 
+                    letterSpacing: -0.5, 
+                    textTransform: 'uppercase',
+                    fontFamily: 'inherit'
+                  }}
+                >
+                  ¡GAME OVER!
                 </Typography>
-                <Typography color="text.secondary" sx={{ mb: 3 }}>Intentá con otros filtros o categorías.</Typography>
+                
+                <Typography 
+                  variant="subtitle1"
+                  color="text.primary" 
+                  sx={{ 
+                    fontWeight: 700, 
+                    mb: 1 
+                  }}
+                >
+                  {searchQuery ? `No encontramos loot para "${searchQuery}"` : "No se encontraron productos en este cuadrante."}
+                </Typography>
+                
+                <Typography 
+                  variant="body2"
+                  color="text.secondary" 
+                  sx={{ 
+                    mb: 4,
+                    maxWidth: 400,
+                    mx: 'auto',
+                    fontWeight: 500
+                  }}
+                >
+                  Revisá los filtros, ajustá tu presupuesto o reiniciá la búsqueda para volver a la partida.
+                </Typography>
+
                 <Button
                   variant="contained"
                   onClick={() => router.push(pathname || '/')}
-                  sx={{ borderRadius: 2, px: 4, fontWeight: 800 }}
+                  sx={{ 
+                    borderRadius: 3, 
+                    px: 5, 
+                    py: 1.2,
+                    fontWeight: 800,
+                    boxShadow: '0 4px 14px 0 rgba(204,0,0,0.3)',
+                    bgcolor: 'primary.main',
+                    '&:hover': {
+                      bgcolor: 'primary.dark',
+                      boxShadow: '0 6px 20px 0 rgba(204,0,0,0.4)',
+                    }
+                  }}
                 >
-                  Limpiar Filtros
+                  Reiniciar Partida (Limpiar Filtros)
                 </Button>
               </Paper>
             )}

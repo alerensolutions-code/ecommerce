@@ -468,6 +468,52 @@ const css = `
     gap: 10px;
   }
 
+  /* ── Mobile carousel ── */
+  .pd-related-carousel-wrap {
+    display: none;
+  }
+  @media (max-width: 768px) {
+    .pd-related-grid { display: none; }
+    .pd-related-carousel-wrap { display: block; }
+  }
+  .pd-related-carousel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    gap: 0;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .pd-related-carousel::-webkit-scrollbar { display: none; }
+  .pd-related-carousel-item {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    padding: 0 4px;
+  }
+  /* Dots */
+  .pd-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+  }
+  .pd-carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ddd;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .pd-carousel-dot.active {
+    background: #cc0000;
+    transform: scale(1.3);
+  }
+
   /* Loading */
   .pd-loading {
     min-height: 60vh;
@@ -514,6 +560,7 @@ export default function ProductDetailPage() {
   const [selectedImage, setSelectedImage] = useState('');
   const [isAdded, setIsAdded] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [carouselIndex, setCarouselIndex] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -739,9 +786,9 @@ export default function ProductDetailPage() {
 
               {/* Stock */}
               <div className="pd-stock">
-                <div className={`pd-stock-dot ${product.stock > 0 ? 'in' : 'out'}`} />
-                {product.stock > 0 ? (
-                  <span className="stock-in">{product.stock} disponibles</span>
+                <div className={`pd-stock-dot ${remainingStock > 0 ? 'in' : 'out'}`} />
+                {remainingStock > 0 ? (
+                  <span className="stock-in">{remainingStock} disponibles</span>
                 ) : (
                   <span className="stock-out">Sin stock</span>
                 )}
@@ -845,10 +892,47 @@ export default function ProductDetailPage() {
               <div className="pd-related-header">
                 <p className="pd-related-title">Productos relacionados</p>
               </div>
+
+              {/* Desktop grid */}
               <div className="pd-related-grid">
                 {related.map((p: any) => (
                   <ProductCard key={p.id} product={p} />
                 ))}
+              </div>
+
+              {/* Mobile carousel */}
+              <div className="pd-related-carousel-wrap">
+                <div
+                  className="pd-related-carousel"
+                  onScroll={(e) => {
+                    const el = e.currentTarget;
+                    const idx = Math.round(el.scrollLeft / el.clientWidth);
+                    setCarouselIndex(idx);
+                  }}
+                >
+                  {related.map((p: any) => (
+                    <div className="pd-related-carousel-item" key={p.id}>
+                      <ProductCard product={p} />
+                    </div>
+                  ))}
+                </div>
+                {/* Dots */}
+                <div className="pd-carousel-dots">
+                  {related.map((_: any, idx: number) => (
+                    <button
+                      key={idx}
+                      className={`pd-carousel-dot ${carouselIndex === idx ? 'active' : ''}`}
+                      onClick={() => {
+                        const carousel = document.querySelector('.pd-related-carousel') as HTMLElement;
+                        if (carousel) {
+                          carousel.scrollTo({ left: idx * carousel.clientWidth, behavior: 'smooth' });
+                          setCarouselIndex(idx);
+                        }
+                      }}
+                      aria-label={`Producto ${idx + 1}`}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           )}
