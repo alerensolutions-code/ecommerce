@@ -18,7 +18,8 @@ import {
 } from '@mui/material';
 import {
   ChevronRight,
-  ChevronDown
+  ChevronDown,
+  Flame
 } from 'lucide-react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { supabase } from '../../lib/supabase';
@@ -152,6 +153,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({ onFilterChange }) => 
 
   const currentStock = searchParams?.get('stock') || '';
   const currentFeatured = searchParams?.get('featured') === 'true';
+  const currentDiscount = searchParams?.get('discount') === 'true';
 
   const handleStockClick = (value: string) => {
     const newParams = new URLSearchParams(searchParams?.toString() || '');
@@ -170,6 +172,17 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({ onFilterChange }) => 
       newParams.delete('featured');
     } else {
       newParams.set('featured', 'true');
+    }
+    router.push(`${pathname}?${newParams.toString()}`);
+    onFilterChange?.();
+  };
+
+  const handleDiscountClick = () => {
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
+    if (currentDiscount) {
+      newParams.delete('discount');
+    } else {
+      newParams.set('discount', 'true');
     }
     router.push(`${pathname}?${newParams.toString()}`);
     onFilterChange?.();
@@ -349,7 +362,7 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({ onFilterChange }) => 
       <Divider sx={{ my: 3, opacity: 0.5 }} />
 
       <Typography variant="subtitle1" sx={{ fontWeight: 800, mb: 2, px: 1, letterSpacing: -0.5 }}>
-        ESPECIALES
+        Productos Devil
       </Typography>
       <List disablePadding>
         <ListItem disablePadding sx={{ mb: 0.5 }}>
@@ -373,6 +386,31 @@ const CategorySidebar: React.FC<CategorySidebarProps> = ({ onFilterChange }) => 
                 color: currentFeatured ? 'primary.main' : 'inherit'
               }}
             />
+          </ListItemButton>
+        </ListItem>
+        <ListItem disablePadding sx={{ mb: 0.5 }}>
+          <ListItemButton
+            selected={currentDiscount}
+            onClick={handleDiscountClick}
+            sx={{
+              borderRadius: 2,
+              '&.Mui-selected': {
+                bgcolor: 'rgba(204, 0, 0, 0.08)',
+                color: 'primary.main',
+                '&:hover': { bgcolor: 'rgba(204, 0, 0, 0.12)' }
+              }
+            }}
+          >
+            <Stack direction="row" spacing={1} alignItems="center">
+              <ListItemText
+                primary="Ofertas"
+                primaryTypographyProps={{
+                  fontSize: '0.85rem',
+                  fontWeight: currentDiscount ? 700 : 600,
+                  color: currentDiscount ? 'primary.main' : 'inherit'
+                }}
+              />
+            </Stack>
           </ListItemButton>
         </ListItem>
       </List>

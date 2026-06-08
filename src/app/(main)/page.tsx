@@ -11,7 +11,7 @@ import 'swiper/css/pagination';
 import { supabase } from '../../lib/supabase';
 import ProductCard from '../../components/product/ProductCard';
 import GoogleReviews from '../../components/layout/GoogleReviews';
-import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Cpu, Monitor, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowRight, Truck, ShieldCheck, Zap, Headphones, Cpu, Monitor, ChevronLeft, ChevronRight, RefreshCcw, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 interface HeroProps {
@@ -416,7 +416,7 @@ const HomePage = () => {
     <Box>
       <Hero banners={banners} loading={bannersLoading} />
 
-      {/* Build PC Highlight Section */}
+      {/* GPU Trade-in Service Section */}
       <Container maxWidth="xl" sx={{ py: 4 }}>
         <motion.div
           animate={{
@@ -446,35 +446,18 @@ const HomePage = () => {
                   viewport={{ once: true }}
                 >
                   <Typography variant="overline" color="primary" sx={{ fontWeight: 900, letterSpacing: 4 }}>
-                    MÁXIMO RENDIMIENTO GARANTIZADO
+                    SERVICIO EXCLUSIVO DEVIL GAMING
                   </Typography>
                   <Typography variant="h2" color="white" sx={{ fontWeight: 900, mt: 1, mb: 3, lineHeight: 1 }}>
-                    PCs PRE-ARMADAS <br />
-                    <span style={{ color: '#cc0000' }}>LISTAS PARA EL COMBATE</span>
+                    CANJE DE{' '}<br />
+                    <span style={{ color: '#cc0000' }}>PLACAS DE VIDEO</span>
                   </Typography>
-                  <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 5, maxWidth: 500, fontSize: '1.1rem' }}>
-                    Equipos ensamblados, testeados y optimizados por nuestros ingenieros expertos. Elegí la configuración que mejor se adapte a tu nivel y empezá a jugar de inmediato.
+                  <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.7)', mb: 3, maxWidth: 500, fontSize: '1.1rem' }}>
+                    ¿Querés dar el salto a la próxima generación? Traé tu placa de video usada, la tasamos en el momento y te llevás la que quieras pagando solo la diferencia.
                   </Typography>
-
-                  <Stack direction="row" spacing={3}>
-                    <Button
-                      component={Link}
-                      href="/shop?category=PCs%20Armadas"
-                      variant="contained"
-                      size="large"
-                      startIcon={<Zap />}
-                      sx={{
-                        px: 5,
-                        py: 2,
-                        borderRadius: 3,
-                        fontWeight: 800,
-                        boxShadow: '0 0 30px rgba(204,0,0,0.4)',
-                        '&:hover': { boxShadow: '0 0 50px rgba(204,0,0,0.6)' }
-                      }}
-                    >
-                      EXPLORAR EQUIPOS
-                    </Button>
-                  </Stack>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.45)', fontSize: '0.9rem' }}>
+                    Consultá disponibilidad por WhatsApp antes de venir.
+                  </Typography>
                 </motion.div>
               </Grid>
               <Grid size={{ xs: 12, md: 6 }}>
@@ -514,9 +497,9 @@ const HomePage = () => {
                   >
                     <Stack spacing={3}>
                       {[
-                        { icon: <Cpu color="#cc0000" />, step: "PCs Gaming Pro", label: "Dominá los eSports competitivos" },
-                        { icon: <Monitor color="#cc0000" />, step: "Streaming & Diseño", label: "Rendimiento óptimo multitarea" },
-                        { icon: <ShieldCheck color="#cc0000" />, step: "Garantía Devil", label: "3 años de protección absoluta" }
+                        { icon: <Cpu color="#cc0000" />, step: "Paso 1", label: "Traé tu placa de video usada" },
+                        { icon: <RefreshCcw color="#cc0000" />, step: "Paso 2", label: "La tasamos en el momento" },
+                        { icon: <Zap color="#cc0000" />, step: "Paso 3", label: "Pagás solo la diferencia y te la llevás" }
                       ].map((item, i) => (
                         <motion.div
                           key={i}
